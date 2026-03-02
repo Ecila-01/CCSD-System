@@ -1,0 +1,156 @@
+:root {
+  --bg: #d9d9d9;
+  --white: #ffffff;
+  --nav: #cfcfcf;
+  --text: #1f2a37;
+  --muted: #4b5563;
+  --title: #2b4f6a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root,
+.app {
+  min-height: 100vh;
+}
+
+/* ---------------- NAVBAR ---------------- */
+
+.navWrap {
+  width: 100%;
+  padding: 0;  /* ✅ remove top gap */
+  margin: 0;
+}
+
+
+/* FULL WIDTH bar */
+.navBar {
+  width: 100%;
+  background: var(--nav);
+  height: 75px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 64px;
+}
+
+/* If you want the navbar content centered but the bar full width,
+   replace padding with:
+   padding: 0;
+   justify-content: center;
+   and wrap inside another div.
+*/
+
+.brandLogo {
+  width: 75px;
+  height: 75px;
+  object-fit: contain; /* better for logos */
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  flex-wrap: wrap;
+}
+
+.navLink {
+  color: #111;
+  text-decoration: none;
+  font-weight: 600;
+  text-transform: lowercase;
+}
+
+.navLink:hover {
+  text-decoration: underline;
+}
+
+/* ---------------- HERO ---------------- */
+
+.page {
+  width: 100%;
+  padding: 0;  /* ✅ remove gap under navbar */
+  margin: 0;
+}
+
+/* FULL WIDTH white card/section */
+.heroCard {
+  width: 100%;
+  background: var(--white);
+
+  min-height: calc(100vh - 72px); 
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 40px;
+
+  padding: 80px 100px;
+}
+
+.heroLeft {
+  max-width: 560px;
+}
+
+.heroTitle {
+  margin: 0 0 18px;
+  font-size: 64px;
+  line-height: 1.02;
+  font-weight: 800;
+  color: var(--title);
+}
+
+.heroSubtitle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.heroRight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroLogo {
+  width: 280px;
+  height: 280px;
+  object-fit: contain;
+}
+
+/* ---------------- RESPONSIVE ---------------- */
+
+@media (max-width: 900px) {
+  .navBar {
+    padding: 0 20px;
+  }
+
+  .heroCard {
+    flex-direction: column;
+    text-align: center;
+    padding: 44px 20px;
+    min-height: auto;
+  }
+
+  .heroTitle {
+    font-size: 48px;
+  }
+
+  .heroLogo {
+    width: 220px;
+    height: 220px;
+  }
+
+}

@@ -1,54 +1,149 @@
 import "./App.css";
+import { Routes, Route, Link } from "react-router-dom";
+import Hero from "./components/Hero";
 import ubLogo from "./assets/ub-logo.png";
-import ccsdLogo from "./assets/ccsd-logo.png";
+import heroBg from "./assets/hero-bg.png";
+import examImg from "./assets/exam.png";
+import webinarImg from "./assets/webinar.png";
+import orientationImg from "./assets/orientation.png";
+import wellnessImg from "./assets/wellness.png";
 
-const navItems = ["home", "home", "home", "home", "home", "home"];
+import About from "./pages/About";
+
+const announcements = [
+  {
+    title: "Upcoming Exam Schedules",
+    text: "Check the dates for the upcoming exams.",
+    image: examImg,
+  },
+  {
+    title: "Webinars for Pre-Employment",
+    text: "Join our Pre-Employment Webinar.",
+    image: webinarImg,
+  },
+  {
+    title: "Student Orientations",
+    text: "Welcome new students to UB CCSD.",
+    image: orientationImg,
+  },
+  {
+    title: "Love and Wellness Fair",
+    text: "Good health and well being.",
+    image: wellnessImg,
+  },
+];
 
 function Navbar() {
   return (
     <header className="navWrap">
       <div className="navBar">
-        <img className="brandLogo" src={ubLogo} alt="UB Logo" />
+        <div className="navLeft">
+          <img className="brandLogo" src={ubLogo} alt="UB Logo" />
+        </div>
 
-        <nav className="navLinks">
-          {navItems.map((label, idx) => (
-            <a key={idx} className="navLink" href="#home">
-              {label}
-            </a>
-          ))}
+        <nav className="navCenter">
+          <Link to="/" className="navLink">
+            Home
+          </Link>
+          <Link to="/about" className="navLink">
+            About
+          </Link>
+          <Link to="/services" className="navLink">
+            Services
+          </Link>
         </nav>
+
+        <div className="navRight">
+          <Link to="/signup" className="navLink">
+            Sign Up
+          </Link>
+          <button className="loginBtn">Login</button>
+        </div>
       </div>
     </header>
   );
 }
 
-function HomeHero() {
+function AnnouncementCard({ title, text, image }) {
   return (
-    <main className="page" id="home">
-      <section className="heroWrap">
-        <div className="heroCard">
-          <div className="heroLeft">
-            <h1 className="heroTitle">
-              Welcome
-              <br />
-              to
-              <br />
-              <span className="heroTitleAccent">UB-CCSD</span>
-            </h1>
+    <div className="announcementCard">
+      <div className="announcementText">
+        <h3>{title}</h3>
+        <div className="cardLine" />
+        <p>{text}</p>
+        <button className="readMoreBtn">Read More ›</button>
+      </div>
 
-            <p className="heroSubtitle">
-              CENTER for COUNSELING and
-              <br />
-              STUDENT DEVELOPMENT
-            </p>
-          </div>
+      <div className="announcementImageWrap">
+        <img src={image} alt={title} className="announcementImage" />
+      </div>
+    </div>
+  );
+}
 
-          <div className="heroRight">
-            <img className="heroLogo" src={ccsdLogo} alt="CCSD Logo" />
-          </div>
-        </div>
-      </section>
-    </main>
+function AnnouncementsSection() {
+  return (
+    <section className="announcementsSection">
+      <div className="sectionHeader">
+        <h2>Latest Announcements</h2>
+        <div className="sectionLine" />
+      </div>
+
+      <div className="announcementGrid">
+        {announcements.map((item) => (
+          <AnnouncementCard
+            key={item.title}
+            title={item.title}
+            text={item.text}
+            image={item.image}
+          />
+        ))}
+      </div>
+
+      <div className="viewAllWrap">
+        <button className="viewAllBtn">View All Announcements ›</button>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="footerBar">
+      <div className="footerItem">📍 F Bldg. 2nd Floor, F206</div>
+      <div className="footerItem">🕒 M-W-Th-Sat 8:00am - 5:00pm</div>
+      <div className="footerItem">ⓕ facebook.com/ubccsd</div>
+      <div className="footerItem">✉ ccsd@e.ubaguio.edu</div>
+    </footer>
+  );
+}
+
+function HomePage() {
+  return (
+    <>
+      <Hero
+        background={heroBg}
+        title="UNIVERSITY OF BAGUIO"
+        subtitle="CCSD ANNOUNCEMENTS"
+      />
+      <AnnouncementsSection />
+    </>
+  );
+}
+
+function ServicesPage() {
+  return (
+    <section className="placeholderPage">
+      <h1>Services Page</h1>
+    </section>
+  );
+}
+
+function SignUpPage() {
+  return (
+    <section className="placeholderPage">
+      <h1>Sign Up Page</h1>
+    </section>
   );
 }
 
@@ -56,7 +151,15 @@ export default function App() {
   return (
     <div className="app">
       <Navbar />
-      <HomeHero />
+
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+      </Routes>
+
+      <Footer />
     </div>
   );
 }

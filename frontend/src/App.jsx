@@ -7,7 +7,7 @@ import examImg from "./assets/exam.png";
 import webinarImg from "./assets/webinar.png";
 import orientationImg from "./assets/orientation.png";
 import wellnessImg from "./assets/wellness.png";
-
+import Services from "./pages/Services";
 import About from "./pages/About";
 
 const announcements = [
@@ -155,7 +155,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<About />} />
-        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/services" element={<Services/>} />
         <Route path="/signup" element={<SignUpPage />} />
       </Routes>
 

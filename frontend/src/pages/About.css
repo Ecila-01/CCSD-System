@@ -1,17 +1,18 @@
 .aboutContainer {
-  padding: 40px 80px;
+  padding: 28px 60px;
 }
 
 .aboutHeader {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 30px;
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
 .aboutHeader h2 {
   color: red;
   margin: 0;
+  font-size: 20px;
 }
 
 .aboutLine {
@@ -20,17 +21,38 @@
   background: #999;
 }
 
-/* CARD */
+/* PAGE */
+.aboutPage {
+  min-height: 100vh;
+}
+
+.aboutSection {
+  padding-bottom: 0;
+}
+
+/* LAYOUT */
+.aboutContent {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  justify-content: center;   /* center everything */
+  max-width: 1000px;         /* prevent stretching */
+  margin: 0 auto;            /* center on page */
+}
+
+/* LEFT CARD */
 .aboutCard {
-  width: 420px;
+  width: 340px;
+  flex: 0 0 340px;
   background: white;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
   overflow: hidden;
 }
 
 .aboutImage {
   width: 100%;
-  height: 240px;
+  height: 220px;
   object-fit: cover;
   display: block;
 }
@@ -43,9 +65,10 @@
     #ff1a1a 100%
   );
   color: white;
-  padding: 10px 14px;
+  padding: 8px 12px;
   font-weight: bold;
   text-align: center;
+  font-size: 13px;
 }
 
 .aboutText {
@@ -55,13 +78,107 @@
     #cfcfcf 60%,
     #a8a8a8 100%
   );
-
-  padding: 14px 20px 22px 20px;
-  font-size: 14px;
+  padding: 12px 16px 16px;
+  font-size: 13px;
   color: #222;
-  line-height: 1.6;
+  line-height: 1.45;
   text-align: center;
 }
+
 .aboutText p {
-  margin: 10px 0;
+  margin: 8px 0;
+}
+
+/* RIGHT SIDE */
+.aboutRight {
+  width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* INFO BOXES */
+.infoBox {
+  max-width: 520px;
+  margin: 0 auto;
+  background: linear-gradient(
+    to bottom,
+    #ffffff 0%,
+    #e8e8e8 60%,
+    #d8d8d8 100%
+  );
+  color: #111;
+  border-radius: 14px;
+  padding: 16px 22px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.infoBox h3 {
+  margin: 0 0 10px;
+  color: red;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.infoBox p {
+  margin: 0;
+  text-align: center;
+  line-height: 1.45;
+  font-size: 13px;
+}
+
+.infoBox ol {
+  margin: 0;
+  padding-left: 18px;
+  color: #111;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.infoBox li {
+  margin-bottom: 6px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .aboutContainer {
+    padding: 24px 30px;
+  }
+
+  .aboutContent {
+    flex-direction: column;
+  }
+
+  .aboutCard {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .aboutRight {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .aboutContainer {
+    padding: 20px;
+  }
+
+  .aboutHeader {
+    gap: 10px;
+  }
+
+  .aboutHeader h2 {
+    font-size: 18px;
+  }
+
+  .footerItem {
+    width: 100%;
+    white-space: normal;
+  }
+}
+.aboutInner{
+  max-width:1000px;
+  margin:0 auto;
 }

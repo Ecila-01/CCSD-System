@@ -18,7 +18,7 @@
 .aboutLine {
   flex: 1;
   height: 1px;
-  background: #999;
+  background: #929396;
 }
 
 /* PAGE */
@@ -45,8 +45,7 @@
   width: 340px;
   flex: 0 0 340px;
   background: white;
-  border-radius: 14px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.10);
   overflow: hidden;
 }
 
@@ -60,9 +59,7 @@
 .aboutTitleBar {
   background: linear-gradient(
     to right,
-    #f5cfcf 0%,
-    #ff5c5c 60%,
-    #ff1a1a 100%
+    #ffffff
   );
   color: white;
   padding: 8px 12px;
@@ -72,12 +69,7 @@
 }
 
 .aboutText {
-  background: linear-gradient(
-    to bottom,
-    #ffffff 0%,
-    #cfcfcf 60%,
-    #a8a8a8 100%
-  );
+  background:#ffffff 100%;
   padding: 12px 16px 16px;
   font-size: 13px;
   color: #222;
@@ -101,16 +93,11 @@
 .infoBox {
   max-width: 520px;
   margin: 0 auto;
-  background: linear-gradient(
-    to bottom,
-    #ffffff 0%,
-    #e8e8e8 60%,
-    #d8d8d8 100%
-  );
+  background:#ffffff 100%;
   color: #111;
-  border-radius: 14px;
+  
   padding: 16px 22px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.10);
 }
 
 .infoBox h3 {

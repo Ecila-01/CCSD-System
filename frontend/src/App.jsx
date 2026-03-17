@@ -9,6 +9,7 @@ import orientationImg from "./assets/orientation.png";
 import wellnessImg from "./assets/wellness.png";
 import Services from "./pages/Services";
 import About from "./pages/About";
+import Navbar from "./Navbar";
 
 const announcements = [
   {
@@ -33,36 +34,7 @@ const announcements = [
   },
 ];
 
-function Navbar() {
-  return (
-    <header className="navWrap">
-      <div className="navBar">
-        <div className="navLeft">
-          <img className="brandLogo" src={ubLogo} alt="UB Logo" />
-        </div>
 
-        <nav className="navCenter">
-          <Link to="/" className="navLink">
-            Home
-          </Link>
-          <Link to="/about" className="navLink">
-            About
-          </Link>
-          <Link to="/services" className="navLink">
-            Services
-          </Link>
-        </nav>
-
-        <div className="navRight">
-          <Link to="/signup" className="navLink">
-            Sign Up
-          </Link>
-          <button className="loginBtn">Login</button>
-        </div>
-      </div>
-    </header>
-  );
-}
 
 function AnnouncementCard({ title, text, image }) {
   return (

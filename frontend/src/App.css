@@ -1,12 +1,14 @@
 :root {
   --bg: #d9d9d9;
-  --red: #f10f0f;
+  --red: #C3151C;
   --dark-red: #d70d0d;
   --white: #ffffff;
+  --gray: #3C3736;
   --text: #1f1f1f;
   --blue-btn: #6ea8e5;
   --nav-btn: #5b67b4;
   --shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --nav-text-color:#3C3736;
 }
 
 * {
@@ -20,7 +22,6 @@ body,
   padding: 0;
   width: 100%;
   min-height: 100%;
-  font-family: Arial, Helvetica, sans-serif;
   background: var(--bg);
 }
 
@@ -33,7 +34,7 @@ body,
 /* NAVBAR */
 .navWrap {
   width: 100%;
-  background: var(--red);
+  background: var(--white);
 }
 
 .navBar {
@@ -72,10 +73,10 @@ body,
 }
 
 .navLink {
-  color: var(--white);
+  color: var(--nav-text-color);
   text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 550;
   text-transform: uppercase;
 }
 
@@ -119,7 +120,7 @@ body,
 
 .sectionLine {
   height: 1px;
-  background: #777;
+  background: #929396;
   flex: 1;
 }
 
@@ -132,10 +133,7 @@ body,
 .announcementCard {
   background: linear-gradient(
     to bottom,
-    #f3d6dc 0%,      /* light pink start */
-    #ffffff 20%,     /* quickly fade to white */
-    #ffffff 80%,     /* keep most of the card white */
-    #dce8c5 100%     /* light green at bottom */
+    #ffffff 100%   /* light green at bottom */
   );
 
   display: flex;
@@ -143,9 +141,7 @@ body,
   align-items: center;
   min-height: 160px;
   padding: 18px 18px 18px 20px;
-
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.10);
 }
 
 .announcementText {
@@ -154,7 +150,7 @@ body,
 
 .announcementText h3 {
   margin: 0;
-  color: var(--red);
+  color: #3C3736;
   font-size: 20px;
   font-weight: 700;
 }

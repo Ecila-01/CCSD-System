@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom"; 
 import "./Navbar.css";
 import ubLogo from "./assets/darkUBlogo.png";
 
@@ -9,7 +9,6 @@ function Navbar() {
   return (
     <header className="navWrap">
       <div className="navBar">
-
         <div className="navLeft">
           <img className="brandLogo" src={ubLogo} alt="UB Logo" />
         </div>
@@ -19,17 +18,15 @@ function Navbar() {
         </div>
 
         <nav className={`navCenter ${menuOpen ? "active" : ""}`}>
-          <Link to="/" className="navLink">Home</Link>
-          <Link to="/about" className="navLink">About</Link>
-          <Link to="/services" className="navLink">Services</Link>
-
+          <NavLink to="/" className="navLink">Home</NavLink>
+          <NavLink to="/about" className="navLink">About</NavLink>
+          <NavLink to="/services" className="navLink">Services</NavLink>
         </nav>
 
         <div className="navRight">
-          <Link to="/signup" className="navLink">Sign Up</Link>
+          <NavLink to="/signup" className="navLink">Sign Up</NavLink>
           <button className="loginBtn">Login</button>
         </div>
-
       </div>
     </header>
   );

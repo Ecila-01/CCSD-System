@@ -8,8 +8,8 @@
 }
 
 .servicesContainer {
-  padding: 0 28px 24px;
-    max-width: 1400px;
+  padding: 0 40px 40px;
+  max-width: 1600px;
   margin: auto;
 }
 
@@ -28,40 +28,43 @@
 /* GRID */
 .servicesGrid {
   display: grid;
-  grid-template-columns: repeat(3, 420px);
-  gap: 26px;
-
+  /* Use '1fr' to ensure they fill the new 1600px width completely */
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 20px; /* Slightly tighter gap makes the cards themselves feel wider */
   justify-content: center;
 }
 
 .serviceCard {
-  height: 150px;
-  padding: 30px 28px 10px 28px; 
-
+  /* Reduced horizontal padding from 28px to 20px to give text more room */
+  padding: 30px 20px; 
   display: grid;
-  grid-template-columns: 1fr 120px;
-
-  align-items: start; /* move contents upward */
-
-  border-radius: 4px;
+  /* Shrink the image column slightly to prioritize the text width */
+  grid-template-columns: 1fr 100px; 
+  gap: 15px;
+  align-items: start;
+  min-height: 250px; /* Ensures all cards stay the same height even if text is long */
+  border-radius: 8px;
 }
 
 /* TEXT SIDE */
 .serviceText {
-  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 .serviceText h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 8px;
+  letter-spacing: -0.2px; /* Tightens the title slightly */
 }
 
 .serviceText p {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: #555;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: #444;
+  /* Prevents text from getting too close to the image */
+  padding-right: 5px; 
 }
-
 /* IMAGE SIDE */
 
 .serviceImageWrapper {
@@ -71,8 +74,9 @@
 }
 
 .serviceImage {
-  max-width: 120px;
-  max-height: 120px;
+  width: 100%;
+  max-width: 130px;
+  height: auto;
   object-fit: contain;
 }
 /* FOOTER */
@@ -121,17 +125,26 @@
     width: 100%;
     white-space: normal;
   }
+  .serviceCard {
+    height: auto; /* Ensure height isn't forced on mobile */
+    grid-template-columns: 1fr; /* Stack image below text on small phones */
+    text-align: center;
+  }
+  .serviceImageWrapper {
+    margin-top: 15px;
+  }
 }
-.serviceCard:nth-child(1){ background:#f4dede; }
-.serviceCard:nth-child(2){ background:#dfe9ef; }
-.serviceCard:nth-child(3){ background:#f2e2d6; }
+  .serviceCard:nth-child(1){ background:#f0e1e1; }
+  .serviceCard:nth-child(2){ background:#fceeff; }
+  .serviceCard:nth-child(3){ background:#e5f0d9; }
 
-.serviceCard:nth-child(4){ background:#e5f0d9; }
-.serviceCard:nth-child(5){ background:#fceeff; }
-.serviceCard:nth-child(6){ background:#f0e1e1; }
-.serviceCard{
-  transition: all .2s ease;
-}
+  .serviceCard:nth-child(4){ background:#f2e2d6; }
+  .serviceCard:nth-child(5){ background:#dfe9ef; }
+  .serviceCard:nth-child(6){ background:#f4dede; }
+
+  .serviceCard{
+    transition: all .2s ease;
+  }
 
 .serviceCard:hover{
   transform: translateY(-2px);

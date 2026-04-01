@@ -1,5 +1,5 @@
 import "./App.css";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, useLocation } from "react-router-dom";
 import Hero from "./components/Hero";
 import ubLogo from "./assets/ub-logo.png";
 import heroBg from "./assets/hero-bg.png";
@@ -10,7 +10,7 @@ import wellnessImg from "./assets/wellness.png";
 import Services from "./pages/Services";
 import About from "./pages/About";
 import Navbar from "./Navbar";
-
+import Dashboard from "./pages/Dashboard";
 const announcements = [
   {
     title: "Upcoming Exam Schedules",
@@ -102,36 +102,23 @@ function HomePage() {
     </>
   );
 }
-
-function ServicesPage() {
-  return (
-    <section className="placeholderPage">
-      <h1>Services Page</h1>
-    </section>
-  );
-}
-
-function SignUpPage() {
-  return (
-    <section className="placeholderPage">
-      <h1>Sign Up Page</h1>
-    </section>
-  );
-}
-
 export default function App() {
+  const location = useLocation();
+
+  // Define the pages where you want to hide the public Navbar/Footer
+  const isDashboard = location.pathname === "/dashboard";
   return (
     <div className="app">
-      <Navbar />
+      {!isDashboard && <Navbar />}
 
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<About />} />
         <Route path="/services" element={<Services/>} />
-        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
 
-      <Footer />
+      {!isDashboard && <Footer />}
     </div>
   );
 }

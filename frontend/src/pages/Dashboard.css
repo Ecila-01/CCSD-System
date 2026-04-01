@@ -1,0 +1,165 @@
+.dashboard-container {
+  display: flex;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 260px; /* Width of the sidebar */
+  padding: 0;
+}
+
+.content-header {
+  height: 60px;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px;
+  border-bottom: 1px solid #ddd;
+}
+
+.welcome-card {
+  background: linear-gradient(135deg, #ff7e7e 0%, #ffb1b1 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 30px;
+  box-shadow: 0 10px 20px rgba(255, 126, 126, 0.3);
+}
+
+.view-schedule {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid white;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 4px;
+  margin-top: 15px;
+  cursor: pointer;
+}
+.content-header {
+  height: 70px;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.search-box input {
+  background: #f0f2f5;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  width: 300px;
+  font-size: 14px;
+}
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  color: #666;
+  font-size: 13px;
+}
+
+.role-tag {
+  background: #c00000;
+  color: white;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-weight: bold;
+  text-transform: capitalize;
+  margin-top: 4px;
+}
+/* Container for the 4 small white cards */
+.small-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin: 0 30px 30px;
+}
+
+.stat-card {
+  background: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.stat-card .icon-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f2f5;
+}
+
+.stat-info h4 { font-size: 18px; margin: 0; }
+.stat-info p { font-size: 12px; color: #777; margin: 0; }
+
+/* Case Categories (The 4 grey progress cards) */
+.categories-section {
+  margin: 0 30px 30px;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.category-card {
+  background: #e9ecef;
+  padding: 20px;
+  border-radius: 10px;
+  position: relative;
+}
+
+.category-card h4 { margin: 0; font-size: 14px; color: #444; }
+.category-card p { font-size: 12px; color: #666; margin-bottom: 15px; }
+
+.progress-bar {
+  height: 6px;
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #999;
+  border-radius: 3px;
+}
+.welcome-card {
+  /* ... existing styles ... */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-bubbles {
+  display: flex;
+  gap: 20px;
+}
+
+.bubble {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 15px 25px;
+  border-radius: 12px;
+  text-align: center;
+  backdrop-filter: blur(5px);
+}

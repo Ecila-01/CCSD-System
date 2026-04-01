@@ -1,0 +1,130 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7); /* Darkens background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modalContent {
+  background: white;
+  padding: 40px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.closeButton {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #666;
+}
+
+.modalHeader {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.modalHeader h2 {
+  color: #c00000; /* UB RED */
+  margin: 10px 0 5px;
+  font-size: 24px;
+}
+
+.modalHeader p {
+  font-size: 14px;
+  color: #666;
+}
+
+.inputGroup {
+  margin-bottom: 20px;
+}
+
+.inputGroup label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.inputGroup input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 15px;
+  box-sizing: border-box; /* Fixes padding issues */
+}
+
+.forgotPassword {
+  text-align: right;
+  margin-bottom: 25px;
+}
+
+.forgotPassword a {
+  font-size: 13px;
+  color: #c00000;
+  text-decoration: none;
+}
+
+.loginSubmitBtn {
+  width: 100%;
+  padding: 14px;
+  background: #c00000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.loginSubmitBtn:hover {
+  background: #a00000;
+}
+/* Center the logo and control its size */
+.modalLogo {
+  width: 100px;         /* Specific width for the UB logo */
+  height: auto;          /* Maintains aspect ratio */
+  display: block;        /* Necessary for margin auto to work */
+  margin: 0 auto 15px;   /* Centers it horizontally and adds space below */
+  object-fit: contain;   /* Ensures the image isn't cropped */
+}
+
+/* Optional: If the logo is too dark against the white modal, 
+   you can add a subtle filter or just ensure the container 
+   is clean */
+.modalHeader {
+  text-align: center;
+  margin-bottom: 25px;
+  padding-top: 10px;
+}
+
+.modalHeader h2 {
+  color: #c00000;       /* UB Red */
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  margin-top: 10px;
+  font-size: 22px;
+  letter-spacing: 1px;
+}

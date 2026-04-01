@@ -2,10 +2,10 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom"; 
 import "./Navbar.css";
 import ubLogo from "./assets/darkUBlogo.png";
-
+import LoginModal from "./components/LoginModal";
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-
+  const [isModalOpen, setModalOpen] = useState(false);
   return (
     <header className="navWrap">
       <div className="navBar">
@@ -24,11 +24,16 @@ function Navbar() {
         </nav>
 
         <div className="navRight">
-          <NavLink to="/signup" className="navLink">Sign Up</NavLink>
-          <button className="loginBtn">Login</button>
+          <button className="loginBtn" onClick={() => setModalOpen(true)} >Login</button>
         </div>
+
       </div>
+      <LoginModal 
+        isOpen={isModalOpen} 
+        onClose={() => setModalOpen(false)} 
+      />
     </header>
+    
   );
 }
 

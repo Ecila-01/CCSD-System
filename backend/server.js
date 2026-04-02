@@ -6,6 +6,8 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const authRoutes = require('./routes/authRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
+const path = require('path');
+const requestRoutes = require('./routes/requests');
 
 // Middleware
 app.use(cors());
@@ -14,6 +16,8 @@ app.use(express.json()); // Allows us to parse JSON data from requests
 //Routes
 app.use('/api/services', serviceRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/api/requests', requestRoutes);
 
 // MongoDB Connection
 const connectDB = async () => {

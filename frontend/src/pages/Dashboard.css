@@ -3,7 +3,11 @@
   background-color: #f5f5f5;
   min-height: 100vh;
 }
-
+.dashboard-view h2 {
+  margin: 25px 30px 5px 30px; /* Aligns the left edge perfectly with your cards */
+  font-size: 24px;
+  color: #222; /* Makes it a nice, sharp dark grey */
+}
 .main-content {
   flex: 1;
   margin-left: 260px; /* Width of the sidebar */

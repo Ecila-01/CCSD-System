@@ -2,7 +2,7 @@
   min-height: 100vh;
 }
 
-/* SECTION */
+/* SECTION & CONTAINER */
 .servicesSection {
   padding: 22px 0 0;
 }
@@ -20,7 +20,7 @@
 
 .servicesHeader h2 {
   margin: 0;
-  color: red;
+  color: #c00000; /* UB Red */
   font-size: 24px;
   font-weight: 700;
 }
@@ -28,49 +28,87 @@
 /* GRID */
 .servicesGrid {
   display: grid;
-  /* Use '1fr' to ensure they fill the new 1600px width completely */
   grid-template-columns: repeat(3, 1fr); 
-  gap: 20px; /* Slightly tighter gap makes the cards themselves feel wider */
+  gap: 20px; 
   justify-content: center;
 }
 
+/* INDIVIDUAL CARD */
 .serviceCard {
-  /* Reduced horizontal padding from 28px to 20px to give text more room */
+  display: flex; /* Flexbox is better here to keep the image and text side-by-side */
+  flex-direction: row;
+  align-items: stretch; /* Forces the text container to reach the bottom */
+  gap: 20px;
   padding: 30px 20px; 
-  display: grid;
-  /* Shrink the image column slightly to prioritize the text width */
-  grid-template-columns: 1fr 100px; 
-  gap: 15px;
-  align-items: start;
-  min-height: 250px; /* Ensures all cards stay the same height even if text is long */
-  border-radius: 8px;
+  min-height: 250px; /* Ensures all cards stay roughly the same height */
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
 }
+
+.serviceCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+/* CARD BACKGROUND COLORS */
+.serviceCard:nth-child(1) { background: #f0e1e1; }
+.serviceCard:nth-child(2) { background: #fceeff; }
+.serviceCard:nth-child(3) { background: #f2e2d6; }
+.serviceCard:nth-child(4) { background: #e5f0d9; }
+.serviceCard:nth-child(5) { background: #dfe9ef; }
+.serviceCard:nth-child(6) { background: #f4dede; }
 
 /* TEXT SIDE */
 .serviceText {
+  flex: 1; /* Takes up all available space on the left */
   display: flex;
   flex-direction: column;
-  height: 100%;
+  align-items: flex-start;
+  height: 100%; /* Forces this container to touch the bottom of the card */
 }
+
 .serviceText h3 {
   font-size: 18px;
   margin-bottom: 8px;
-  letter-spacing: -0.2px; /* Tightens the title slightly */
+  letter-spacing: -0.2px; 
+  color: #222;
 }
 
 .serviceText p {
   font-size: 14.5px;
   line-height: 1.5;
   color: #444;
-  /* Prevents text from getting too close to the image */
+  margin-bottom: 20px;
   padding-right: 5px; 
 }
-/* IMAGE SIDE */
 
+/* BUTTON */
+.scheduleBtn {
+  margin-top: auto; /* THE MAGIC FIX: Pushes the button to the floor */
+  background-color: #c00000; /* UB Red */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.scheduleBtn:hover {
+  background-color: #a00000;
+}
+
+/* IMAGE SIDE */
 .serviceImageWrapper {
+  width: 130px; /* Fixed width so images don't stretch the card */
+  flex-shrink: 0; /* Prevents the image container from being squished by text */
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 }
 
 .serviceImage {
@@ -79,9 +117,10 @@
   height: auto;
   object-fit: contain;
 }
+
 /* FOOTER */
 .servicesFooter {
-  background: red;
+  background: #c00000;
   color: white;
   display: flex;
   justify-content: space-around;
@@ -97,14 +136,14 @@
   white-space: nowrap;
 }
 
-/* RESPONSIVE */
-@media (max-width: 900px) {
+/* RESPONSIVE DESIGN */
+@media (max-width: 1100px) {
   .servicesGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr); /* Switch to 2 columns on medium screens */
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 650px) {
   .servicesContainer {
     padding: 0 18px 20px;
   }
@@ -114,39 +153,31 @@
   }
 
   .servicesGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Switch to 1 column on phones */
   }
 
   .serviceCard {
-    height: 150px;
+    min-height: auto; 
+    flex-direction: column-reverse; /* Put the image above the text on mobile */
+    align-items: center;
+    text-align: center;
+    padding: 25px 20px;
+  }
+
+  .serviceText {
+    align-items: center; /* Center everything on mobile */
+  }
+
+  .serviceText p {
+    padding-right: 0;
+  }
+
+  .serviceImageWrapper {
+    margin-bottom: 20px; /* Space between image and text when stacked */
   }
 
   .footerItem {
     width: 100%;
     white-space: normal;
   }
-  .serviceCard {
-    height: auto; /* Ensure height isn't forced on mobile */
-    grid-template-columns: 1fr; /* Stack image below text on small phones */
-    text-align: center;
-  }
-  .serviceImageWrapper {
-    margin-top: 15px;
-  }
-}
-  .serviceCard:nth-child(1){ background:#f0e1e1; }
-  .serviceCard:nth-child(2){ background:#fceeff; }
-  .serviceCard:nth-child(3){ background:#e5f0d9; }
-
-  .serviceCard:nth-child(4){ background:#f2e2d6; }
-  .serviceCard:nth-child(5){ background:#dfe9ef; }
-  .serviceCard:nth-child(6){ background:#f4dede; }
-
-  .serviceCard{
-    transition: all .2s ease;
-  }
-
-.serviceCard:hover{
-  transform: translateY(-2px);
-  box-shadow:0 4px 10px rgba(0,0,0,.12);
 }

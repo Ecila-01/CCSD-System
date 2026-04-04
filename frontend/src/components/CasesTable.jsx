@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react'; // 1. Add useState
+import CaseDetailsModal from './CaseDetailsModal'; // 2. Import the Modal
 import './CasesTable.css';
 
 const CasesTable = ({ requests }) => {
-  // HELPER FUNCTIONS: Since your data is dynamic (NoSQL), 
-  // we need to translate different form fields into a unified table view.
+  // 3. Add state to track which case is currently being viewed
+  const [selectedCase, setSelectedCase] = useState(null);
+
   const getStudentName = (data) => {
     return data.studentName || data.fullName || data.referrerName || "N/A";
   };
@@ -12,7 +14,6 @@ const CasesTable = ({ requests }) => {
     return data.courseYear || data.courseDescription || data.department || "N/A";
   };
 
-  // Helper to format the MongoDB timestamp into "April 06, 2026"
   const formatDate = (dateString) => {
     const options = { month: 'long', day: '2-digit', year: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
@@ -42,9 +43,8 @@ const CasesTable = ({ requests }) => {
           </tr>
         </thead>
         <tbody>
-          {requests.slice(0, 6).map((req, index) => ( // Showing only top 6 for dashboard
+          {requests.slice(0, 6).map((req, index) => (
             <tr key={req._id}>
-              {/* Fake Case Number for now based on index */}
               <td>00{index + 1}-001{index}</td>
               
               <td>
@@ -65,7 +65,13 @@ const CasesTable = ({ requests }) => {
               </td>
               
               <td>
-                <button className="action-btn">Open</button>
+                {/* 4. SET THE SELECTED CASE ON CLICK */}
+                <button 
+                  className="action-btn" 
+                  onClick={() => setSelectedCase(req)}
+                >
+                  Open
+                </button>
               </td>
             </tr>
           ))}
@@ -79,6 +85,14 @@ const CasesTable = ({ requests }) => {
       <div className="table-footer">
         <span>Showing {Math.min(requests.length, 6)} of {requests.length} cases</span>
       </div>
+
+      {/* 5. RENDER THE MODAL AT THE BOTTOM */}
+      <CaseDetailsModal 
+        isOpen={!!selectedCase} 
+        onClose={() => setSelectedCase(null)} 
+        request={selectedCase} 
+      />
+
     </div>
   );
 };

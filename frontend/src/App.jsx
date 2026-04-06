@@ -1,8 +1,8 @@
 import "./App.css";
-import { Routes, Route, Link, useLocation } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 import Hero from "./components/Hero";
 import ubLogo from "./assets/ub-logo.png";
-import heroBg from "./assets/hero-bg.png";
+import heroBg from "./assets/facade.jpg";
 import examImg from "./assets/exam.png";
 import webinarImg from "./assets/webinar.png";
 import orientationImg from "./assets/orientation.png";
@@ -10,7 +10,9 @@ import wellnessImg from "./assets/wellness.png";
 import Services from "./pages/Services";
 import About from "./pages/About";
 import Navbar from "./Navbar";
-import Dashboard from "./pages/Dashboard";
+import AnnouncementCards from "./components/AnnouncementCards";
+import FlipTitle from "./components/FlipTitle";
+
 const announcements = [
   {
     title: "Upcoming Exam Schedules",
@@ -36,48 +38,48 @@ const announcements = [
 
 
 
-function AnnouncementCard({ title, text, image }) {
-  return (
-    <div className="announcementCard">
-      <div className="announcementText">
-        <h3>{title}</h3>
-        <div className="cardLine" />
-        <p>{text}</p>
-        <button className="readMoreBtn">Read More ›</button>
-      </div>
+// function AnnouncementCard({ title, text, image }) {
+//   return (
+//     <div className="announcementCard">
+//       <div className="announcementText">
+//         <h3>{title}</h3>
+//         <div className="cardLine" />
+//         <p>{text}</p>
+//         <button className="readMoreBtn">Read More ›</button>
+//       </div>
 
-      <div className="announcementImageWrap">
-        <img src={image} alt={title} className="announcementImage" />
-      </div>
-    </div>
-  );
-}
+//       <div className="announcementImageWrap">
+//         <img src={image} alt={title} className="announcementImage" />
+//       </div>
+//     </div>
+//   );
+// }
 
-function AnnouncementsSection() {
-  return (
-    <section className="announcementsSection">
-      <div className="sectionHeader">
-        <h2>Latest Announcements</h2>
-        <div className="sectionLine" />
-      </div>
+// function AnnouncementsSection() {
+//   return (
+//     <section className="announcementsSection">
+//       <div className="sectionHeader">
+//         <h2>Latest Announcements</h2>
+//         <div className="sectionLine" />
+//       </div>
 
-      <div className="announcementGrid">
-        {announcements.map((item) => (
-          <AnnouncementCard
-            key={item.title}
-            title={item.title}
-            text={item.text}
-            image={item.image}
-          />
-        ))}
-      </div>
+//       <div className="announcementGrid">
+//         {announcements.map((item) => (
+//           <AnnouncementCard
+//             key={item.title}
+//             title={item.title}
+//             text={item.text}
+//             image={item.image}
+//           />
+//         ))}
+//       </div>
 
-      <div className="viewAllWrap">
-        <button className="viewAllBtn">View All Announcements ›</button>
-      </div>
-    </section>
-  );
-}
+//       <div className="viewAllWrap">
+//         <button className="viewAllBtn">View All Announcements ›</button>
+//       </div>
+//     </section>
+//   );
+// }
 
 function Footer() {
   return (
@@ -95,30 +97,44 @@ function HomePage() {
     <>
       <Hero
         background={heroBg}
-        title="UNIVERSITY OF BAGUIO"
-        subtitle="CCSD ANNOUNCEMENTS"
+        title="Center for Counseling and Student Development"
+        //subtitle="CCSD ANNOUNCEMENTS"
       />
-      <AnnouncementsSection />
+      <FlipTitle />
+      <AnnouncementCards />  {/* ← replaces AnnouncementsSection */}
     </>
   );
 }
-export default function App() {
-  const location = useLocation();
 
-  // Define the pages where you want to hide the public Navbar/Footer
-  const isDashboard = location.pathname === "/dashboard";
+function ServicesPage() {
+  return (
+    <section className="placeholderPage">
+      <h1>Services Page</h1>
+    </section>
+  );
+}
+
+function SignUpPage() {
+  return (
+    <section className="placeholderPage">
+      <h1>Sign Up Page</h1>
+    </section>
+  );
+}
+
+export default function App() {
   return (
     <div className="app">
-      {!isDashboard && <Navbar />}
+      <Navbar />
 
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<About />} />
         <Route path="/services" element={<Services/>} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/signup" element={<SignUpPage />} />
       </Routes>
 
-      {!isDashboard && <Footer />}
+      <Footer />
     </div>
   );
 }

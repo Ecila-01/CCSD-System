@@ -7,10 +7,15 @@ import examImg from "./assets/exam.png";
 import webinarImg from "./assets/webinar.png";
 import orientationImg from "./assets/orientation.png";
 import wellnessImg from "./assets/wellness.png";
+
+// Page Imports
 import Services from "./pages/Services";
 import About from "./pages/About";
 import Navbar from "./Navbar";
 import Dashboard from "./pages/Dashboard";
+import Schedules from "./pages/Schedules";
+import Referrals from "./pages/Referrals";
+
 const announcements = [
   {
     title: "Upcoming Exam Schedules",
@@ -105,20 +110,29 @@ function HomePage() {
 export default function App() {
   const location = useLocation();
 
-  // Define the pages where you want to hide the public Navbar/Footer
-  const isDashboard = location.pathname === "/dashboard";
+  // 2. THE FIX: Create an array of all your admin pages. 
+  // Now you can easily add "/reports", "/counselors" later without breaking the layout!
+  const adminPages = ["/dashboard", "/schedules", "/referrals"];
+  const isAdminView = adminPages.includes(location.pathname);
+
   return (
     <div className="app">
-      {!isDashboard && <Navbar />}
+      {/* Hide public navbar if on ANY admin page */}
+      {!isAdminView && <Navbar />}
 
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<About />} />
         <Route path="/services" element={<Services/>} />
+        
+        {/* Admin Routes */}
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/schedules" element={<Schedules />} /> 
+        <Route path="/referrals" element={<Referrals />} /> 
       </Routes>
 
-      {!isDashboard && <Footer />}
+      {/* Hide public footer if on ANY admin page */}
+      {!isAdminView && <Footer />}
     </div>
   );
 }

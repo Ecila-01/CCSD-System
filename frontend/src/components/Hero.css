@@ -1,11 +1,11 @@
 .heroSection {
     width: 100%;
-    min-height: 250px;
+    min-height: 300px;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     position: relative;
-    
+   
   }
   
   .heroOverlay {
@@ -14,13 +14,15 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 30px 20px;
+    padding: 100px 20px;
+    
   }
   
   .heroContent {
     display: flex;
     flex-direction: column;
     align-items: center;
+    
   }
   
   .heroMainTitle {
@@ -28,7 +30,8 @@
     font-size: 48px;
     font-weight: 800;
     color: #ffffff;
-    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.18);
+   text-shadow: 0 0 10px rgba(0,0,0,0.8),
+               0 0 20px rgba(0,0,0,0.8);
   }
   
   .heroSubTitle {
@@ -36,7 +39,7 @@
     font-size: 28px;
     font-weight: 800;
     color: #C3151C;
-    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.15);
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.50);
   }
   
   @media (max-width: 900px) {

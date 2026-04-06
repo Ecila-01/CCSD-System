@@ -1,88 +1,22 @@
 import "./App.css";
-import { Routes, Route, Link, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Hero from "./components/Hero";
 import ubLogo from "./assets/ub-logo.png";
-import heroBg from "./assets/hero-bg.png";
+import heroBg from "./assets/facade.jpg"; // Groupmate's updated image
 import examImg from "./assets/exam.png";
 import webinarImg from "./assets/webinar.png";
 import orientationImg from "./assets/orientation.png";
 import wellnessImg from "./assets/wellness.png";
 
-// Page Imports
+// Page & Component Imports
 import Services from "./pages/Services";
 import About from "./pages/About";
 import Navbar from "./Navbar";
 import Dashboard from "./pages/Dashboard";
 import Schedules from "./pages/Schedules";
 import Referrals from "./pages/Referrals";
-
-const announcements = [
-  {
-    title: "Upcoming Exam Schedules",
-    text: "Check the dates for the upcoming exams.",
-    image: examImg,
-  },
-  {
-    title: "Webinars for Pre-Employment",
-    text: "Join our Pre-Employment Webinar.",
-    image: webinarImg,
-  },
-  {
-    title: "Student Orientations",
-    text: "Welcome new students to UB CCSD.",
-    image: orientationImg,
-  },
-  {
-    title: "Love and Wellness Fair",
-    text: "Good health and well being.",
-    image: wellnessImg,
-  },
-];
-
-
-
-function AnnouncementCard({ title, text, image }) {
-  return (
-    <div className="announcementCard">
-      <div className="announcementText">
-        <h3>{title}</h3>
-        <div className="cardLine" />
-        <p>{text}</p>
-        <button className="readMoreBtn">Read More ›</button>
-      </div>
-
-      <div className="announcementImageWrap">
-        <img src={image} alt={title} className="announcementImage" />
-      </div>
-    </div>
-  );
-}
-
-function AnnouncementsSection() {
-  return (
-    <section className="announcementsSection">
-      <div className="sectionHeader">
-        <h2>Latest Announcements</h2>
-        <div className="sectionLine" />
-      </div>
-
-      <div className="announcementGrid">
-        {announcements.map((item) => (
-          <AnnouncementCard
-            key={item.title}
-            title={item.title}
-            text={item.text}
-            image={item.image}
-          />
-        ))}
-      </div>
-
-      <div className="viewAllWrap">
-        <button className="viewAllBtn">View All Announcements ›</button>
-      </div>
-    </section>
-  );
-}
+import AnnouncementCards from "./components/AnnouncementCards"; // Groupmate's new component
+import FlipTitle from "./components/FlipTitle"; // Groupmate's new component
 
 function Footer() {
   return (
@@ -95,23 +29,33 @@ function Footer() {
   );
 }
 
+// Groupmate's updated HomePage layout
 function HomePage() {
   return (
     <>
       <Hero
         background={heroBg}
-        title="UNIVERSITY OF BAGUIO"
-        subtitle="CCSD ANNOUNCEMENTS"
+        title="Center for Counseling and Student Development"
       />
-      <AnnouncementsSection />
+      <FlipTitle />
+      <AnnouncementCards /> 
     </>
   );
 }
+
+// Groupmate's new placeholder page
+function SignUpPage() {
+  return (
+    <section className="placeholderPage">
+      <h1>Sign Up Page</h1>
+    </section>
+  );
+}
+
 export default function App() {
   const location = useLocation();
 
-  // 2. THE FIX: Create an array of all your admin pages. 
-  // Now you can easily add "/reports", "/counselors" later without breaking the layout!
+  // Your logic to hide public nav/footer on admin pages
   const adminPages = ["/dashboard", "/schedules", "/referrals"];
   const isAdminView = adminPages.includes(location.pathname);
 
@@ -121,9 +65,11 @@ export default function App() {
       {!isAdminView && <Navbar />}
 
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<About />} />
-        <Route path="/services" element={<Services/>} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/signup" element={<SignUpPage />} />
         
         {/* Admin Routes */}
         <Route path="/dashboard" element={<Dashboard />} />

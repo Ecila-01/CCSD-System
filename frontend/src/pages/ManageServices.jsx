@@ -6,6 +6,7 @@ import ServiceModal from '../components/ServiceModal'; // <-- IMPORT THE NEW MOD
 import '../styles/ManageServices.css'; 
 import { MdOutlineShield, MdOutlineCheckCircle, MdOutlineWarning, MdOutlinePeopleAlt } from "react-icons/md";
 import AddServiceModal from '../components/AddServiceModal';
+import StatusModal from '../components/StatusModal';
 
 function ManageServices() {
   const [user, setUser] = useState(null);
@@ -15,8 +16,9 @@ function ManageServices() {
   const [isLoading, setIsLoading] = useState(true);
   const [viewingService, setViewingService] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
-  
+  const [statusModal, setStatusModal] = useState({ 
+    isOpen: false, type: 'confirm', title: '', message: '', action: null 
+  });
   useEffect(() => {
     const loggedInUser = localStorage.getItem("user");
     if (!loggedInUser) navigate('/');
@@ -38,15 +40,44 @@ function ManageServices() {
     fetchServices();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this service?")) {
-      try {
-        await axios.delete(`http://localhost:5000/api/services/${id}`);
-        setViewingService(null);
-        fetchServices(); 
-      } catch (error) {
-        console.error("Error deleting service:", error);
-      }
+  const triggerDelete = (id) => {
+    setStatusModal({
+      isOpen: true,
+      type: 'delete_confirm',
+      title: 'Delete Service?',
+      message: 'Are you sure you want to remove this service? This action cannot be undone.',
+      onConfirm: () => finalDelete(id) 
+    });
+  };
+
+  const finalDelete = async (id) => {
+    setStatusModal({ isOpen: true, type: 'loading', title: 'Deleting...', message: 'Please wait while we remove the service.' });
+    
+    try {
+      await axios.delete(`http://localhost:5000/api/services/${id}`);
+      
+      // Close the viewing modal if it was open
+      setViewingService(null); 
+
+      // Show Success
+      setStatusModal({ 
+        isOpen: true, 
+        type: 'success', 
+        title: 'Deleted!', 
+        message: 'The service has been removed',
+        onConfirm: () => {
+          setStatusModal({ ...statusModal, isOpen: false });
+          fetchServices(); // Refresh the list
+        }
+      });
+    } catch (error) {
+      setStatusModal({ 
+        isOpen: true, 
+        type: 'error', 
+        title: 'Error', 
+        message: 'Could not delete the service. Please try again later.',
+        onConfirm: () => setStatusModal({ ...statusModal, isOpen: false })
+      });
     }
   };
 
@@ -55,7 +86,37 @@ function ManageServices() {
   };
 
   if (!user) return null;
+  const handleStatusChange = async (id, newStatus) => {
+    // Show a small loading state in the status modal
+    setStatusModal({ 
+      isOpen: true, 
+      type: 'loading', 
+      title: 'Updating Status', 
+      message: 'Applying changes to the service...' 
+    });
 
+    try {
+      // We hit a PATCH route (which we will create next)
+      await axios.patch(`http://localhost:5000/api/services/${id}`, { status: newStatus });
+      
+      // Update local state immediately so the UI feels snappy
+      setServices(prev => prev.map(s => s._id === id ? { ...s, status: newStatus } : s));
+
+      // Close the loading modal after a short delay
+      setTimeout(() => {
+        setStatusModal({ isOpen: false });
+      }, 500);
+
+    } catch (error) {
+      setStatusModal({ 
+        isOpen: true, 
+        type: 'error', 
+        title: 'Update Failed', 
+        message: 'Could not update status. Please try again.' 
+      });
+    }
+  };
+  
   return (
     <div className="dashboard-container">
       <Sidebar />
@@ -82,26 +143,35 @@ function ManageServices() {
               + Add Services
             </button>
           </div>
-
           <div className="services-stats-row">
             <div className="service-stat-card">
               <div className="icon-box red"><MdOutlineShield size={24}/></div>
-              <div className="stat-info"><span className="stat-label">TOTAL SERVICES</span><span className="stat-number">{services.length}</span></div>
+              <div className="stat-info">
+                <span className="stat-label">TOTAL SERVICES</span>
+                <span className="stat-number">{services.length}</span>
+              </div>
             </div>
+            
             <div className="service-stat-card">
               <div className="icon-box green"><MdOutlineCheckCircle size={24}/></div>
-              <div className="stat-info"><span className="stat-label">ACTIVE</span><span className="stat-number">{services.length}</span></div>
+              <div className="stat-info">
+                <span className="stat-label">ACTIVE</span>
+                <span className="stat-number">
+                  {services.filter(s => s.status?.toLowerCase() === 'active').length}
+                </span>
+              </div>
             </div>
+            
             <div className="service-stat-card">
               <div className="icon-box yellow"><MdOutlineWarning size={24}/></div>
-              <div className="stat-info"><span className="stat-label">INACTIVE</span><span className="stat-number">0</span></div>
-            </div>
-            <div className="service-stat-card">
-              <div className="icon-box blue"><MdOutlinePeopleAlt size={24}/></div>
-              <div className="stat-info"><span className="stat-label">CATEGORIES</span><span className="stat-number">{services.length}</span></div>
+              <div className="stat-info">
+                <span className="stat-label">INACTIVE</span>
+                <span className="stat-number">
+                  {services.filter(s => s.status?.toLowerCase() === 'inactive').length}
+                </span>
+              </div>
             </div>
           </div>
-
           <div className="services-table-wrapper">
             <div className="services-table-header">
               <h3>All Services <span>({services.length})</span></h3>
@@ -125,7 +195,16 @@ function ManageServices() {
                         <td className="index-col">{(index + 1).toString().padStart(2, '0')}</td>
                         <td className="name-col"><span className={`dot ${index % 2 === 0 ? 'dot-red' : 'dot-blue'}`}></span>{svc.name}</td>
                         <td className="desc-col">{svc.description}</td>
-                        <td><span className="status-badge">Active</span></td>
+                        {/* Inside your services.map */}
+                        <td className="status-col"> {/* Added class here */}
+                          <button 
+                            className={`status-toggle-btn ${svc.status?.toLowerCase()}`}
+                            onClick={() => handleStatusChange(svc._id, svc.status === 'Active' ? 'Inactive' : 'Active')}
+                          >
+                            {svc.status || 'Active'}
+                          </button>
+                        </td>
+
                         <td className="action-col">
                           <button className="btn-view" onClick={() => setViewingService(svc)}>View</button>
                         </td>
@@ -146,19 +225,39 @@ function ManageServices() {
         </section>
       </main>
 
-      {/* --- RENDER THE NEW COMPONENT HERE --- */}
+      {/* 1. VIEW SERVICE MODAL */}
       <ServiceModal 
         service={viewingService} 
         onClose={() => setViewingService(null)} 
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={triggerDelete} // Now triggers the professional confirmation
       />
+
+      {/* 2. ADD SERVICE MODAL */}
       <AddServiceModal 
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
-        onSuccess={fetchServices} 
+        onSuccess={() => {
+            fetchServices();
+            setStatusModal({
+                isOpen: true,
+                type: 'success',
+                title: 'Service Created!',
+                message: 'Your new service is now live and available to students.',
+                onConfirm: () => setStatusModal({ ...statusModal, isOpen: false })
+            });
+        }} 
       />
 
+      {/* 3. GLOBAL STATUS MODAL (Confirmations, Success, Errors) */}
+      <StatusModal 
+        isOpen={statusModal.isOpen}
+        type={statusModal.type}
+        title={statusModal.title}
+        message={statusModal.message}
+        onConfirm={statusModal.onConfirm}
+        onCancel={() => setStatusModal({ ...statusModal, isOpen: false })}
+      />
     </div>
   );
 }

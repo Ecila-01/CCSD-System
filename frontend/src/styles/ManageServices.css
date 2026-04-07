@@ -40,22 +40,40 @@
 .new-service-btn:hover { background: #e60000; }
 
 /* Stats Row */
+/* Stats Row */
 .services-stats-row {
-  display: flex;
-  gap: 20px;
+  display: grid;
+  /* This creates 3 equal columns that stretch to fill the space */
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 25px; /* Slightly more gap looks better with 3 items */
   margin-bottom: 30px;
 }
 
 .service-stat-card {
   background: white;
-  flex: 1;
   display: flex;
   align-items: center;
-  padding: 24px; /* Chunkier padding inside the cards */
-  border-radius: 8px;
+  /* Increased padding to make the cards feel more "premium" */
+  padding: 30px 24px; 
+  border-radius: 10px;
   border: 1px solid #eee;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-  gap: 20px; /* More space between the icon and the text */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  gap: 20px;
+  transition: transform 0.2s ease;
+}
+
+/* Optional: Subtle hover effect to make the dashboard feel alive */
+.service-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+}
+
+.stat-number { 
+  font-size: 36px; /* Bumped up the size since we have more room */
+  font-weight: bold; 
+  color: #333; 
+  margin-top: 2px; 
+  line-height: 1;
 }
 
 .icon-box {
@@ -116,6 +134,17 @@
   border-bottom: 1px solid #eee;
   background: #fdfdfd;
 }
+.services-table th:nth-child(4), /* Status Header */
+.services-table th:nth-child(5) { /* Action Header */
+    text-align: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+.status-col, 
+.action-col {
+    text-align: center;
+    vertical-align: middle;
+}
 
 .services-table td {
   padding: 20px 24px; 
@@ -138,15 +167,7 @@
 .dot-red { background: #ff4d4d; }
 .dot-blue { background: #2196F3; }
 
-/* Badges & Buttons */
-.status-badge {
-  background: #eaffe6;
-  color: #4CAF50;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: bold;
-}
+
 /* Centers the text of the very last column header */
 .services-table th:last-child {
   text-align: center;
@@ -197,20 +218,74 @@
   font-weight: bold;
 }
 
-/* --- THE NEW VIEW BUTTON --- */
-.btn-view {
-  background: #f3e8ff; /* Soft slate/gray background */
-  color: #9333ea; /* Darker slate text */
-  border: none; /* Removes the harsh outline */
-  padding: 6px 18px; /* Tighter vertical padding, wider horizontal */
-  border-radius: 20px; /* Gives it the fully rounded 'pill' shape */
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.btn-view:hover {
+    background: #e9d5ff;
 }
 
+.status-toggle-btn.active {
+    background: #eaffe6;
+    color: #2e7d32;
+    border-color: #a5d6a7;
+}
+
+.status-toggle-btn.inactive {
+    background: #fff1f0;
+    color: #d32f2f;
+    border-color: #ffa39e;
+}
+
+.status-toggle-btn:hover {
+  filter: brightness(0.9);
+  transform: scale(1.02);
+}
+/* --- UNIFIED BUTTON STYLES (WITH BORDERS) --- */
+
+.status-toggle-btn, 
+.btn-view {
+  width: 110px;        /* Identical Width */
+  height: 34px;       /* Identical Height */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1.5px solid; /* Consistent border thickness for both */
+  text-decoration: none;
+}
+
+/* Status: Active (Green) */
+.status-toggle-btn.active {
+  background: #eaffe6;
+  color: #2e7d32;
+  border-color: #a5d6a7;
+}
+
+/* Status: Inactive (Red) */
+.status-toggle-btn.inactive {
+  background: #fff1f0;
+  color: #d32f2f;
+  border-color: #ffa39e;
+}
+
+/* Action: View (Purple) */
+.btn-view {
+  background: #f3e8ff;
+  color: #9333ea;
+  border-color: #d8b4fe; /* Adding the purple border to match */
+}
+
+/* Hover States for both */
+.status-toggle-btn:hover,
 .btn-view:hover {
-  background: #e9d5ff; /* A slightly darker soft purple */
-  color: #7e22ce; /* A slightly darker deep purple text */
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.status-toggle-btn:active,
+.btn-view:active {
+  transform: translateY(0);
 }

@@ -12,6 +12,7 @@ const fieldSchema = new mongoose.Schema({
 
 const serviceSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  status: { type: String, required: true },
   description: { type: String, required: true },
   image: { type: String },
   fields: [fieldSchema]

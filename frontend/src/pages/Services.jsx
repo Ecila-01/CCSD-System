@@ -48,7 +48,10 @@ function Services() {
             <div className="loading-spinner">Loading Services...</div>
           ) : (
             <div className="servicesGrid">
-              {services.map((service) => (
+              {services
+              /* Only show services where status is 'active' */
+                .filter((service) => service.status?.toLowerCase() === "active")
+                .map((service) => (
                 <div className="serviceCard" key={service._id}>
                   <div className="serviceText">
                     <h3>{service.name}</h3>

@@ -1,0 +1,101 @@
+.status-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 10000; /* Higher than everything else */
+}
+
+.status-modal-card {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalPop {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Base style for the circle (size and shape only) */
+.status-icon {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px auto;
+  font-size: 45px;
+}
+
+/* Red Theme (Delete/Error) */
+.status-icon.status-red {
+  background-color: #fff1f0; /* Light red background */
+  color: #ff4d4f; /* Darker red icon */
+}
+
+/* Green Theme (Success) */
+.status-icon.status-green {
+  background-color: #f6ffed; /* Light green background */
+  color: #52c41a; /* Darker green icon */
+}
+
+/* Blue Theme (Generic Confirm) */
+.status-icon.status-blue {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+
+.status-modal-card h3 { margin: 0 0 10px 0; color: #1e293b; font-size: 20px; }
+.status-modal-card p { color: #64748b; font-size: 14px; line-height: 1.5; margin-bottom: 25px; }
+
+.status-modal-footer { display: flex; gap: 12px; justify-content: center; }
+
+.btn-modal-primary, .btn-modal-secondary {
+  padding: 10px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px;
+}
+
+.btn-modal-secondary { background: #f1f5f9; color: #64748b; }
+.btn-confirm { background: #3b82f6; color: white; }
+.btn-success { background: #22c55e; color: white; }
+.btn-error { background: #ef4444; color: white; }
+
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+/* The Icon Container */
+.status-icon {
+  width: 80px;
+  height: 80px;
+  background: #ffebeb; /* Soft red circle from your reference */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px auto;
+  font-size: 40px;
+}
+
+/* The "Yes, Delete" Button */
+.btn-delete-confirm {
+  background: #ff9999 !important; /* The lighter red/salmon color from your ref */
+  color: white;
+  border: 1px solid #ff4d4d !important;
+}
+
+.btn-delete-confirm:hover {
+  background: #ff4d4d !important;
+}
+
+/* The Cancel Button from your reference */
+.btn-modal-secondary {
+  background: #f1f5f9;
+  color: #333;
+  border: 1px solid #999;
+}

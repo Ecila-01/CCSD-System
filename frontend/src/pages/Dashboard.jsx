@@ -5,7 +5,7 @@ import WelcomeCard from '../components/WelcomeCard';
 import StatsGrid from '../components/StatsGrid';
 import CaseCategories from '../components/CaseCategories';
 import CasesTable from '../components/CasesTable';
-import './Dashboard.css';
+import '../styles/Dashboard.css';
 
 function Dashboard() {
   const [user, setUser] = useState(null);

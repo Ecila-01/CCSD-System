@@ -1,4 +1,4 @@
-import "./Hero.css";
+import "../styles/Hero.css";
 
 function Hero({ background, title, subtitle }) {
   return (

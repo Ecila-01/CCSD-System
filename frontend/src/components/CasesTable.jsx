@@ -1,6 +1,6 @@
 import React, { useState } from 'react'; // 1. Add useState
 import CaseDetailsModal from './CaseDetailsModal'; // 2. Import the Modal
-import './CasesTable.css';
+import '../styles/CasesTable.css';
 
 const CasesTable = ({ requests }) => {
   // 3. Add state to track which case is currently being viewed

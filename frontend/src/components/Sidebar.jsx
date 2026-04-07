@@ -13,7 +13,7 @@ import {
   MdOutlineBarChart,
   MdOutlineAccountCircle
 } from "react-icons/md";
-import './Sidebar.css';
+import '../styles/Sidebar.css';
 import ubLogo from "../assets/darkUBlogo.png";
 
 const Sidebar = () => {

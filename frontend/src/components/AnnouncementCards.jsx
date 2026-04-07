@@ -1,4 +1,4 @@
-import './AnnouncementCards.css';
+import '../styles/AnnouncementCards.css';
 import a1Img from "../assets/announcement1.jpg";
 import a2Img from "../assets/announcement2.jpg";
 import a3Img from "../assets/announcement3.jpg";

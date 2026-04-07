@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import "./About.css";
+import "../styles/About.css";
 
 // Import or replace these with actual asset paths in your project
 const UB_LOGO = "https://upload.wikimedia.org/wikipedia/en/thumb/5/5e/University_of_Baguio_logo.png/200px-University_of_Baguio_logo.png";

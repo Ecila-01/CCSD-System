@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './LoginModal.css';
+import '../styles/LoginModal.css';
 import ubLogo from "../assets/darkUBlogo.png";
 import { useNavigate } from 'react-router-dom'; 
 const LoginModal = ({ isOpen, onClose }) => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import './Schedules.css';
+import '../styles/Schedules.css';
 import { MdOutlineDateRange, MdOutlineSchedule, MdOutlineCheckCircle, MdOutlinePeople } from "react-icons/md";
 
 function Schedules() {

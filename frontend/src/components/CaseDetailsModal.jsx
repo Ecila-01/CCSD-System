@@ -1,5 +1,5 @@
 import React from 'react';
-import './CaseDetailsModal.css';
+import '../styles/CaseDetailsModal.css';
 
 const CaseDetailsModal = ({ isOpen, onClose, request }) => {
   if (!isOpen || !request) return null;

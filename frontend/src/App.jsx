@@ -15,8 +15,10 @@ import Navbar from "./Navbar";
 import Dashboard from "./pages/Dashboard";
 import Schedules from "./pages/Schedules";
 import Referrals from "./pages/Referrals";
-import AnnouncementCards from "./components/AnnouncementCards"; // Groupmate's new component
-import FlipTitle from "./components/FlipTitle"; // Groupmate's new component
+import AnnouncementCards from "./components/AnnouncementCards"; 
+import FlipTitle from "./components/FlipTitle";
+import ManageServices from './pages/ManageServices';
+
 
 function Footer() {
   return (
@@ -56,7 +58,7 @@ export default function App() {
   const location = useLocation();
 
   // Your logic to hide public nav/footer on admin pages
-  const adminPages = ["/dashboard", "/schedules", "/referrals"];
+  const adminPages = ["/dashboard", "/schedules", "/referrals", "/manage-services"];
   const isAdminView = adminPages.includes(location.pathname);
 
   return (
@@ -75,6 +77,7 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/schedules" element={<Schedules />} /> 
         <Route path="/referrals" element={<Referrals />} /> 
+        <Route path="/manage-services" element={<ManageServices />} /> 
       </Routes>
 
       {/* Hide public footer if on ANY admin page */}

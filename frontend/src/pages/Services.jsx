@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import campusImg from "../assets/hero-bg.png";
 import Hero from "../components/Hero";
 import AppointmentModal from "../components/AppointmentModal";
-import "./Services.css";
+import "../styles/Services.css";
 
 function Services() {
   const [services, setServices] = useState([]);

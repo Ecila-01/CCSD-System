@@ -15,9 +15,10 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const service = new Service({
-    title: req.body.title,
+    name: req.body.name,  
+    description: req.body.description, 
     image: req.body.image,
-    desc: req.body.desc
+    fields: req.body.fields  
   });
 
   try {

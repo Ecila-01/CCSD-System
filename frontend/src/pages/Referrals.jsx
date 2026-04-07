@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import './Referrals.css';
+import '../styles/Referrals.css';
 import { MdOutlineAssignment, MdOutlineWarning, MdOutlinePending, MdOutlineCheckCircle } from "react-icons/md";
 
 function Referrals() {

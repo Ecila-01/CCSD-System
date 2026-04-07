@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
-import "./AppointmentModal.css";
+import "../styles/AppointmentModal.css";
 
 const AppointmentModal = ({ isOpen, onClose, service }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const totalSteps = service?.fields 
+    ? Math.max(...service.fields.map(f => f.section || 1)) 
+    : 1;
   // PREVENT BACKGROUND SCROLL
   useEffect(() => {
     if (isOpen) {
@@ -19,7 +21,6 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   if (!isOpen || !service) return null;
 
   const getFieldsForStep = () => {
-    // Falls back to section 1 if section is missing in DB
     return service.fields.filter((f) => (f.section || 1) === step);
   };
 
@@ -37,13 +38,11 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   const handleSubmit = async (e) => {
     e.preventDefault(); // Always stop default browser refresh
 
-    // 1. IF NOT ON LAST PAGE: Act as "Next Page"
-    // This brilliantly triggers HTML5 required validation before letting them pass!
-    if (step < 3) {
+    if (step < totalSteps) {
       const scrollArea = document.querySelector(".form-scroll-area");
       if (scrollArea) scrollArea.scrollTop = 0;
       setStep((prev) => prev + 1);
-      return; // Stop here, do not hit the database yet!
+      return; 
     }
 
     // 2. IF ON LAST PAGE: Actually submit to database
@@ -75,7 +74,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
         <div className="modal-header">
           <div className="header-text-group">
             <h2>{service.name} REQUEST</h2>
-            <p>Step {step} of 3</p>
+            <p>Step {step} of {totalSteps}</p>
           </div>
           <button className="close-btn" onClick={onClose}>
             &times;
@@ -175,22 +174,15 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
           </div>
 
           <div className="modal-footer">
-            <div className="footer-left">
-              {step > 1 && (
-                <button type="button" className="back-btn" onClick={handleBack}>
-                  Back
-                </button>
-              )}
-            </div>
+            {/* ... */}
             <div className="footer-right">
               <button type="button" className="cancel-btn" onClick={onClose}>
                 Cancel
               </button>
-              {step < 3 ? (
-                <button
-                  type="submit" /* CHANGED THIS TO SUBMIT TO TRIGGER VALIDATION AND INTERCEPT */
-                  className="next-btn"
-                >
+              
+              {/* --- CHANGED: Condition uses totalSteps instead of 3 --- */}
+              {step < totalSteps ? (
+                <button type="submit" className="next-btn">
                   Next Page
                 </button>
               ) : (

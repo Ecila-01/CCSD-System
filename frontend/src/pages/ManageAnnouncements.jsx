@@ -121,17 +121,36 @@ const toggleSelect = (e, id) => {
 
 const handleBulkArchive = async () => {
   setStatusModal({ isOpen: true, type: 'loading', title: 'Archiving...', message: 'Updating multiple posts...' });
+  
+  // Save the length before we clear the array so we can show it in the success message!
+  const count = selectedIds.length; 
+
   try {
-    // Send array of IDs to a bulk route (or loop through them)
     await Promise.all(selectedIds.map(id => 
       axios.patch(`http://localhost:5000/api/announcements/${id}`, { status: 'Archived' })
     ));
+    
     setIsSelectMode(false);
     setSelectedIds([]);
     fetchAnnouncements();
-    setStatusModal({ isOpen: false });
+    
+    // Show Success Modal instead of just closing it
+    setStatusModal({ 
+      isOpen: true, 
+      type: 'success', 
+      title: 'Archived!', 
+      message: `${count} items have been moved to the archive.`,
+      onConfirm: () => setStatusModal(prev => ({ ...prev, isOpen: false })) 
+    });
+
   } catch (err) {
-    setStatusModal({ isOpen: true, type: 'error', title: 'Error', message: 'Bulk action failed.' });
+    setStatusModal({ 
+      isOpen: true, 
+      type: 'error', 
+      title: 'Error', 
+      message: 'Bulk action failed. Please try again.',
+      onConfirm: () => setStatusModal(prev => ({ ...prev, isOpen: false })) 
+    });
   }
 };
 
@@ -142,28 +161,69 @@ const handleBulkDelete = () => {
     title: `Delete ${selectedIds.length} items?`,
     message: 'This will permanently remove all selected announcements.',
     onConfirm: async () => {
-      await Promise.all(selectedIds.map(id => axios.delete(`http://localhost:5000/api/announcements/${id}`)));
-      setIsSelectMode(false);
-      setSelectedIds([]);
-      fetchAnnouncements();
-      setStatusModal({ isOpen: true, type: 'success', title: 'Deleted!', message: 'Items removed successfully.' });
+      // 1. Show a loading state while it deletes (optional but good for UX)
+      setStatusModal({ isOpen: true, type: 'loading', title: 'Deleting...', message: 'Please wait...' });
+      
+      try {
+        await Promise.all(selectedIds.map(id => axios.delete(`http://localhost:5000/api/announcements/${id}`)));
+        setIsSelectMode(false);
+        setSelectedIds([]);
+        fetchAnnouncements();
+        
+        // 2. Show Success AND attach the close function!
+        setStatusModal({ 
+          isOpen: true, 
+          type: 'success', 
+          title: 'Deleted!', 
+          message: 'Items removed successfully.',
+          // ---> THIS IS THE MISSING LINE <---
+          onConfirm: () => setStatusModal(prev => ({ ...prev, isOpen: false })) 
+        });
+      } catch (err) {
+        setStatusModal({ 
+          isOpen: true, 
+          type: 'error', 
+          title: 'Error', 
+          message: 'Could not delete some items.',
+          onConfirm: () => setStatusModal(prev => ({ ...prev, isOpen: false }))
+        });
+      }
     }
   });
 };
 const handleBulkRestore = async () => {
-    setStatusModal({ isOpen: true, type: 'loading', title: 'Restoring...', message: 'Restoring multiple posts...' });
-    try {
-      await Promise.all(selectedIds.map(id => 
-        axios.patch(`http://localhost:5000/api/announcements/${id}`, { status: 'Active' })
-      ));
-      setIsSelectMode(false);
-      setSelectedIds([]);
-      fetchAnnouncements();
-      setStatusModal({ isOpen: false });
-    } catch (err) {
-      setStatusModal({ isOpen: true, type: 'error', title: 'Error', message: 'Bulk action failed.' });
-    }
-  };
+  setStatusModal({ isOpen: true, type: 'loading', title: 'Restoring...', message: 'Restoring multiple posts...' });
+  
+  const count = selectedIds.length;
+
+  try {
+    await Promise.all(selectedIds.map(id => 
+      axios.patch(`http://localhost:5000/api/announcements/${id}`, { status: 'Active' })
+    ));
+    
+    setIsSelectMode(false);
+    setSelectedIds([]);
+    fetchAnnouncements();
+    
+    // Show Success Modal instead of just closing it
+    setStatusModal({ 
+      isOpen: true, 
+      type: 'success', 
+      title: 'Restored!', 
+      message: `${count} items are now active on the student feed.`,
+      onConfirm: () => setStatusModal(prev => ({ ...prev, isOpen: false })) 
+    });
+
+  } catch (err) {
+    setStatusModal({ 
+      isOpen: true, 
+      type: 'error', 
+      title: 'Error', 
+      message: 'Bulk action failed. Please try again.',
+      onConfirm: () => setStatusModal(prev => ({ ...prev, isOpen: false })) 
+    });
+  }
+};
 
   return (
     <div className="dashboard-container">

@@ -18,13 +18,28 @@ const AnnouncementModal = ({ announcement, onClose }) => {
 
         <div className="modal-body">
           {/* Main Hero Image */}
-          <div className="preview-image-container" style={{ marginBottom: '20px' }}>
-            <img 
-              src={announcement.image} 
-              alt={announcement.title} 
-              style={{ width: '100%', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-            />
-          </div>
+        <div 
+          className="preview-image-container" 
+          style={{ 
+            marginBottom: '20px', 
+            backgroundColor: '#f8f9fa', // Optional: light gray background for empty space
+            borderRadius: '8px',
+            display: 'flex',
+            justifyContent: 'center'
+          }}
+        >
+          <img 
+            src={announcement.image} 
+            alt={announcement.title} 
+            style={{ 
+              width: '100%', 
+              maxHeight: '300px',    // Prevents the image from getting too tall
+              objectFit: 'contain',  // THIS is the magic "zoom out to fit" property!
+              borderRadius: '8px', 
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+            }}
+          />
+        </div>
 
           <div className="modal-detail-group">
             <h1 style={{ fontSize: '24px', color: '#333', marginBottom: '10px' }}>

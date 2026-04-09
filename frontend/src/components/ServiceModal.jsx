@@ -3,13 +3,11 @@ import {
   MdClose, MdOutlineShortText, MdOutlineNotes, MdOutlineEmail, 
   MdOutlineCalendarToday, MdOutlineAccessTime, MdOutlineArrowDropDownCircle, MdOutlineInfo
 } from "react-icons/md";
-import '../styles/ServiceModal.css'; // Make sure we import the CSS!
+import '../styles/ServiceModal.css'; 
 
 const ServiceModal = ({ service, onClose, onEdit, onDelete }) => {
-  // If no service is clicked, don't render the modal at all
   if (!service) return null;
 
-  // The Translator Function: Turns raw database text into beautiful UI labels with icons
   const getFieldTypeDisplay = (type) => {
     switch (type?.toLowerCase()) {
       case 'text': return { label: 'Short Answer', icon: <MdOutlineShortText size={16} /> };
@@ -27,7 +25,6 @@ const ServiceModal = ({ service, onClose, onEdit, onDelete }) => {
     <div className="service-modal-overlay">
       <div className="service-modal-card">
         
-        {/* Modal Header - Styled with a bold red background like your mockup */}
         <div className="modal-header bg-red">
           <h2>{service.name}</h2>
           <button className="close-btn" onClick={onClose}>
@@ -35,8 +32,23 @@ const ServiceModal = ({ service, onClose, onEdit, onDelete }) => {
           </button>
         </div>
 
-        {/* Modal Body */}
         <div className="modal-body">
+          
+          {/* NEW: IMAGE DISPLAY SECTION */}
+          {service.image && (
+            <div className="modal-detail-group">
+              <label>SERVICE IMAGE</label>
+              <div className="modal-image-wrapper" style={{ textAlign: 'center', backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '8px', border: '1px solid #eee' }}>
+                <img 
+                  src={service.image} 
+                  alt={service.name} 
+                  style={{ maxHeight: '180px', maxWidth: '100%', objectFit: 'contain' }}
+                  onError={(e) => { e.target.style.display = 'none'; }} // Hides the image tag if the URL is broken
+                />
+              </div>
+            </div>
+          )}
+
           <div className="modal-detail-group">
             <label>DESCRIPTION</label>
             <p>{service.description}</p>
@@ -45,7 +57,6 @@ const ServiceModal = ({ service, onClose, onEdit, onDelete }) => {
           <div className="modal-detail-group">
             <label>CONFIGURED FORM FIELDS ({service.fields?.length || 0})</label>
             
-            {/* Shows a beautifully formatted list of custom fields */}
             {service.fields && service.fields.length > 0 ? (
               <div className="fields-preview-list">
                 {service.fields.map((field, i) => {
@@ -54,7 +65,6 @@ const ServiceModal = ({ service, onClose, onEdit, onDelete }) => {
                   return (
                     <div key={i} className="field-preview-item">
                       
-                      {/* Top Row: Label and Type Badge */}
                       <div className="field-header-row">
                         <div className="field-label-group">
                           <span className="field-req">{field.required ? '*' : ''}</span>
@@ -67,7 +77,6 @@ const ServiceModal = ({ service, onClose, onEdit, onDelete }) => {
                         </div>
                       </div>
 
-                      {/* Bottom Row: Options (Only shows if it's a select field) */}
                     {field.type === 'select' && field.options && field.options.length > 0 && (
                         <div className="field-options-list">
                           <span className="options-label">OPTIONS:</span>
@@ -77,7 +86,6 @@ const ServiceModal = ({ service, onClose, onEdit, onDelete }) => {
                         </div>
                       )}
 
-                      {/* NEW: Information Content (Only shows if it's an info field) */}
                       {field.type === 'info' && field.content && (
                         <div className="field-info-preview">
                           {field.content}
@@ -94,7 +102,6 @@ const ServiceModal = ({ service, onClose, onEdit, onDelete }) => {
           </div>
         </div>
 
-        {/* Modal Footer (Actions) */}
         <div className="modal-footer">
           <button 
             className="btn-delete-large" 

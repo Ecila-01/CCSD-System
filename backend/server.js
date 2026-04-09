@@ -8,6 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const path = require('path');
 const requestRoutes = require('./routes/requests');
+const announcementRoutes = require('./routes/announcements')
 
 // Middleware
 app.use(cors());
@@ -16,8 +17,14 @@ app.use(express.json()); // Allows us to parse JSON data from requests
 //Routes
 app.use('/api/services', serviceRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'), {
+  setHeaders: (res) => {
+    // This tells the browser: "Yes, it is safe for React to read these image pixels"
+    res.set('Access-Control-Allow-Origin', '*'); 
+  }
+}));
 app.use('/api/requests', requestRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // MongoDB Connection
 const connectDB = async () => {

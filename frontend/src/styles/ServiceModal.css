@@ -478,3 +478,46 @@
 .change-img-btn:hover {
   background: rgba(0, 0, 0, 0.8);
 }
+/* --- Secondary Action: Close Preview --- */
+.btn-cancel {
+  flex: 1;
+  padding: 12px 20px;
+  background-color: white;
+  color: #555;
+  border: 1px solid #ccc;
+  border-radius: 8px; /* Matches the rounded corners of your image */
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background-color: #f8f9fa;
+  border-color: #999;
+  color: #333;
+}
+
+/* --- Primary Action: Edit Announcement --- */
+.btn-save {
+  flex: 1;
+  padding: 12px 20px;
+  background-color: #333; /* Dark gray to match your theme */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle drop shadow */
+}
+
+.btn-save:hover {
+  background-color: #555;
+  transform: translateY(-2px); /* Makes the button "lift" when hovered */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Optional: If you want the Edit button to be UB Red instead of Dark Gray */
+/* Just change background-color to #cc0000 and hover to #a00000 */

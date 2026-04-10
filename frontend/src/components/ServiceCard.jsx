@@ -6,6 +6,7 @@ const ServiceCard = ({ service, onClick }) => {
     const [isReady, setIsReady] = useState(false);
 
     const extractColor = () => {
+        console.log(service)
         try {
         const img = imgRef.current;
         if (!img || !img.complete || img.naturalWidth === 0) return;
@@ -88,7 +89,7 @@ const ServiceCard = ({ service, onClick }) => {
     <h3>{service.name}</h3>
     <p>{service.description}</p>
     <button className="scheduleBtn" onClick={onClick}>
-        {service.name.toUpperCase() === "COUNSELING" ? "Schedule Appointment" : "Submit Request"}
+        {service.requiresScheduling ? "Schedule Appointment" : "Submit Request"}
     </button>
     </div>
 

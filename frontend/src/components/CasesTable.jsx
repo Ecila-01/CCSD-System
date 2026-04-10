@@ -1,17 +1,19 @@
-import React, { useState } from 'react'; // 1. Add useState
-import CaseDetailsModal from './CaseDetailsModal'; // 2. Import the Modal
+import React from 'react';
 import '../styles/CasesTable.css';
 
-const CasesTable = ({ requests }) => {
-  // 3. Add state to track which case is currently being viewed
-  const [selectedCase, setSelectedCase] = useState(null);
-
+const CasesTable = ({ requests, onView }) => {
+  
+  // Helper to extract the student's name from your dynamic form data
   const getStudentName = (data) => {
+    if (!data) return "N/A";
+    // Updated to prioritize the new standardized keys
     return data.studentName || data.fullName || data.referrerName || "N/A";
   };
-
+  // Helper to extract the course from your dynamic form data
   const getCourse = (data) => {
-    return data.courseYear || data.courseDescription || data.department || "N/A";
+    if (!data) return "N/A";
+    // Updated to include 'courseDescription' for Good Moral requests
+    return data.courseYear || data.courseDescription || data.yearLevel || "N/A";
   };
 
   const formatDate = (dateString) => {
@@ -43,8 +45,10 @@ const CasesTable = ({ requests }) => {
           </tr>
         </thead>
         <tbody>
+          {/* Limit to the latest 6 for the dashboard view */}
           {requests.slice(0, 6).map((req, index) => (
             <tr key={req._id}>
+              {/* Generate a dummy case number for UI purposes */}
               <td>00{index + 1}-001{index}</td>
               
               <td>
@@ -53,22 +57,35 @@ const CasesTable = ({ requests }) => {
                 </span>
               </td>
               
-              <td>{getStudentName(req.requestData)}</td>
+              {/* We extract data from the flexible requestData object */}
+              <td>
+                {req.serviceName === "REFERRAL" ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', fontSize: '13px' }}>
+                    <span style={{ fontWeight: '600', color: '#333' }}>{req.studentName}</span>
+                    <span style={{ fontSize: '11px', color: '#888' }}>
+                      Ref by: {req.referrerName}
+                    </span>
+                  </div>
+                ) : (
+                  req.studentName
+                )}
+              </td>
               <td>{getCourse(req.requestData)}</td>
+              
               <td>{formatDate(req.createdAt)}</td>
               <td>{formatTime(req.createdAt)}</td>
               
               <td>
-                <span className={`status-badge ${req.status.toLowerCase().replace(/\s+/g, '-')}`}>
+                <span className={`case-status-badge ${req.status.toLowerCase().replace(/\s+/g, '-')}`}>
                   {req.status}
                 </span>
               </td>
               
               <td>
-                {/* 4. SET THE SELECTED CASE ON CLICK */}
+                {/* Trigger the onView prop passed down from Dashboard.jsx */}
                 <button 
                   className="action-btn" 
-                  onClick={() => setSelectedCase(req)}
+                  onClick={() => onView(req)}
                 >
                   Open
                 </button>
@@ -85,13 +102,6 @@ const CasesTable = ({ requests }) => {
       <div className="table-footer">
         <span>Showing {Math.min(requests.length, 6)} of {requests.length} cases</span>
       </div>
-
-      {/* 5. RENDER THE MODAL AT THE BOTTOM */}
-      <CaseDetailsModal 
-        isOpen={!!selectedCase} 
-        onClose={() => setSelectedCase(null)} 
-        request={selectedCase} 
-      />
 
     </div>
   );

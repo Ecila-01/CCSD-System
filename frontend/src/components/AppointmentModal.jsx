@@ -5,21 +5,27 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // NEW: State to track if the form was successfully submitted
   const [isSuccess, setIsSuccess] = useState(false); 
 
   const totalSteps = service?.fields 
     ? Math.max(...service.fields.map(f => f.section || 1)) 
     : 1;
 
-  // PREVENT BACKGROUND SCROLL & RESET FORM ON CLOSE
+  // FIX 1: INITIALIZE ALL FIELDS TO EMPTY STRINGS TO PREVENT REACT WARNINGS
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      
+      // Pre-fill the state with empty strings based on the service fields
+      if (service?.fields) {
+        const initialData = {};
+        service.fields.forEach(field => {
+          initialData[field.name] = "";
+        });
+        setFormData(initialData);
+      }
     } else {
       document.body.style.overflow = "unset";
-      // Reset the form in the background when closed so it's fresh next time
       setTimeout(() => {
         setStep(1);
         setFormData({});
@@ -29,7 +35,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [isOpen]);
+  }, [isOpen, service]);
 
   if (!isOpen || !service) return null;
 
@@ -48,29 +54,67 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
 
     if (step < totalSteps) {
       const scrollArea = document.querySelector(".form-scroll-area");
       if (scrollArea) scrollArea.scrollTop = 0;
       setStep((prev) => prev + 1);
-      return; 
+      return;
     }
 
     setIsSubmitting(true);
     try {
+      let extractedData = {};
+
+      if (service.name.toUpperCase() === "REFERRAL") {
+        extractedData = {
+          studentName: formData.studentName || "Unknown Student",
+          studentEmail: formData.studentContact || "", 
+          studentIdNumber: formData.studentContact || "", 
+          referrerName: formData.referrerName || "",
+          referrerEmail: formData.email || "", 
+        };
+      } else {
+        extractedData = {
+          studentName: formData.studentName || formData.fullName || "Unknown Student",
+          studentEmail: formData.email || "",
+          studentIdNumber: formData.idNumber || formData.studentId || "",
+          referrerName: "",
+          referrerEmail: "",
+        };
+      }
+
+      // FIX 2: BULLETPROOF PAYLOAD (No nulls, strict formatting)
+      const payload = {
+        serviceId: service._id,
+        serviceName: service.name,
+        status: "Pending",
+        ...extractedData,
+        
+        // Force Boolean and Strings so Mongoose doesn't crash
+        requiresSchedule: Boolean(service.requiresScheduling),
+        appointmentDate: formData.prefDate || formData.preferredDate || "",
+        timeSlot: formData.prefTime || formData.preferredTime || "",
+        requestData: formData,
+      };
+
+      // Helpful log so you can inspect what is being sent to the backend
+      console.log("Submitting Payload:", payload);
+
       const response = await fetch("http://localhost:5000/api/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          serviceName: service.name,
-          requestData: formData, 
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        // CHANGED: Instead of alerting and closing, we trigger the Success UI!
         setIsSuccess(true);
+      } else {
+        // If it still 500s, this will log the server's error message
+        const errorData = await response.json();
+        console.error("Backend rejected the request:", errorData);
+        alert("Server Error. Check the console.");
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -83,55 +127,35 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
     <div className="modal-overlay">
       <div className="modal-container">
         
-        {/* CONDITIONAL RENDER: Success View vs Form View */}
         {isSuccess ? (
-  
-        /* --- UPDATED SUCCESS UI --- */
-        <div style={{ 
-            display: "flex", 
-            flexDirection: "column", 
-            alignItems: "center", // Horizontal Centering
-            justifyContent: "center", // Vertical Centering
-            height: "100%", // Tells Flex to use the full modal height
-            textAlign: "center", 
-            padding: "60px 40px" 
-        }}>
           <div style={{ 
-            width: "80px", height: "80px", borderRadius: "50%", 
-            backgroundColor: "#e8f5e9", color: "#2e7d32", 
-            fontSize: "40px", display: "flex", alignItems: "center", 
-            justifyContent: "center", margin: "0 auto 20px auto" 
+              display: "flex", flexDirection: "column", alignItems: "center", 
+              justifyContent: "center", height: "100%", textAlign: "center", padding: "60px 40px" 
           }}>
-            ✓
-          </div>
-                      <h2 style={{ color: "#333", marginBottom: "15px", fontSize: "28px" }}>Request Submitted!</h2>
+            <div style={{ 
+              width: "80px", height: "80px", borderRadius: "50%", backgroundColor: "#e8f5e9", 
+              color: "#2e7d32", fontSize: "40px", display: "flex", alignItems: "center", 
+              justifyContent: "center", margin: "0 auto 20px auto" 
+            }}>
+              ✓
+            </div>
+            <h2 style={{ color: "#333", marginBottom: "15px", fontSize: "28px" }}>Request Submitted!</h2>
             <p style={{ color: "#666", lineHeight: "1.6", marginBottom: "30px", fontSize: "16px" }}>
               Your request for <strong>{service.name}</strong> has been successfully sent to the CCSD team. 
               We will review your details and reach out to your UB student email shortly.
             </p>
-            <button 
-              onClick={onClose} 
-              style={{ 
-                backgroundColor: "#cc0000", color: "white", border: "none", 
-                padding: "12px 32px", fontSize: "16px", borderRadius: "6px", 
-                cursor: "pointer", fontWeight: "bold" 
-              }}
-            >
+            <button onClick={onClose} style={{ backgroundColor: "#cc0000", color: "white", border: "none", padding: "12px 32px", fontSize: "16px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}>
               Done
             </button>
-        </div>
-
-      ) : (
-          /* --- ORIGINAL FORM UI --- */
+          </div>
+        ) : (
           <>
             <div className="modal-header">
               <div className="header-text-group">
                 <h2>{service.name} REQUEST</h2>
                 <p>Step {step} of {totalSteps}</p>
               </div>
-              <button className="close-btn" onClick={onClose}>
-                &times;
-              </button>
+              <button className="close-btn" onClick={onClose}>&times;</button>
             </div>
 
             <form className="dynamic-form" onSubmit={handleSubmit}>
@@ -142,10 +166,11 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                       <div className="info-display-box">{field.content}</div>
                     ) : (
                       <>
-                        <label className="field-label">
-                          {field.label}{" "}
-                          {field.required && <span className="required">*</span>}
-                        </label>
+                        {field.label && (
+                           <label className="field-label">
+                             {field.label} {field.required && <span className="required">*</span>}
+                           </label>
+                        )}
 
                         {field.type === "select" ? (
                           <div className="radio-group">
@@ -243,12 +268,8 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                       Next Page
                     </button>
                   ) : (
-                    <button
-                      type="submit"
-                      className="submit-btn"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? "Submitting..." : "Submit Request"}
+                    <button type="submit" className="submit-btn" disabled={isSubmitting}>
+                      {isSubmitting ? "Submitting..." : (service.requiresScheduling ? "Schedule Appointment" : "Submit Request")}
                     </button>
                   )}
                 </div>

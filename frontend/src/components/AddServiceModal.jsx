@@ -3,6 +3,11 @@ import axios from 'axios';
 import { MdClose, MdAdd, MdDeleteOutline, MdCloudUpload } from "react-icons/md";
 import '../styles/ServiceModal.css'; 
 
+
+const VITAL_FIELDS = [
+  { name: 'email', label: 'Email Address', type: 'email', required: true, section: 1 },
+  { name: 'studentName', label: 'Full Name (Last, First, M.I.)', type: 'text', required: true, section: 1 },
+];
 // 1. ADDED `editingService` TO PROPS
 const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   if (!isOpen) return null;
@@ -10,6 +15,7 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   // --- STATE ---
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [requiresScheduling, setRequiresScheduling] = useState(false);
   const [fields, setFields] = useState([]); 
   const [selectedFile, setSelectedFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,17 +25,22 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
     if (editingService) {
       setName(editingService.name || '');
       setDescription(editingService.description || '');
+      // NEW: Pre-fill the flag
+      setRequiresScheduling(editingService.requiresScheduling || false); 
+
+      const customOnly = (editingService.fields || []).filter(
+        f => f.name !== 'email' && f.name !== 'studentName'
+      );
       setFields(editingService.fields || []);
-      // We don't pre-fill selectedFile because you can't set file inputs programmatically.
-      // We handle keeping the old image later in the submit function.
     } else {
-      // If no editingService, clear the form (Add Mode)
       setName('');
       setDescription('');
+      // NEW: Reset the flag
+      setRequiresScheduling(false); 
       setFields([]);
       setSelectedFile(null);
     }
-  }, [editingService, isOpen]); // Re-run when the modal opens or the service changes
+  }, [editingService, isOpen]);
 
   // --- FIELD BUILDER LOGIC ---
   const handleAddField = () => {
@@ -58,74 +69,69 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   };
 
   // --- SUBMIT LOGIC ---
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     let currentSection = 1;
-    let currentWeight = 0;
+    let currentWeight = 2; // Start at 2 because the 2 Vital Fields take up space on Page 1
     const MAX_WEIGHT_PER_PAGE = 7; 
 
-    // 1. Process Fields 
-    const finalFields = fields.map((field) => {
+    // 1. Process Custom Fields and combine with Vitals
+    const customFields = fields.map((field) => {
       let fieldWeight = 1; 
       if (field.type === 'select' || field.type === 'textarea') fieldWeight = 2;
       if (field.type === 'info') fieldWeight = 3;
 
-      if (currentWeight + fieldWeight > MAX_WEIGHT_PER_PAGE && currentWeight > 0) {
+      if (currentWeight + fieldWeight > MAX_WEIGHT_PER_PAGE) {
         currentSection++;
         currentWeight = 0; 
       }
       currentWeight += fieldWeight;
 
-      const dbFieldName = field.label
+      // IMPROVED NAMING LOGIC
+      let dbFieldName = field.label
         .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, idx) => (idx === 0 ? word.toLowerCase() : word.toUpperCase()))
-        .replace(/\s+/g, '');
+        .replace(/\s+/g, '')
+        .replace(/[^a-zA-Z0-9]/g, ''); // Remove special characters like ?, !, ( )
 
-      const fieldObj = {
+      // Safeguard: If user names a custom field "Email", it won't collide with the vital one
+      if (dbFieldName === 'email' || dbFieldName === 'studentName') {
+        dbFieldName = `custom_${dbFieldName}`;
+      }
+
+      return {
+        ...field,
         name: dbFieldName,
-        label: field.label,
-        type: field.type,
-        required: field.required || false,
         section: currentSection
       };
-
-      if (field.type === 'select') fieldObj.options = field.options;
-      if (field.type === 'info') fieldObj.content = field.content;
-
-      return fieldObj;
     });
 
-    // 2. Prepare FormData
+    // Combine: Vitals are ALWAYS at the start of Section 1
+    const finalFields = [...VITAL_FIELDS, ...customFields];
+
     const formData = new FormData();
     formData.append('name', name);
     formData.append('description', description);
+    formData.append('requiresScheduling', requiresScheduling);
     formData.append('fields', JSON.stringify(finalFields)); 
-    
-    if (selectedFile) {
-      formData.append('image', selectedFile);
-    }
-    // If we are editing, but NO new file was selected, the backend should keep the old image.
+    if (selectedFile) formData.append('image', selectedFile);
 
-    // 3. Send to Backend (DYNAMIC ROUTE based on mode)
     try {
-      if (editingService) {
-        // EDIT MODE: Use PATCH or PUT and include the ID
-        await axios.patch(`http://localhost:5000/api/services/${editingService._id}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-      } else {
-        // ADD MODE: Use POST to root
-        await axios.post('http://localhost:5000/api/services', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-      }
+      const url = editingService 
+        ? `http://localhost:5000/api/services/${editingService._id}`
+        : 'http://localhost:5000/api/services';
+      
+      const method = editingService ? 'patch' : 'post';
+
+      await axios[method](url, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Upload error:", error);
-      alert("Failed to save service. Check the console for details.");
+      console.error("Save error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -133,7 +139,7 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
 
   // 3. DYNAMIC UI LABELS (Change text based on mode)
   const isEditing = !!editingService;
-
+  
   return (
     <div className="service-modal-overlay">
       <div className="service-modal-card add-service-card">
@@ -166,6 +172,27 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
                 ></textarea>
               </div>
               <div className="input-group">
+                <label>APPOINTMENT SETTINGS</label>
+                <div className="checkbox-group" style={{ 
+                    marginTop: '5px', 
+                    padding: '10px 15px', 
+                    background: '#f8f9fa', 
+                    borderRadius: '8px', 
+                    border: '1px solid #ddd' 
+                }}>
+                  <input 
+                    type="checkbox" 
+                    id="req-scheduling"
+                    checked={requiresScheduling} 
+                    onChange={(e) => setRequiresScheduling(e.target.checked)} 
+                    style={{ width: 'auto', marginRight: '10px' }}
+                  />
+                  <label htmlFor="req-scheduling" style={{ fontWeight: 'normal', color: '#333' }}>
+                    This service requires a calendar appointment (Date & Time).
+                  </label>
+                </div>
+              </div>
+              <div className="input-group">
                 <label>SERVICE IMAGE *</label>
                 <div className="image-upload-container">
                   {/* If you want to add a preview here too, you can add a preview state like in Announcements */}
@@ -183,7 +210,26 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
                 <p className="file-hint">Recommended size: 800×400px</p>
               </div>
             </div>
+            <hr className="divider" />
 
+            {/* NEW: VITAL FIELDS PREVIEW (Read Only) */}
+            <div className="form-section">
+              <h3 className="section-title">Required Information</h3>
+              <p className="file-hint" style={{ marginBottom: '10px' }}>
+                The following fields are automatically included in Page 1 of every service.
+              </p>
+              <div className="vitals-preview-box" style={{ 
+                background: '#f1f3f4', 
+                padding: '15px', 
+                borderRadius: '8px', 
+                border: '1px dashed #ccc',
+                display: 'flex',
+                gap: '10px'
+              }}>
+                <span className="vital-tag" style={{ background: '#fff', padding: '5px 10px', borderRadius: '4px', fontSize: '12px', border: '1px solid #ddd' }}>📧 Email Address</span>
+                <span className="vital-tag" style={{ background: '#fff', padding: '5px 10px', borderRadius: '4px', fontSize: '12px', border: '1px solid #ddd' }}>👤 Full Name</span>
+              </div>
+            </div>
             <hr className="divider" />
 
             <div className="form-section">

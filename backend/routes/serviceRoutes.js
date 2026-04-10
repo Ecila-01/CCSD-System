@@ -31,6 +31,7 @@ router.post('/', upload.single('image'), async (req, res) => {
       description: req.body.description, 
       status: "Inactive",
       image: imageUrl,
+      requiresScheduling: req.body.requiresScheduling === 'true',
       // Parse fields if it's a string, otherwise use as is
       fields: typeof req.body.fields === 'string' ? JSON.parse(req.body.fields) : req.body.fields
     });
@@ -89,6 +90,10 @@ router.patch('/:id', upload.single('image'), async (req, res) => {
     if (req.body.name) updateData.name = req.body.name;
     if (req.body.description) updateData.description = req.body.description;
     
+    if (req.body.requiresScheduling !== undefined) {
+      updateData.requiresScheduling = req.body.requiresScheduling === 'true';
+    }
+
     // This allows your Active/Inactive toggle feature to still work perfectly
     if (req.body.status) updateData.status = req.body.status;
 

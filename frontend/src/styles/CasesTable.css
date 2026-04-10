@@ -1,11 +1,11 @@
 .cases-table-container {
   background: white;
   border-radius: 12px;
-  margin: 0 30px 30px;
+  /* Change the margin to this: */
+  margin: 0 20px 30px 20px; 
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
   padding: 20px;
 }
-
 .table-header h3 {
   margin: 0 0 20px 0;
   font-size: 18px;
@@ -48,7 +48,9 @@
 .service-badge.good-moral-certificate { background: #e8f5e9; color: #2e7d32; }
 
 /* Status Badges */
-.status-badge {
+/* Update this block in CasesTable.css */
+.case-status-badge {
+  display: inline-block;
   padding: 4px 12px;
   border-radius: 4px;
   font-size: 11px;
@@ -56,9 +58,9 @@
   text-transform: uppercase;
 }
 
-.status-badge.pending { background: #e1f5fe; color: #0277bd; }
-.status-badge.in-progress { background: #fff8e1; color: #f57f17; }
-.status-badge.completed { background: #e8f5e9; color: #2e7d32; }
+.case-status-badge.pending { background: #e1f5fe; color: #0277bd; }
+.case-status-badge.in-progress { background: #fff8e1; color: #f57f17; }
+.case-status-badge.completed { background: #e8f5e9; color: #2e7d32; }
 
 /* Actions */
 .action-btn {

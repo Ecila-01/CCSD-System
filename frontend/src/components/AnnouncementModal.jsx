@@ -2,7 +2,7 @@ import React from 'react';
 import { MdClose, MdCalendarToday, MdLabelOutline } from "react-icons/md";
 import '../styles/ServiceModal.css'; 
 
-const AnnouncementModal = ({ announcement, onClose }) => {
+const AnnouncementModal = ({ announcement, onClose, onEdit }) => {
   if (!announcement) return null;
 
   return (
@@ -64,18 +64,20 @@ const AnnouncementModal = ({ announcement, onClose }) => {
           <hr className="divider" />
           
           <div className="modal-detail-group">
-            <label>ADMIN METADATA</label>
+            <label>Details</label>
             <ul style={{ fontSize: '12px', color: '#888', listStyle: 'none', padding: 0 }}>
-              <li><strong>Database ID:</strong> {announcement._id}</li>
               <li><strong>Post Status:</strong> {announcement.status}</li>
               <li><strong>System Post Date:</strong> {new Date(announcement.datePosted).toLocaleString()}</li>
             </ul>
           </div>
         </div>
 
-        <div className="modal-footer">
-          <button className="btn-cancel" onClick={onClose} style={{ width: '100%' }}>
+        <div className="modal-footer" style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
+          <button className="btn-cancel" onClick={onClose}>
             Close Preview
+          </button>
+          <button className="btn-save" onClick={() => onEdit(announcement)}>
+            Edit Announcement
           </button>
         </div>
 

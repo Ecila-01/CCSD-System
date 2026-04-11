@@ -127,7 +127,8 @@ function Dashboard() {
           {/* Pass the FILTERED requests to the table */}
           <CasesTable 
             requests={filteredRequests} 
-            onView={(request) => setViewingRequest(request)} 
+            onView={(request) => setViewingRequest(request) } 
+            maxItems={6}
           />
 
         </section>

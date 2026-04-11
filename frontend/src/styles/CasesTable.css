@@ -43,9 +43,6 @@
   font-weight: bold;
 }
 
-.service-badge.counseling { background: #ffebee; color: #c62828; }
-.service-badge.referral { background: #e3f2fd; color: #1565c0; }
-.service-badge.good-moral-certificate { background: #e8f5e9; color: #2e7d32; }
 
 /* Status Badges */
 /* Update this block in CasesTable.css */
@@ -60,6 +57,10 @@
 
 .case-status-badge.pending { background: #e1f5fe; color: #0277bd; }
 .case-status-badge.in-progress { background: #fff8e1; color: #f57f17; }
+.case-status-badge.active {
+  background-color: #e6f4ea;
+  color: #137333;
+}
 .case-status-badge.completed { background: #e8f5e9; color: #2e7d32; }
 
 /* Actions */

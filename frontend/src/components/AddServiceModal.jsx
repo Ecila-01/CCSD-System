@@ -25,17 +25,19 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
     if (editingService) {
       setName(editingService.name || '');
       setDescription(editingService.description || '');
-      // NEW: Pre-fill the flag
       setRequiresScheduling(editingService.requiresScheduling || false); 
 
+      // Filter out the vitals so they don't show up in the builder
       const customOnly = (editingService.fields || []).filter(
         f => f.name !== 'email' && f.name !== 'studentName'
       );
-      setFields(editingService.fields || []);
+      
+      // FIX: Actually use the filtered array here!
+      setFields(customOnly); 
+      
     } else {
       setName('');
       setDescription('');
-      // NEW: Reset the flag
       setRequiresScheduling(false); 
       setFields([]);
       setSelectedFile(null);
@@ -52,6 +54,15 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
       options: [], 
       content: '' 
     }]);
+    setTimeout(() => {
+      const scrollArea = document.querySelector(".form-scroll-area");
+      if (scrollArea) {
+        scrollArea.scrollTo({
+          top: scrollArea.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
   };
 
   const handleFieldChange = (index, key, value) => {
@@ -235,13 +246,35 @@ const handleSubmit = async (e) => {
             <div className="form-section">
               <div className="section-header-row">
                 <h3 className="section-title">Custom Form Fields</h3>
-                <button type="button" className="btn-add-field" onClick={handleAddField}>
-                  <MdAdd size={18} /> Add Question
-                </button>
               </div>
 
             {fields.length === 0 ? (
-            <p className="no-fields-msg">Click "Add Question" to build a custom intake form for this service.</p>
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <p style={{ color: '#666', marginBottom: '15px' }}>
+                  No custom questions yet. Click below to start building!
+                </p>
+                <button 
+                  type="button" 
+                  onClick={handleAddField}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '12px 24px',
+                    background: '#fce4e4',
+                    color: '#c00000',
+                    border: '2px dashed #c00000',
+                    borderRadius: '8px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = '#f8d7d7'}
+                  onMouseOut={(e) => e.currentTarget.style.background = '#fce4e4'}
+                >
+                  <MdAdd size={20} /> Add First Question
+                </button>
+              </div>
             ) : (
             <div className="fields-editor-list">
                 {fields.map((field, index) => {
@@ -327,6 +360,32 @@ const handleSubmit = async (e) => {
                     </React.Fragment>
                 );
                 })}
+                {/* --- NEW BOTTOM BUTTON --- */}
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', paddingBottom: '20px' }}>
+                    <button 
+                      type="button" 
+                      onClick={handleAddField}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '12px 24px',
+                        background: '#f8f9fa',
+                        color: '#c00000',
+                        border: '2px dashed #c00000',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        width: '100%',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.background = '#fce4e4'}
+                      onMouseOut={(e) => e.currentTarget.style.background = '#f8f9fa'}
+                    >
+                      <MdAdd size={20} /> Add Another Question
+                    </button>
+                  </div>
             </div>
             )}
             </div>

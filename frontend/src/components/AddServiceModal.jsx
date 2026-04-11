@@ -3,12 +3,6 @@ import axios from 'axios';
 import { MdClose, MdAdd, MdDeleteOutline, MdCloudUpload } from "react-icons/md";
 import '../styles/ServiceModal.css'; 
 
-
-const VITAL_FIELDS = [
-  { name: 'email', label: 'Email Address', type: 'email', required: true, section: 1 },
-  { name: 'studentName', label: 'Full Name (Last, First, M.I.)', type: 'text', required: true, section: 1 },
-];
-// 1. ADDED `editingService` TO PROPS
 const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   if (!isOpen) return null;
 
@@ -26,15 +20,8 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
       setName(editingService.name || '');
       setDescription(editingService.description || '');
       setRequiresScheduling(editingService.requiresScheduling || false); 
-
-      // Filter out the vitals so they don't show up in the builder
-      const customOnly = (editingService.fields || []).filter(
-        f => f.name !== 'email' && f.name !== 'studentName'
-      );
-      
-      // FIX: Actually use the filtered array here!
-      setFields(customOnly); 
-      
+      // Load all fields directly, no more filtering out vitals!
+      setFields(editingService.fields || []); 
     } else {
       setName('');
       setDescription('');
@@ -80,16 +67,19 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   };
 
   // --- SUBMIT LOGIC ---
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     let currentSection = 1;
-    let currentWeight = 2; // Start at 2 because the 2 Vital Fields take up space on Page 1
+    let currentWeight = 0; // Starts at 0 now because there are no hidden vital fields!
     const MAX_WEIGHT_PER_PAGE = 7; 
 
-    // 1. Process Custom Fields and combine with Vitals
-    const customFields = fields.map((field) => {
+    // Track used keys to prevent duplicate database names
+    const usedKeys = new Set(); 
+
+    // 1. Process Fields
+    const finalFields = fields.map((field) => {
       let fieldWeight = 1; 
       if (field.type === 'select' || field.type === 'textarea') fieldWeight = 2;
       if (field.type === 'info') fieldWeight = 3;
@@ -100,26 +90,58 @@ const handleSubmit = async (e) => {
       }
       currentWeight += fieldWeight;
 
-      // IMPROVED NAMING LOGIC
-      let dbFieldName = field.label
-        .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, idx) => (idx === 0 ? word.toLowerCase() : word.toUpperCase()))
-        .replace(/\s+/g, '')
-        .replace(/[^a-zA-Z0-9]/g, ''); // Remove special characters like ?, !, ( )
+      // --- THE COMMON FIELD INTERCEPTOR ---
+      let dbFieldName = "";
+      const lowerLabel = field.label.toLowerCase();
 
-      // Safeguard: If user names a custom field "Email", it won't collide with the vital one
-      if (dbFieldName === 'email' || dbFieldName === 'studentName') {
-        dbFieldName = `custom_${dbFieldName}`;
+      // NEW: Catch Email and Name to guarantee perfect DB keys
+      if (lowerLabel.includes('email')) {
+        dbFieldName = 'email';
       }
+      else if (lowerLabel.includes('name')) {
+        dbFieldName = 'studentName';
+      }
+      else if (lowerLabel.includes('course') || lowerLabel.includes('program')) {
+        dbFieldName = 'courseYear';
+      } 
+      else if (lowerLabel.includes('department') || lowerLabel.includes('school of')) {
+        dbFieldName = 'department';
+      } 
+      else if (lowerLabel.includes('id number') || lowerLabel.includes('student id')) {
+        dbFieldName = 'idNumber';
+      } 
+      else if (lowerLabel.includes('mobile') || lowerLabel.includes('contact') || lowerLabel.includes('phone')) {
+        dbFieldName = 'mobileNumber';
+      }
+      else if (lowerLabel.includes('date')) {
+        dbFieldName = 'preferredDate';
+      }
+      else if (lowerLabel.includes('time')) {
+        dbFieldName = 'preferredTime';
+      } 
+      else {
+        // Fallback: If it's a truly custom question, use Regex Generator
+        dbFieldName = field.label
+          .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, idx) => (idx === 0 ? word.toLowerCase() : word.toUpperCase()))
+          .replace(/\s+/g, '')
+          .replace(/[^a-zA-Z0-9]/g, ''); 
+      }
+
+      // --- COLLISION PROTECTION ---
+      let finalName = dbFieldName;
+      let counter = 1;
+      while (usedKeys.has(finalName)) {
+        finalName = `${dbFieldName}_${counter}`;
+        counter++;
+      }
+      usedKeys.add(finalName); 
 
       return {
         ...field,
-        name: dbFieldName,
+        name: finalName,
         section: currentSection
       };
     });
-
-    // Combine: Vitals are ALWAYS at the start of Section 1
-    const finalFields = [...VITAL_FIELDS, ...customFields];
 
     const formData = new FormData();
     formData.append('name', name);
@@ -148,15 +170,69 @@ const handleSubmit = async (e) => {
     }
   };
 
-  // 3. DYNAMIC UI LABELS (Change text based on mode)
+  // 3. DYNAMIC UI LABELS
   const isEditing = !!editingService;
-  
+
+  // --- QUICK ADD MACROS ---
+  const addBasicInfo = () => {
+    const basicFields = [
+      { label: "Email Address", type: "email", required: true, options: [] },
+      { label: "Full Name (Last, First, M.I.)", type: "text", required: true, options: [] }
+    ];
+    setFields([...fields, ...basicFields]);
+  };
+
+  const addAcademicProfile = () => {
+    const academicFields = [
+      {
+        label: "School / Department",
+        type: "select",
+        required: true,
+        options: ["SBAA", "SCJPS", "SD", "SEA", "SIHTM", "SIT", "SNS", "SN", "STELA", "SL", "Other"]
+      },
+      {
+        // Changed to a text field with a clear instruction
+        label: "Course / Program (e.g. BSCS, BSBA)",
+        type: "text",
+        required: true,
+        options: [] // Text fields don't need options
+      },
+      {
+        label: "Year Level",
+        type: "select",
+        required: true,
+        options: ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year", "Graduate/Alumni", "N/A"]
+      }
+    ];
+
+    setFields([...fields, ...academicFields]);
+  };
+  const addContactInfo = () => {
+    const contactFields = [
+      { label: "ID Number", type: "text", required: true, options: [] },
+      { label: "Mobile Number", type: "text", required: true, options: [] }
+    ];
+    setFields([...fields, ...contactFields]);
+  };
+
+  const addAppointmentPrefs = () => {
+    const appointmentFields = [
+      { 
+        label: "Preferred Consultation Method", 
+        type: "select", 
+        required: true, 
+        options: ["Face-to-face", "Google Meet", "Zoom", "Phone Call", "Other"] 
+      },
+      { label: "Preferred Date", type: "date", required: true, options: [] },
+      { label: "Preferred Time", type: "time", required: true, options: [] }
+    ];
+    setFields([...fields, ...appointmentFields]);
+  };
   return (
     <div className="service-modal-overlay">
       <div className="service-modal-card add-service-card">
         
         <div className="modal-header bg-red">
-          {/* Change Header Text */}
           <h2>{isEditing ? `EDITING: ${name.toUpperCase()}` : "CREATE NEW SERVICE"}</h2>
           <button type="button" className="close-btn" onClick={onClose}>
             <MdClose size={24} />
@@ -206,7 +282,6 @@ const handleSubmit = async (e) => {
               <div className="input-group">
                 <label>SERVICE IMAGE *</label>
                 <div className="image-upload-container">
-                  {/* If you want to add a preview here too, you can add a preview state like in Announcements */}
                   <label className="upload-placeholder">
                     <MdCloudUpload size={30} />
                     <span>{selectedFile ? selectedFile.name : "Click to upload service image"}</span>
@@ -221,26 +296,62 @@ const handleSubmit = async (e) => {
                 <p className="file-hint">Recommended size: 800×400px</p>
               </div>
             </div>
+            
             <hr className="divider" />
 
-            {/* NEW: VITAL FIELDS PREVIEW (Read Only) */}
-            <div className="form-section">
-              <h3 className="section-title">Required Information</h3>
-              <p className="file-hint" style={{ marginBottom: '10px' }}>
-                The following fields are automatically included in Page 1 of every service.
+            {/* QUICK ADD TEMPLATES AREA */}
+            <div style={{ margin: '5px 0 20px 0', padding: '12px 15px', backgroundColor: '#f4f7fa', borderRadius: '8px', border: '1px dashed #b8cde0' }}>
+              <h4 style={{ fontSize: '11px', color: '#555', marginBottom: '6px', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                Quick Add Templates
+              </h4>
+              <p style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+                Click to auto-generate common question sets. You can edit them after adding.
               </p>
-              <div className="vitals-preview-box" style={{ 
-                background: '#f1f3f4', 
-                padding: '15px', 
-                borderRadius: '8px', 
-                border: '1px dashed #ccc',
-                display: 'flex',
-                gap: '10px'
-              }}>
-                <span className="vital-tag" style={{ background: '#fff', padding: '5px 10px', borderRadius: '4px', fontSize: '12px', border: '1px solid #ddd' }}>📧 Email Address</span>
-                <span className="vital-tag" style={{ background: '#fff', padding: '5px 10px', borderRadius: '4px', fontSize: '12px', border: '1px solid #ddd' }}>👤 Full Name</span>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                
+                <button
+                  type="button"
+                  onClick={addBasicInfo}
+                  style={{ padding: '5px 12px', backgroundColor: '#fff', border: '1px solid #1a73e8', color: '#1a73e8', borderRadius: '20px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', transition: 'all 0.2s' }}
+                  onMouseOver={(e) => { e.target.style.backgroundColor = '#e8f0fe'; }}
+                  onMouseOut={(e) => { e.target.style.backgroundColor = '#fff'; }}
+                >
+                  + Basic Info (Name & Email)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={addAcademicProfile}
+                  style={{ padding: '5px 12px', backgroundColor: '#fff', border: '1px solid #137333', color: '#137333', borderRadius: '20px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', transition: 'all 0.2s' }}
+                  onMouseOver={(e) => { e.target.style.backgroundColor = '#e6f4ea'; }}
+                  onMouseOut={(e) => { e.target.style.backgroundColor = '#fff'; }}
+                >
+                  + Academic Profile (Dept, Course, Year)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={addContactInfo}
+                  style={{ padding: '5px 12px', backgroundColor: '#fff', border: '1px solid #f29900', color: '#f29900', borderRadius: '20px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', transition: 'all 0.2s' }}
+                  onMouseOver={(e) => { e.target.style.backgroundColor = '#fef7e0'; }}
+                  onMouseOut={(e) => { e.target.style.backgroundColor = '#fff'; }}
+                >
+                  + Contact Info (ID & Mobile)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={addAppointmentPrefs}
+                  style={{ padding: '5px 12px', backgroundColor: '#fff', border: '1px solid #8e24aa', color: '#8e24aa', borderRadius: '20px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', transition: 'all 0.2s' }}
+                  onMouseOver={(e) => { e.target.style.backgroundColor = '#f3e5f5'; }}
+                  onMouseOut={(e) => { e.target.style.backgroundColor = '#fff'; }}
+                >
+                  + Appointment Preferences
+                </button>
+                
               </div>
             </div>
+            
             <hr className="divider" />
 
             <div className="form-section">
@@ -331,7 +442,6 @@ const handleSubmit = async (e) => {
                             <label>DROPDOWN OPTIONS (Separate with commas)</label>
                             <input 
                             type="text" required placeholder="e.g. Morning, Afternoon, Evening"
-                            // SAFEGUARD: Ensure options is treated as an array even if undefined
                             value={(field.options || []).join(', ')} 
                             onChange={(e) => handleFieldChange(index, 'options', e.target.value)}
                             />
@@ -360,7 +470,6 @@ const handleSubmit = async (e) => {
                     </React.Fragment>
                 );
                 })}
-                {/* --- NEW BOTTOM BUTTON --- */}
                   <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', paddingBottom: '20px' }}>
                     <button 
                       type="button" 
@@ -397,7 +506,6 @@ const handleSubmit = async (e) => {
               Cancel
             </button>
             <button type="submit" className="btn-save" disabled={isSubmitting}>
-              {/* Change Button Text */}
               {isSubmitting ? 'Saving...' : (isEditing ? 'Update Service' : 'Save Service')}
             </button>
           </div>

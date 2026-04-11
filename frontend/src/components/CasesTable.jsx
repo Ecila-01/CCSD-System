@@ -12,8 +12,17 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
   // Helper to extract the course from your dynamic form data
   const getCourse = (data) => {
     if (!data) return "N/A";
-    // Updated to include 'courseDescription' for Good Moral requests
-    return data.courseYear || data.courseDescription || data.yearLevel || "N/A";
+
+    // If both exist, glue them together (e.g. "BSCS - 4th Year")
+    if (data.courseYear && data.yearLevel) {
+      return `${data.courseYear} - ${data.yearLevel}`;
+    }
+    
+    // Fallbacks
+    if (data.courseYear) return data.courseYear;
+    if (data.courseDescription) return data.courseDescription;
+    
+    return "N/A";
   };
 
   const formatDate = (dateString) => {
@@ -151,7 +160,7 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
                 </div>
               </td>
               <td>
-                <span style={{ fontWeight: req.requiresSchedule ? 'bold' : 'normal', color: '#333' }}>
+                <span style={{ fontWeight: 'normal', color: '#333' }}>
                   {getDisplayTime(req)}
                 </span>
               </td>

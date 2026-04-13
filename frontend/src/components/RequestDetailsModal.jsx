@@ -1,16 +1,57 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MdClose, MdOutlineEmail, MdOutlineCalendarToday } from "react-icons/md";
-import '../styles/ServiceModal.css'; // Reusing your existing modal styles!
-import { useState } from 'react';
+import '../styles/ServiceModal.css'; 
 import axios from 'axios';
 
 const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
   const [isUpdating, setIsUpdating] = useState(false);
-  // If no request is selected, don't render anything
-  if (!request) return null;
+  
+  // State to hold the original service fields
+  const [serviceFields, setServiceFields] = useState([]);
+  const [isLoadingFields, setIsLoadingFields] = useState(true);
 
+  useEffect(() => {
+    if (!request) return;
+
+    // Fetch the parent service to grab the labels
+    const fetchServiceTemplate = async () => {
+      try {
+        setIsLoadingFields(true);
+        const response = await axios.get(`http://localhost:5000/api/services/${request.serviceId}`);
+        setServiceFields(response.data.fields || []);
+      } catch (error) {
+        console.error("Error fetching service fields:", error);
+      } finally {
+        setIsLoadingFields(false);
+      }
+    };
+
+    // If your backend already populated serviceId via Mongoose .populate(), use it directly!
+    if (typeof request.serviceId === 'object' && request.serviceId.fields) {
+      setServiceFields(request.serviceId.fields);
+      setIsLoadingFields(false);
+    } else {
+      fetchServiceTemplate();
+    }
+  }, [request]); 
+
+  // --- HELPER FUNCTION (Moved outside useEffect so the JSX can use it!) ---
+  const getFieldLabel = (key) => {
+    // 1. Try to find the exact match in the service template
+    const matchingField = serviceFields.find(field => field.name === key);
+    if (matchingField && matchingField.label) {
+      return matchingField.label;
+    }
+
+    // 2. Fallback: If not found, format the camelCase key so it isn't ugly
+    // e.g., "whatIsYourCurrentCareerFocus" -> "What Is Your Current Career Focus"
+    const spaced = key.replace(/([A-Z])/g, ' $1');
+    return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+  };
+
+  if (!request) return null;
+  
   const handleUpdateStatus = async (newStatus) => {
-    console.log(request)
     setIsUpdating(true);
     try {
       await axios.patch(`http://localhost:5000/api/requests/${request._id}`, {
@@ -26,6 +67,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
       setIsUpdating(false);
     }
   };
+
   return (
     <div className="service-modal-overlay">
       <div className="service-modal-card" style={{ maxWidth: '650px' }}>
@@ -56,7 +98,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                 }}>
                 {/* Status Badge */}
                   <div style={{ position: 'absolute', top: '15px', right: '15px', textAlign: 'right' }}>
-                    <span className={`case-status-badge ${request.status?.toLowerCase() || 'pending'}`} style={{ display: 'inline-block', marginBottom: '5px', padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold' }}>
+                    <span className={`case-status-badge ${request.status?.toLowerCase().replace(/\s+/g, '-') || 'pending'}`} style={{ display: 'inline-block', marginBottom: '5px', padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold' }}>
                       {request.status || 'Pending'}
                     </span>
                     <div style={{ fontSize: '10px', color: '#aaa' }}>{new Date(request.createdAt).toLocaleDateString()}</div>
@@ -105,7 +147,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                 </div>
                 
                 <div style={{ textAlign: 'right' }}>
-                  <span className={`case-status-badge ${request.status?.toLowerCase() || 'pending'}`} style={{ display: 'inline-block', marginBottom: '8px', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
+                  <span className={`case-status-badge ${request.status?.toLowerCase().replace(/\s+/g, '-') || 'pending'}`} style={{ display: 'inline-block', marginBottom: '8px', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
                     {request.status || 'Pending'}
                   </span>
                   <div style={{ fontSize: '12px', color: '#888' }}>
@@ -137,26 +179,38 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
 
           <hr className="divider" style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
 
-          {/* SECTION 2: Dynamic Form Answers */}
+          {/* SECTION 2: Dynamic Form Answers (NOW CROSS-REFERENCED!) */}
           <div className="form-section">
             <h3 className="section-title" style={{ fontSize: '16px', color: '#444', marginBottom: '15px' }}>Form Submission Details</h3>
             
             <div style={{ display: 'grid', gap: '12px' }}>
-              {request.requestData ? (
-                Object.entries(request.requestData).map(([question, answer], index) => {
-                  // Skip displaying the Name and Email here since they are already at the top!
-                  if (question.toLowerCase().includes('name') || question.toLowerCase().includes('email')) {
+              {isLoadingFields ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#666', fontStyle: 'italic' }}>
+                  Loading questionnaire details...
+                </div>
+              ) : request.requestData ? (
+                Object.entries(request.requestData).map(([questionKey, answer], index) => {
+                  // Skip displaying the Name and Email here since they are already at the top
+                  if (questionKey.toLowerCase().includes('name') || questionKey.toLowerCase().includes('email')) {
                     return null;
                   }
+                  
+                  // Skip empty answers entirely
+                  if (answer === "" || answer === null || answer === undefined) return null;
 
                   return (
                     <div key={index} style={{ padding: '12px 15px', background: '#fcfcfc', borderRadius: '6px', border: '1px solid #f0f0f0' }}>
                       <span style={{ display: 'block', fontSize: '12px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        {question}
+                        {/* Here is the magic cross-reference function: */}
+                        {getFieldLabel(questionKey)}
                       </span>
                       <span style={{ display: 'block', color: '#222', fontSize: '14px', whiteSpace: 'pre-wrap' }}>
-                        {/* If the answer is an array (like multiple checkboxes), join them with commas */}
-                        {Array.isArray(answer) ? answer.join(', ') : (answer || <em style={{color: '#aaa'}}>No answer provided</em>)}
+                        {/* Handles Arrays (checkboxes), Booleans (true/false), and standard strings */}
+                        {Array.isArray(answer) 
+                          ? answer.join(', ') 
+                          : typeof answer === 'boolean' 
+                            ? (answer ? "Yes" : "No") 
+                            : (answer || <em style={{color: '#aaa'}}>No answer provided</em>)}
                       </span>
                     </div>
                   );
@@ -175,7 +229,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
             background: '#fafafa', 
             borderRadius: '0 0 8px 8px',
             display: 'flex',
-            justifyContent: 'space-between', // Pushes Close to left, Actions to right
+            justifyContent: 'space-between',
             alignItems: 'center'
         }}>
           
@@ -199,13 +253,10 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                   Decline
                 </button>
 
-                {/* NEW: Reschedule Button directly on the Pending screen */}
                 {request.requiresSchedule && (
                   <button 
-                    // For now, we can keep it in Pending status, but later this will trigger the email modal
                     onClick={() => {
                       alert(`Later, this will open an email to ${request.guestEmail || 'the student'} to propose a new time.`);
-                      // handleUpdateStatus('Pending - Rescheduling'); // Optional: Create a new status for this
                     }} 
                     disabled={isUpdating}
                     style={{ padding: '10px 20px', background: '#fff3e0', color: '#e65100', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
@@ -228,7 +279,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
             {request.status === 'Active' && (
               <>
                 <button 
-                  onClick={() => handleUpdateStatus('Pending')} // Bounces it back to pending for rescheduling
+                  onClick={() => handleUpdateStatus('Pending')} 
                   disabled={isUpdating}
                   style={{ padding: '10px 20px', background: '#fff3e0', color: '#e65100', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
@@ -244,7 +295,6 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
               </>
             )}
 
-            {/* If Completed or Declined, no extra action buttons are shown */}
             {isUpdating && <span style={{ alignSelf: 'center', fontSize: '14px', color: '#888' }}>Updating...</span>}
           </div>
 

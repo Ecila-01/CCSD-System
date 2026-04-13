@@ -120,4 +120,22 @@ router.patch('/:id', upload.single('image'), async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 });
+// GET a single service by ID
+router.get('/:id', async (req, res) => {
+  try {
+    // Find the service in MongoDB using the ID from the URL
+    const service = await Service.findById(req.params.id);
+    
+    // If it doesn't exist, send a 404 back
+    if (!service) {
+      return res.status(404).json({ message: 'Service not found' });
+    }
+    
+    // If it does exist, send the service data (including the fields!) back to React
+    res.json(service);
+  } catch (error) {
+    console.error("Error fetching single service:", error);
+    res.status(500).json({ message: "Server error fetching service" });
+  }
+});
 module.exports = router;

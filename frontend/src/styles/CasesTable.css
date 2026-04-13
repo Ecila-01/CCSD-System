@@ -55,13 +55,46 @@
   text-transform: uppercase;
 }
 
-.case-status-badge.pending { background: #e1f5fe; color: #0277bd; }
-.case-status-badge.in-progress { background: #fff8e1; color: #f57f17; }
-.case-status-badge.active {
-  background-color: #e6f4ea;
-  color: #137333;
+/* Ensure your base badge has these properties if it doesn't already */
+.case-status-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-block;
+  text-align: center;
 }
-.case-status-badge.completed { background: #e8f5e9; color: #2e7d32; }
+
+/* 1. PENDING - Waiting for review (Light Blue) */
+.case-status-badge.pending { 
+  background-color: #e1f5fe; 
+  color: #0277bd; 
+}
+
+/* 2. ACTIVE - Currently ongoing (Your custom UB Red) */
+.case-status-badge.active {
+  background-color: #fce4e4; 
+  color: #c00000; 
+}
+
+/* 3. COMPLETED - Successfully finished (Green) */
+.case-status-badge.completed { 
+  background-color: #e8f5e9; 
+  color: #2e7d32; 
+}
+
+/* 4. DECLINED - Rejected by counselor (Amber/Orange) */
+.case-status-badge.declined {
+  background-color: #fff8e1; 
+  color: #f57f17; 
+}
+
+/* 5. CANCELLED - Aborted by student (Muted Slate/Gray) */
+.case-status-badge.cancelled {
+  background-color: #f1f5f9;
+  color: #475569;
+}
 
 /* Actions */
 .action-btn {

@@ -1,6 +1,30 @@
 import React from 'react';
 import '../styles/CasesTable.css';
 import { useState } from 'react';
+import Select from 'react-select';
+
+
+// --- HARDCODED COUNSELORS FOR NOW ---
+const COUNSELOR_OPTIONS = [
+  { value: "Unassigned", label: "Unassigned" },
+  { value: "Leny O. Estacio", label: "Leny O. Estacio" },
+  { value: "Ian R. Alangdeo", label: "Ian R. Alangdeo" },
+  { value: "Lara Joi G. Ilumin", label: "Lara Joi G. Ilumin" },
+  { value: "Kristina G. Valdez", label: "Kristina G. Valdez" },
+  { value: "Jozenieh A. Bangibang", label: "Jozenieh A. Bangibang" },
+  { value: "Rizza Joy E. Quitaleg", label: "Rizza Joy E. Quitaleg" },
+  { value: "Kristina G. Velasco", label: "Kristina G. Velasco" },
+  { value: "Minerva P. Andres", label: "Minerva P. Andres" },
+  { value: "Alicia Audrey T. Bautista", label: "Alicia Audrey T. Bautista" },
+  { value: "Fiona Mae D. Gorio", label: "Fiona Mae D. Gorio" },
+  { value: "Karol B. Manalo", label: "Karol B. Manalo" },
+  { value: "Camille Joyce G. Velasco", label: "Camille Joyce G. Velasco" },
+  { value: "Shiela Natalie D. Juyag", label: "Shiela Natalie D. Juyag" },
+  { value: "Godwin Deve D. Ayodoc", label: "Godwin Deve D. Ayodoc" },
+  { value: "Shena Lea G. Ariola", label: "Shena Lea G. Ariola" },
+  { value: "Karylle Elaiza U. Lee", label: "Karylle Elaiza U. Lee" },
+  { value: "Jenel Mae D. Baniaga", label: "Jenel Mae D. Baniaga" }
+];
 const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 6 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   // Helper to extract the student's name from your dynamic form data
@@ -101,6 +125,12 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
   const handlePrevPage = () => {
     if (currentPage > 1) setCurrentPage(prev => prev - 1);
   };
+
+  // Dummy handler for counselor assignment (to be wired to backend later)
+  const handleCounselorChange = (requestId, newCounselor) => {
+    console.log(`Assigned ${newCounselor} to request ID: ${requestId}`);
+    // await axios.patch(`/api/servicerequests/${requestId}`, { counselor: newCounselor });
+  };
   return (
     <div className="cases-table-container">
       <div className="table-header">
@@ -110,13 +140,13 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
       <table className="cases-table">
         <thead>
           <tr>
-            <th>CASES NO</th>
             <th>CASES</th>
             <th>STUDENT NAME</th>
             <th>COURSE & YEAR</th>
             <th>DATE</th>
             <th>TIME</th>
             <th>STATUS</th>
+            <th>COUNSELOR</th>
             <th>ACTIONS</th>
           </tr>
         </thead>
@@ -124,7 +154,6 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
           {/* Limit to the latest 6 for the dashboard view */}
           {currentRequests.map((req, index) => (
             <tr key={req._id}>
-              <td>00{indexOfFirstRequest + index + 1}-001{indexOfFirstRequest + index}</td>
               
               <td>
                 <span 
@@ -170,7 +199,89 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
                   {req.status}
                 </span>
               </td>
-              
+              {/* --- NEW COUNSELOR DROPDOWN --- */}
+              <td>
+                <Select 
+                  options={COUNSELOR_OPTIONS}
+                  defaultValue={{ value: req.counselor || 'Unassigned', label: req.counselor || 'Unassigned' }}
+                  onChange={(selectedOption) => handleCounselorChange(req._id, selectedOption.value)}
+                  menuPortalTarget={document.body} 
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      minHeight: '30px',      
+                      height: '30px',
+                      fontSize: '12px',
+                      backgroundColor: '#f3f4f6',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      width: '135px',         
+                      boxShadow: 'none',      
+                      '&:hover': {
+                        borderColor: '#9ca3af' 
+                      }
+                    }),
+                    // 1. Removes the vertical dividing line
+                    indicatorSeparator: () => ({
+                      display: 'none'
+                    }),
+                    // 2. Centers the container
+                    valueContainer: (base) => ({
+                      ...base,
+                      justifyContent: 'center',
+                      padding: '0 6px',
+                    }),
+                    // 3. Centers the selected text and stops the jump
+                    singleValue: (base) => ({
+                      ...base,
+                      color: '#374151',
+                      fontWeight: '500',
+                      textAlign: 'center',
+                      margin: 0
+                    }),
+                    // 4. Keeps the hidden typing cursor centered too
+                    input: (base) => ({
+                      ...base,
+                      margin: 0,
+                      padding: 0,
+                      textAlign: 'center',
+                      color: '#374151'
+                    }),
+                    // Tightens up the arrow button area
+                    indicatorsContainer: (base) => ({
+                      ...base,
+                      height: '30px',
+                    }),
+                    dropdownIndicator: (base) => ({
+                      ...base,
+                      padding: '4px 8px',
+                      color: '#6b7280'
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      fontSize: '12px',       // Made the options slightly larger
+                      padding: '6px 10px',    
+                      cursor: 'pointer',
+                      color: '#374151',
+                      whiteSpace: 'nowrap',   
+                      textAlign: 'center',    // Centers the dropdown list items
+                      backgroundColor: state.isSelected 
+                        ? '#e5e7eb' 
+                        : state.isFocused ? '#f3f4f6' : 'white',
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      width: 'max-content',   
+                      minWidth: '100%',       
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', 
+                      borderRadius: '6px',
+                      overflow: 'hidden'
+                    }),
+                    menuPortal: base => ({ ...base, zIndex: 9999 }) 
+                  }}
+                />
+              </td>
               <td>
                 <button className="action-btn" onClick={() => onView(req)}>Open</button>
               </td>

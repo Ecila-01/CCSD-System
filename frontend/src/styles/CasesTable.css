@@ -1,15 +1,14 @@
 .cases-table-container {
   background: white;
-  border-radius: 12px;
   margin: 0 30px 30px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   padding: 20px;
 }
 
 .table-header h3 {
   margin: 0 0 20px 0;
   font-size: 18px;
-  color: #333;
+  color: #3C3736;
 }
 
 .cases-table {

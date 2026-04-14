@@ -76,6 +76,7 @@ function Referrals() {
           <div className="header-right">
             <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
             <div className="user-pill">
+               <div style={{ margin: '10px' }}></div>
               <span className="role-tag">{user.role}</span>
             </div>
           </div>

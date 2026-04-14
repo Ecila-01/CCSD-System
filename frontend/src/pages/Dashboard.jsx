@@ -46,14 +46,15 @@ function Dashboard() {
           </div>
           <div className="header-right">
             <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-            <div className="user-pill">
+            <div className="user-pill"> 
+              <div style={{ margin: '10px' }}></div>
               <span className="role-tag">{user.role}</span>
             </div>
           </div>
         </header>
 
         <section className="dashboard-view">
-          <h2>Case Dashboard</h2>
+          <h2 style={{ color: '#3C3736' }}>Case Dashboard</h2>
           
           {/* THE MODULAR COMPONENTS */}
           <WelcomeCard user={user} />

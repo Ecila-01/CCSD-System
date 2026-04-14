@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import campusImg from "../assets/hero-bg.png";
+import campusImg from "../assets/facade.jpg";
 import Hero from "../components/Hero";
 import AppointmentModal from "../components/AppointmentModal";
 import "../styles/Services.css";

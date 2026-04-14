@@ -4,7 +4,7 @@
 
 /* SECTION & CONTAINER */
 .servicesSection {
-  padding: 22px 0 0;
+  padding: 25px 0 0;
 }
 
 .servicesContainer {
@@ -41,8 +41,7 @@
   gap: 20px;
   padding: 30px 20px; 
   min-height: 250px; /* Ensures all cards stay roughly the same height */
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.0.9);
   transition: all 0.2s ease;
 }
 
@@ -52,9 +51,9 @@
 }
 
 /* CARD BACKGROUND COLORS */
-.serviceCard:nth-child(1) { background: #f0e1e1; }
-.serviceCard:nth-child(2) { background: #fceeff; }
-.serviceCard:nth-child(3) { background: #f2e2d6; }
+.serviceCard:nth-child(1) { background: #ffbaba; }
+.serviceCard:nth-child(2) { background: #dfdde0; }
+.serviceCard:nth-child(3) { background: #ffdada; }
 .serviceCard:nth-child(4) { background: #e5f0d9; }
 .serviceCard:nth-child(5) { background: #dfe9ef; }
 .serviceCard:nth-child(6) { background: #f4dede; }
@@ -72,7 +71,7 @@
   font-size: 18px;
   margin-bottom: 8px;
   letter-spacing: -0.2px; 
-  color: #222;
+  color: #3C3736;
 }
 
 .serviceText p {
@@ -86,11 +85,10 @@
 /* BUTTON */
 .scheduleBtn {
   margin-top: auto; /* THE MAGIC FIX: Pushes the button to the floor */
-  background-color: #c00000; /* UB Red */
-  color: white;
+  background-color: #EF0000; /* UB Red */
+  color: #FFFFFF;
   border: none;
   padding: 10px 20px;
-  border-radius: 4px;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.3s ease;
@@ -113,7 +111,7 @@
 
 .serviceImage {
   width: 100%;
-  max-width: 130px;
+  max-width: 150px;
   height: auto;
   object-fit: contain;
 }

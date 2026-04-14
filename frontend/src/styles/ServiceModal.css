@@ -407,3 +407,117 @@
   letter-spacing: 2px;
   text-transform: uppercase;
 }
+/* Container for the upload area */
+.image-upload-container {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* The clickable box */
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 120px;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  background-color: #fafafa;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-placeholder:hover {
+  border-color: #cc0000; /* UB Red */
+  background-color: #fff5f5;
+  color: #cc0000;
+}
+
+.upload-placeholder span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Hide the actual file input entirely */
+.upload-placeholder input[type="file"] {
+  display: none;
+}
+
+/* Styles for the Preview Box */
+.preview-box {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #eee;
+}
+
+.preview-box img {
+  width: 100%;
+  display: block;
+  max-height: 200px;
+  object-fit: cover;
+}
+
+.change-img-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.change-img-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+/* --- Secondary Action: Close Preview --- */
+.btn-cancel {
+  flex: 1;
+  padding: 12px 20px;
+  background-color: white;
+  color: #555;
+  border: 1px solid #ccc;
+  border-radius: 8px; /* Matches the rounded corners of your image */
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background-color: #f8f9fa;
+  border-color: #999;
+  color: #333;
+}
+
+/* --- Primary Action: Edit Announcement --- */
+.btn-save {
+  flex: 1;
+  padding: 12px 20px;
+  background-color: #333; /* Dark gray to match your theme */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle drop shadow */
+}
+
+.btn-save:hover {
+  background-color: #555;
+  transform: translateY(-2px); /* Makes the button "lift" when hovered */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Optional: If you want the Edit button to be UB Red instead of Dark Gray */
+/* Just change background-color to #cc0000 and hover to #a00000 */

@@ -1,24 +1,16 @@
 import "./App.css";
 import { Routes, Route, useLocation } from "react-router-dom";
-import Hero from "./components/Hero";
-import ubLogo from "./assets/ub-logo.png";
-import heroBg from "./assets/facade.jpg"; // Groupmate's updated image
-import examImg from "./assets/exam.png";
-import webinarImg from "./assets/webinar.png";
-import orientationImg from "./assets/orientation.png";
-import wellnessImg from "./assets/wellness.png";
 
 // Page & Component Imports
+import Home from "./pages/Home"; // Imported the new separate file
 import Services from "./pages/Services";
 import About from "./pages/About";
 import Navbar from "./Navbar";
 import Dashboard from "./pages/Dashboard";
 import Schedules from "./pages/Schedules";
 import Referrals from "./pages/Referrals";
-import AnnouncementCards from "./components/AnnouncementCards"; 
-import FlipTitle from "./components/FlipTitle";
 import ManageServices from './pages/ManageServices';
-
+import ManageAnnouncements from "./pages/ManageAnnouncements";
 
 function Footer() {
   return (
@@ -31,34 +23,17 @@ function Footer() {
   );
 }
 
-// Groupmate's updated HomePage layout
-function HomePage() {
-  return (
-    <>
-      <Hero
-        background={heroBg}
-        title="Center for Counseling and Student Development"
-      />
-      <FlipTitle />
-      <AnnouncementCards /> 
-    </>
-  );
-}
-
-// Groupmate's new placeholder page
-function SignUpPage() {
-  return (
-    <section className="placeholderPage">
-      <h1>Sign Up Page</h1>
-    </section>
-  );
-}
-
 export default function App() {
   const location = useLocation();
 
-  // Your logic to hide public nav/footer on admin pages
-  const adminPages = ["/dashboard", "/schedules", "/referrals", "/manage-services"];
+  // Logic to hide public nav/footer on admin pages
+  const adminPages = [
+    "/dashboard", 
+    "/schedules", 
+    "/referrals", 
+    "/manage-services", 
+    "/manage-announcements"
+  ];
   const isAdminView = adminPages.includes(location.pathname);
 
   return (
@@ -68,16 +43,16 @@ export default function App() {
 
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/services" element={<Services />} />
-        <Route path="/signup" element={<SignUpPage />} />
         
         {/* Admin Routes */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/schedules" element={<Schedules />} /> 
         <Route path="/referrals" element={<Referrals />} /> 
         <Route path="/manage-services" element={<ManageServices />} /> 
+        <Route path="/manage-announcements" element={<ManageAnnouncements />} /> 
       </Routes>
 
       {/* Hide public footer if on ANY admin page */}

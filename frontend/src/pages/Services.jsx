@@ -3,6 +3,7 @@ import campusImg from "../assets/facade.jpg";
 import Hero from "../components/Hero";
 import AppointmentModal from "../components/AppointmentModal";
 import "../styles/Services.css";
+import ServiceCard from "../components/ServiceCard";
 
 function Services() {
   const [services, setServices] = useState([]);
@@ -45,38 +46,31 @@ function Services() {
           </div>
 
           {loading ? (
-            <div className="loading-spinner">Loading Services...</div>
+            <div className="servicesGrid">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="skeleton-card">
+                  <div className="skeleton-text-block">
+                    <div className="skeleton-title"></div>
+                    <div className="skeleton-line"></div>
+                    <div className="skeleton-line short"></div>
+                    <div className="skeleton-button"></div>
+                  </div>
+                  <div className="skeleton-image"></div>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="servicesGrid">
               {services
-              /* Only show services where status is 'active' */
                 .filter((service) => service.status?.toLowerCase() === "active")
                 .map((service) => (
-                <div className="serviceCard" key={service._id}>
-                  <div className="serviceText">
-                    <h3>{service.name}</h3>
-                    <p>{service.description}</p>
-                    
-                    <button 
-                      className="scheduleBtn"
-                      onClick={() => handleOpenModal(service)}
-                    >
-                      {service.name === "COUNSELING" ? "Schedule Appointment" : "Submit Request"}
-                    </button>
-                  </div>
-
-                  <div className="serviceImageWrapper">
-                    <img
-                      /* This now pulls http://localhost:5000/uploads/counseling.png */
-                      src={service.image} 
-                      alt={service.name}
-                      className="serviceImage"
-                      /* Fallback in case the local image file is missing */
-                      onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
-                    />
-                  </div>
-                </div>
-              ))}
+                  <ServiceCard 
+                    key={service._id} 
+                    service={service} 
+                    onClick={() => handleOpenModal(service)} 
+                  />
+                ))
+              }
             </div>
           )}
         </div>

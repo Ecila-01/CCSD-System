@@ -1,26 +1,31 @@
 const mongoose = require('mongoose');
 
 const serviceRequestSchema = new mongoose.Schema({
-  // 1. What service did they request? (e.g., "COUNSELING", "GOOD MORAL")
-  serviceName: { 
-    type: String, 
-    required: true 
-  },
-  
-  // 2. Track the status for the admin dashboard
+  serviceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Service' },
+  serviceName: { type: String, required: true },
   status: { 
     type: String, 
-    enum: ['Pending', 'In Progress', 'Completed', 'Declined'],
+    enum: ['Pending', 'Active', 'Completed', 'Declined', 'Cancelled'], 
     default: 'Pending' 
   },
   
-  // 3. THE MAGIC FIELD: This accepts ANY form data
-  requestData: { 
-    type: mongoose.Schema.Types.Mixed, 
-    required: true 
-  }
-}, { 
-  timestamps: true // Automatically adds createdAt and updatedAt dates
-});
+  // --- THE VITAL EXTRACTED FIELDS ---
+  // The Student (The primary subject of the service)
+  studentName: { type: String, required: true },
+  studentEmail: { type: String }, // Optional, as referrals might only have their ID
+  studentIdNumber: { type: String },
+
+  // The Referrer (ONLY populated if serviceName === "REFERRAL")
+  referrerName: { type: String },
+  referrerEmail: { type: String },
+  
+  // --- SCHEDULING FIELDS ---
+  requiresSchedule: { type: Boolean, default: false },
+  appointmentDate: { type: String }, 
+  timeSlot: { type: String },
+
+  // --- THE FULL DYNAMIC FORM DATA ---
+  requestData: { type: mongoose.Schema.Types.Mixed, required: true }
+}, { timestamps: true });
 
 module.exports = mongoose.model('ServiceRequest', serviceRequestSchema);

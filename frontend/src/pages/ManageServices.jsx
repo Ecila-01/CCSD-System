@@ -16,9 +16,11 @@ function ManageServices() {
   const [isLoading, setIsLoading] = useState(true);
   const [viewingService, setViewingService] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingService, setEditingService] = useState(null);
   const [statusModal, setStatusModal] = useState({ 
     isOpen: false, type: 'confirm', title: '', message: '', action: null 
   });
+
   useEffect(() => {
     const loggedInUser = localStorage.getItem("user");
     if (!loggedInUser) navigate('/');
@@ -82,8 +84,9 @@ function ManageServices() {
   };
 
   const handleEdit = (service) => {
-    alert(`Editing ${service.name} - Form builder coming soon!`);
-  };
+      setViewingService(null); // Close the View modal
+      setEditingService(service); // Open the Edit modal (with the service data)
+    };
 
   if (!user) return null;
   const handleStatusChange = async (id, newStatus) => {
@@ -235,17 +238,22 @@ function ManageServices() {
 
       {/* 2. ADD SERVICE MODAL */}
       <AddServiceModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
+        isOpen={isAddModalOpen || editingService !== null} // Open if adding OR editing
+        editingService={editingService} // Pass the service data!
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setEditingService(null); // Clear edit state on close
+        }} 
         onSuccess={() => {
             fetchServices();
             setStatusModal({
                 isOpen: true,
                 type: 'success',
-                title: 'Service Created!',
-                message: 'Your new service is now live and available to students.',
+                title: editingService ? 'Service Updated!' : 'Service Created!',
+                message: editingService ? 'The changes have been saved.' : 'Your new service is now live.',
                 onConfirm: () => setStatusModal({ ...statusModal, isOpen: false })
             });
+            setEditingService(null); // Clear edit state on success
         }} 
       />
 

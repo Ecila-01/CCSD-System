@@ -1,10 +1,10 @@
 .cases-table-container {
   background: white;
+  border-radius: 12px;
   margin: 0 30px 30px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
   padding: 20px;
 }
-
 .table-header h3 {
   margin: 0 0 20px 0;
   font-size: 18px;
@@ -42,12 +42,11 @@
   font-weight: bold;
 }
 
-.service-badge.counseling { background: #ffebee; color: #c62828; }
-.service-badge.referral { background: #e3f2fd; color: #1565c0; }
-.service-badge.good-moral-certificate { background: #e8f5e9; color: #2e7d32; }
 
 /* Status Badges */
-.status-badge {
+/* Update this block in CasesTable.css */
+.case-status-badge {
+  display: inline-block;
   padding: 4px 12px;
   border-radius: 4px;
   font-size: 11px;
@@ -55,9 +54,46 @@
   text-transform: uppercase;
 }
 
-.status-badge.pending { background: #e1f5fe; color: #0277bd; }
-.status-badge.in-progress { background: #fff8e1; color: #f57f17; }
-.status-badge.completed { background: #e8f5e9; color: #2e7d32; }
+/* Ensure your base badge has these properties if it doesn't already */
+.case-status-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-block;
+  text-align: center;
+}
+
+/* 1. PENDING - Waiting for review (Light Blue) */
+.case-status-badge.pending { 
+  background-color: #e1f5fe; 
+  color: #0277bd; 
+}
+
+/* 2. ACTIVE - Currently ongoing (Your custom UB Red) */
+.case-status-badge.active {
+  background-color: #fce4e4; 
+  color: #c00000; 
+}
+
+/* 3. COMPLETED - Successfully finished (Green) */
+.case-status-badge.completed { 
+  background-color: #e8f5e9; 
+  color: #2e7d32; 
+}
+
+/* 4. DECLINED - Rejected by counselor (Amber/Orange) */
+.case-status-badge.declined {
+  background-color: #fff8e1; 
+  color: #f57f17; 
+}
+
+/* 5. CANCELLED - Aborted by student (Muted Slate/Gray) */
+.case-status-badge.cancelled {
+  background-color: #f1f5f9;
+  color: #475569;
+}
 
 /* Actions */
 .action-btn {

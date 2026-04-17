@@ -48,8 +48,6 @@ function Dashboard() {
   // 2. Calculate Pending/Urgent Cases
   const pendingCases = requests.filter(req => req.status === 'Pending').length;
 
-  // 3. Extract Unique Service Names for the Filter Pills
-  const uniqueCategories = ['All', ...new Set(requests.map(req => req.serviceName))];
 
   // 4. SMART EMAIL CALCULATION (Filters out old blank tests)
   const getClientEmail = (req) => {
@@ -68,10 +66,6 @@ function Dashboard() {
   const uniqueEmails = requests.map(getClientEmail).filter(email => email !== null);
   const uniqueClientsCount = new Set(uniqueEmails).size;
 
-  // 5. Filter the requests to pass to the table
-  const filteredRequests = activeFilter === 'All' 
-    ? requests 
-    : requests.filter(req => req.serviceName === activeFilter);
 
   return (
     <div className="dashboard-container">
@@ -105,29 +99,10 @@ function Dashboard() {
           
           <StatsGrid requests={requests} />
           
-          {/* DYNAMIC FILTER PILLS */}
-          <div className="filter-row" style={{ 
-              display: 'flex', 
-              gap: '10px', 
-              margin: '25px 20px 15px 25px', // Added 20px to Left and Right
-              overflowX: 'auto',
-              paddingBottom: '5px' // Extra space for scrollbar if needed
-          }}>
-            {uniqueCategories.map(category => (
-              <button 
-                key={category}
-                className={`filter-pill ${activeFilter === category ? 'active' : ''}`} 
-                onClick={() => setActiveFilter(category)}
-                style={{ whiteSpace: 'nowrap', textTransform: 'capitalize' }}
-              >
-                {category.toLowerCase()}
-              </button>
-            ))}
-          </div>
           
           {/* Pass the FILTERED requests to the table */}
           <CasesTable 
-            requests={filteredRequests} 
+            requests={requests} 
             onView={(request) => setViewingRequest(request) } 
             maxItems={6}
           />

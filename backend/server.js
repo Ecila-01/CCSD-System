@@ -9,6 +9,8 @@ const PORT = process.env.PORT || 5000;
 const path = require('path');
 const requestRoutes = require('./routes/requests');
 const announcementRoutes = require('./routes/announcements')
+const userRoutes = require('./routes/userRoutes');
+
 
 // Middleware
 app.use(cors());
@@ -25,6 +27,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'), {
 }));
 app.use('/api/requests', requestRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/users', userRoutes);
+
 
 // MongoDB Connection
 const connectDB = async () => {

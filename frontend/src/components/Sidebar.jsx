@@ -1,6 +1,5 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-// Using Md (Material Design) and Fi (Feather) which are the most stable sets
 import { 
   MdOutlineDashboard, 
   MdOutlineCalendarMonth, 
@@ -19,6 +18,10 @@ import ubLogo from "../assets/darkUBlogo.png";
 const Sidebar = () => {
   const navigate = useNavigate();
 
+  // Grab the user data from local storage
+  const savedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const role = savedUser.role || "counsellor"; // Fallback to counsellor
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -31,6 +34,7 @@ const Sidebar = () => {
         <img src={ubLogo} alt="UB Logo" />
       </div>
 
+      {/* SHARED SECTION: Both Admins and Counselors see the Main Menu */}
       <div className="sidebar-section">
         <p className="section-title">Main Menu</p>
         <NavLink to="/dashboard" className="sidebar-link">
@@ -44,29 +48,30 @@ const Sidebar = () => {
         </NavLink>
       </div>
 
-      <div className="sidebar-section">
-        <p className="section-title">Manages</p>
-        <NavLink to="/manage-counselors" className="sidebar-link">
-          <MdOutlinePeopleAlt /> Counselors
-        </NavLink>
-        <NavLink to="/manage-announcements" className="sidebar-link">
-          <MdOutlineCampaign /> Announcements
-        </NavLink>
-        <NavLink to="/manage-services" className="sidebar-link">
-          <MdOutlineCategory /> Services
-        </NavLink>
-        <NavLink to="/reports" className="sidebar-link">
-          <MdOutlineBarChart /> Reports
-        </NavLink>
-      </div>
+      {/* ADMIN EXCLUSIVE SECTION: Only Admins see the Management tools */}
+      {role === 'admin' && (
+        <div className="sidebar-section">
+          <p className="section-title">Manages</p>
+          <NavLink to="/manage-counselors" className="sidebar-link">
+            <MdOutlinePeopleAlt /> Counselors
+          </NavLink>
+          <NavLink to="/manage-announcements" className="sidebar-link">
+            <MdOutlineCampaign /> Announcements
+          </NavLink>
+          <NavLink to="/manage-services" className="sidebar-link">
+            <MdOutlineCategory /> Services
+          </NavLink>
+          <NavLink to="/reports" className="sidebar-link">
+            <MdOutlineBarChart /> Reports
+          </NavLink>
+        </div>
+      )}
 
+      {/* SHARED SECTION: Both Admins and Counselors see their Account settings */}
       <div className="sidebar-section">
         <p className="section-title">Account</p>
         <NavLink to="/profile" className="sidebar-link">
           <MdOutlineAccountCircle /> Profile
-        </NavLink>
-        <NavLink to="/settings" className="sidebar-link">
-          <MdOutlineSettings /> Settings
         </NavLink>
         <button onClick={handleLogout} className="sidebar-link logout-btn">
           <MdOutlineLogout /> Logout

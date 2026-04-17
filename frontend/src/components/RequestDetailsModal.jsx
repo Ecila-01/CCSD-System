@@ -54,8 +54,19 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
   const handleUpdateStatus = async (newStatus) => {
     setIsUpdating(true);
     try {
+      // 1. Grab the currently logged-in user
+      const currentUser = JSON.parse(localStorage.getItem("user"));
+      
+      // 2. Logic to assign the counselor ONLY when accepting a new case
+      // If it's already assigned, keep the current name.
+      let counselorToAssign = request.assignedCounselor || 'Unassigned';
+      
+      if (newStatus === 'Active' && request.status === 'Pending') {
+        counselorToAssign = currentUser.name; 
+      }
       await axios.patch(`http://localhost:5000/api/requests/${request._id}`, {
-        status: newStatus
+        status: newStatus,
+        assignedCounselor: counselorToAssign
       });
       // Tell the Dashboard to re-fetch the data, then close the modal
       if (onStatusUpdate) onStatusUpdate();

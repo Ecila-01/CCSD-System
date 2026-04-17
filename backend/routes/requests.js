@@ -38,12 +38,12 @@ router.get('/', async (req, res) => {
 // Assuming this file is mounted in server.js using app.use('/api/requests', ...)
 router.patch('/:id', async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, assignedCounselor } = req.body;
     const updatedRequest = await ServiceRequest.findByIdAndUpdate(
       req.params.id, 
-      { status: status }, 
-      { new: true } // Returns the updated document
-    );
+      { status, assignedCounselor }, // Update both!
+      { returnDocument: 'after'}
+    )
     res.json(updatedRequest);
   } catch (error) {
     console.error("Status Update Error:", error.message);

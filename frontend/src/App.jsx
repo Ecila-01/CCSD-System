@@ -11,6 +11,9 @@ import Schedules from "./pages/Schedules";
 import Referrals from "./pages/Referrals";
 import ManageServices from './pages/ManageServices';
 import ManageAnnouncements from "./pages/ManageAnnouncements";
+import ManageCounselors from "./pages/ManageCounselors";
+import Profile from "./pages/Profile";
+
 
 function Footer() {
   return (
@@ -27,19 +30,23 @@ export default function App() {
   const location = useLocation();
 
   // Logic to hide public nav/footer on admin pages
-  const adminPages = [
+  const appPages = [
     "/dashboard", 
     "/schedules", 
     "/referrals", 
     "/manage-services", 
-    "/manage-announcements"
+    "/manage-announcements",
+    "/manage-counselors", // Added missing route
+    "/reports",           // Added missing route
+    "/profile",           // Added missing route
+    "/settings"           // Added missing route
   ];
-  const isAdminView = adminPages.includes(location.pathname);
+  const isAppView = appPages.includes(location.pathname);
 
   return (
     <div className="app">
       {/* Hide public navbar if on ANY admin page */}
-      {!isAdminView && <Navbar />}
+      {!isAppView && <Navbar />}
 
       <Routes>
         {/* Public Routes */}
@@ -53,10 +60,12 @@ export default function App() {
         <Route path="/referrals" element={<Referrals />} /> 
         <Route path="/manage-services" element={<ManageServices />} /> 
         <Route path="/manage-announcements" element={<ManageAnnouncements />} /> 
+        <Route path="/manage-counselors" element={<ManageCounselors />} /> 
+        <Route path="/profile" element={<Profile/>} /> 
       </Routes>
 
       {/* Hide public footer if on ANY admin page */}
-      {!isAdminView && <Footer />}
+      {!isAppView && <Footer />}
     </div>
   );
 }

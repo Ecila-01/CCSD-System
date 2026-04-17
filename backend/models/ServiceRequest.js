@@ -8,7 +8,7 @@ const serviceRequestSchema = new mongoose.Schema({
     enum: ['Pending', 'Active', 'Completed', 'Declined', 'Cancelled'], 
     default: 'Pending' 
   },
-  
+  assignedCounselor: { type: String, default: 'Unassigned' },
   // --- THE VITAL EXTRACTED FIELDS ---
   // The Student (The primary subject of the service)
   studentName: { type: String, required: true },

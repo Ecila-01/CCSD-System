@@ -11,7 +11,7 @@ function Schedules() {
   const [requests, setRequests] = useState([]); 
   const [viewingRequest, setViewingRequest] = useState(null); 
   const navigate = useNavigate();
-
+  
   const getStartOfWeek = (date) => {
     const d = new Date(date);
     const day = d.getDay();
@@ -74,8 +74,19 @@ function Schedules() {
   }, [navigate]);
 
   if (!user) return null;
+
+  // 1. Identify User Role & Departments
+  const isAdmin = user.role === 'admin';
+  const userDepts = user.assignedDepartments || [];
+
+  // 🔥 THE MASTER FILTER: Restrict cases by department
+  const authorizedRequests = requests.filter(req => {
+    if (isAdmin) return true; // Admins see everything
+    return userDepts.includes(req.requestData?.department);
+  });
    
-  const scheduledRequests = requests.filter(req => req.requiresSchedule === true);
+  // 2. Do the math using the FILTERED requests
+  const scheduledRequests = authorizedRequests.filter(req => req.requiresSchedule === true);
   const pendingCount = scheduledRequests.filter(req => req.status === 'Pending').length;
   const completedCount = scheduledRequests.filter(req => req.status === 'Completed').length;
 
@@ -103,14 +114,11 @@ function Schedules() {
           <div style={{ width: '100%', maxWidth: '1500px' }}>
             
             {/* 1. PAGE HEADER */}
-            <div className="schedules-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div className="schedules-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <div>
                 <h2 style={{ margin: 0, color: '#1e293b' }}>Schedules</h2>
                 <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '14px' }}>Manage and track all counseling and referral sessions</p>
               </div>
-              <button className="new-session-btn" style={{ padding: '10px 20px', background: '#c00000', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
-                + New Counseling
-              </button>
             </div>
 
             {/* 2. STATS ROW */}
@@ -189,8 +197,12 @@ function Schedules() {
                 <div className="time-label" style={{gridRow: 8}}>2 PM</div>
                 <div className="time-label" style={{gridRow: 9}}>3 PM</div>
                 <div className="time-label" style={{gridRow: 10}}>4 PM</div>
+                
+                {/* ✅ FIX: Add 5 PM to cap off the bottom of the grid */}
+                <div className="time-label" style={{gridRow: 11}}>5 PM</div>
 
-                {[2,3,4,5,6,7,8,9,10].map(row => 
+                {/* ✅ FIX: Add '11' to the row array so it draws the bottom boxes */}
+                {[2,3,4,5,6,7,8,9,10,11].map(row => 
                   [2,3,4,5,6,7,8].map(col => (
                     <div key={`${row}-${col}`} className="grid-cell" style={{gridRow: row, gridColumn: col}}></div>
                   ))
@@ -233,16 +245,71 @@ function Schedules() {
                   const timeString = new Date(`1970-01-01T${req.timeSlot}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
                   return (
-                    <div 
-                      key={req._id} 
-                      className={`cal-event ${colorClass}`} 
-                      style={{ gridRow: `${gridRow} / span 1`, gridColumn: gridCol, cursor: 'pointer' }}
-                      onClick={() => setViewingRequest(req)}
-                    >
-                      <strong>{timeString}</strong><br/>
-                      {req.studentName}<br/>
-                      <span style={{fontSize: '10px', textTransform: 'uppercase'}}>{req.serviceName}</span>
+                  <div 
+                    key={req._id} 
+                    className={`cal-event ${colorClass}`} 
+                    style={{ 
+                      gridRow: `${gridRow} / span 1`, 
+                      gridColumn: gridCol, 
+                      cursor: 'pointer', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      padding: '8px 10px',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      justifyContent: 'flex-start',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    }}
+                    onClick={() => setViewingRequest(req)}
+                  >
+                    {/* Time Header */}
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '4px', opacity: 0.8 }}>
+                      {timeString}
                     </div>
+
+                    {/* Student Name - Bold and Clear */}
+                    <span style={{ 
+                      fontSize: '13px', 
+                      fontWeight: '900', 
+                      lineHeight: '1.1',
+                      marginBottom: '2px',
+                      color: '#1a202c'
+                    }}>
+                      {req.studentName}
+                    </span>
+                    
+                    {/* Service Type - Subtle but readable */}
+                    <span style={{ 
+                      fontSize: '10px', 
+                      textTransform: 'uppercase', 
+                      fontWeight: '600',
+                      letterSpacing: '0.3px',
+                      opacity: 0.7
+                    }}>
+                      {req.serviceName}
+                    </span>
+
+                    {/* ✅ Counselor Badge - Larger and More Visible */}
+                    <div style={{ 
+                      position: 'absolute',
+                      bottom: '6px',
+                      right: '6px',
+                      fontSize: '10px', // Increased from 8px
+                      background: 'rgba(255,255,255,0.85)', 
+                      color: '#333',
+                      padding: '3px 7px', // More padding for a "pill" look
+                      borderRadius: '12px', 
+                      fontWeight: 'bold',
+                      border: '1px solid rgba(0,0,0,0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                    }}>
+                      <span style={{ fontSize: '12px' }}>👤</span> 
+                      {req.assignedCounselor !== 'Unassigned' ? req.assignedCounselor.split(' ')[0] : 'None'}
+                    </div>
+                  </div>
                   );
                 })}
               </div>

@@ -33,9 +33,17 @@ exports.login = async (req, res) => {
       { expiresIn: '8h' }, // Staff stays logged in for a full shift
       (err, token) => {
         if (err) throw err;
+        
+        // ✅ THE FIX: Added assignedDepartments and email to the response
         res.json({ 
           token, 
-          user: { id: user.id, name: user.name, role: user.role } 
+          user: { 
+            id: user.id, 
+            name: user.name, 
+            email: user.email,
+            role: user.role,
+            assignedDepartments: user.assignedDepartments || [] // 👈 Grabs the array!
+          } 
         });
       }
     );

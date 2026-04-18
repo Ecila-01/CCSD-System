@@ -1,25 +1,53 @@
 const express = require('express');
 const router = express.Router();
 const ServiceRequest = require('../models/ServiceRequest');
+const User = require('../models/User'); // Import your User model
+const {sendGuestLink, sendCounselorNotification, sendStatusUpdateToStudent, sendStatusUpdateToReferrer } = require('../utils/mailer');
 
-// POST: Submit a new dynamic form
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   try {
-    // Pass the ENTIRE payload (req.body) directly into the new request
-    // Mongoose will automatically map all the fields (studentName, requiresSchedule, etc.)
     const newRequest = new ServiceRequest(req.body);
+    const savedRequest = await newRequest.save();
 
-    await newRequest.save();
+    // 1. Notify Student/Referrer
+    const isReferral = savedRequest.serviceName.toUpperCase() === "REFERRAL";
+    const recipientEmail = isReferral ? savedRequest.referrerEmail : savedRequest.studentEmail;
 
-    res.status(201).json({ 
-      message: 'Request submitted successfully!',
-      request: newRequest 
-    });
+    if (recipientEmail) {
+      await sendGuestLink(recipientEmail, savedRequest.serviceName, savedRequest.guestToken);
+    }
 
+    // 2. Notify Assigned Counselors
+    const studentDept = req.body.requestData.department; 
+    if (studentDept) {
+      const counselors = await User.find({ 
+        assignedDepartments: studentDept, 
+        role: 'counsellor' 
+      });
+
+      const notifications = counselors.map(c => 
+        sendCounselorNotification(c.email, savedRequest.studentName, studentDept, savedRequest.serviceName, "New Request")
+      );
+      await Promise.all(notifications);
+    }
+
+    res.status(201).json(savedRequest);
   } catch (error) {
-    // Pro-tip: Log the actual error message from Mongoose so you know exactly what failed!
-    console.error("Submission Error:", error.message); 
-    res.status(500).json({ message: 'Server error while saving request', error: error.message });
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.get("/guest/:token", async (req, res) => {
+  try {
+    const request = await ServiceRequest.findOne({ guestToken: req.params.token });
+    
+    if (!request) {
+      return res.status(404).json({ message: "Invalid or expired link." });
+    }
+    
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -34,21 +62,77 @@ router.get('/', async (req, res) => {
 });
 
 // PATCH: Update Status (Accept/Decline/Reschedule)
-// NOTE: I changed this from '/api/requests/:id' to just '/:id' 
-// Assuming this file is mounted in server.js using app.use('/api/requests', ...)
 router.patch('/:id', async (req, res) => {
   try {
     const { status, assignedCounselor } = req.body;
+    
     const updatedRequest = await ServiceRequest.findByIdAndUpdate(
       req.params.id, 
-      { status, assignedCounselor }, // Update both!
-      { returnDocument: 'after'}
-    )
+      { status, assignedCounselor },
+      { returnDocument: 'after' }
+    );
+
+    if (!updatedRequest) return res.status(404).json({ message: "Request not found" });
+
+    // ✅ Pass the guestToken into the mailer functions
+    if (updatedRequest.serviceName.toUpperCase() === "REFERRAL") {
+      if (updatedRequest.referrerEmail) {
+        await sendStatusUpdateToReferrer(
+          updatedRequest.referrerEmail, 
+          updatedRequest.studentName, 
+          status,
+          updatedRequest.guestToken // 👈 Pass the token here
+        );
+      }
+    } else {
+      if (updatedRequest.studentEmail) {
+        await sendStatusUpdateToStudent(
+          updatedRequest.studentEmail, 
+          updatedRequest.serviceName, 
+          status,
+          updatedRequest.guestToken // 👈 Pass the token here
+        );
+      }
+    }
+
     res.json(updatedRequest);
   } catch (error) {
-    console.error("Status Update Error:", error.message);
     res.status(500).json({ error: "Failed to update status" });
   }
 });
 
+// Student updating their own request via Guest Token
+router.patch("/guest-update/:token", async (req, res) => {
+  try {
+    const { action, appointmentDate, timeSlot } = req.body; // action: "Reschedule" or "Cancel"
+    
+    const request = await ServiceRequest.findOne({ guestToken: req.params.token });
+    if (!request) return res.status(404).json({ message: "Request not found" });
+
+    // Update the request
+    if (action === "Cancel") {
+      request.status = "Cancelled";
+    } else if (action === "Reschedule") {
+      request.appointmentDate = appointmentDate;
+      request.timeSlot = timeSlot;
+      request.status = "Pending"; // Reset to pending for review
+    }
+    
+    await request.save();
+
+    // Notify Counselors of the CHANGE
+    const studentDept = request.requestData.department;
+    if (studentDept) {
+      const counselors = await User.find({ assignedDepartments: studentDept });
+      const updates = counselors.map(c => 
+        sendCounselorNotification(c.email, request.studentName, studentDept, request.serviceName, `Student ${action}`)
+      );
+      await Promise.all(updates);
+    }
+
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({ message: "Update failed" });
+  }
+});
 module.exports = router;

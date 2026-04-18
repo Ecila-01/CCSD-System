@@ -10,7 +10,8 @@ import {
   MdOutlineAssignment,
   MdOutlineCategory,
   MdOutlineBarChart,
-  MdOutlineAccountCircle
+  MdOutlineAccountCircle,
+  MdAccountBalance
 } from "react-icons/md";
 import '../styles/Sidebar.css';
 import ubLogo from "../assets/darkUBlogo.png";
@@ -63,6 +64,9 @@ const Sidebar = () => {
           </NavLink>
           <NavLink to="/reports" className="sidebar-link">
             <MdOutlineBarChart /> Reports
+          </NavLink>
+          <NavLink to="/departments" className="sidebar-link">
+            <MdAccountBalance /> Departments
           </NavLink>
         </div>
       )}

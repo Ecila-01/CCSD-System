@@ -93,7 +93,9 @@ router.patch('/:id', upload.single('image'), async (req, res) => {
     const updated = await Announcement.findByIdAndUpdate(
       req.params.id,
       { $set: updateData },
-      { returnDocument: 'after' }
+      { returnDocument: 'after', // ✅ Modern syntax
+        runValidators: true      // ✅ Ensures model logic is followed
+      }
     );
 
     if (!updated) return res.status(404).json({ message: "Not found" });

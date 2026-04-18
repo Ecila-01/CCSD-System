@@ -6,7 +6,8 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   const [formData, setFormData] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false); 
-
+  const [submittedToken, setSubmittedToken] = useState("");
+  
   const totalSteps = service?.fields 
     ? Math.max(...service.fields.map(f => f.section || 1)) 
     : 1;
@@ -109,6 +110,13 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
       });
 
       if (response.ok) {
+        // ✅ Capture the backend response which contains the guestToken
+        const result = await response.json();
+        
+        // ✅ Store the token in our new state so the UI can see it
+        setSubmittedToken(result.guestToken);
+        
+        // ✅ Now show the success screen
         setIsSuccess(true);
       } else {
         // If it still 500s, this will log the server's error message
@@ -140,10 +148,26 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
               ✓
             </div>
             <h2 style={{ color: "#333", marginBottom: "15px", fontSize: "28px" }}>Request Submitted!</h2>
-            <p style={{ color: "#666", lineHeight: "1.6", marginBottom: "30px", fontSize: "16px" }}>
-              Your request for <strong>{service.name}</strong> has been successfully sent to the CCSD team. 
-              We will review your details and reach out to your UB student email shortly.
+            
+            <p style={{ color: "#666", lineHeight: "1.6", marginBottom: "20px", fontSize: "16px" }}>
+              Your request for <strong>{service.name}</strong> has been sent.
             </p>
+
+            <div style={{ backgroundColor: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '30px', width: '100%' }}>
+              <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Your Secure Tracking Link</p>
+              
+              <code style={{ fontSize: '13px', color: '#0f172a', wordBreak: 'break-all' }}>
+                {/* ✅ Changed from formData.guestToken to submittedToken */}
+                {`http://localhost:5173/view-request/${submittedToken}`}
+              </code>
+              
+              <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '10px' }}>
+                {service.name.toUpperCase() === "REFERRAL" 
+                  ? `We have sent this link to your email (${formData.email}) for tracking.`
+                  : `We have sent this link to your UB student email (${formData.email}).`
+                }
+              </p>
+            </div>
             <button onClick={onClose} style={{ backgroundColor: "#cc0000", color: "white", border: "none", padding: "12px 32px", fontSize: "16px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}>
               Done
             </button>

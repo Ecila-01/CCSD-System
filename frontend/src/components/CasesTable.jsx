@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Select from 'react-select'; // ✅ Import React Select for Searchable Dropdowns
+import Select from 'react-select'; 
 import '../styles/CasesTable.css';
 
 const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 6 }) => {
@@ -7,34 +7,25 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
   
   // --- FILTER STATES ---
   const [filterCase, setFilterCase] = useState('');
-  const [filterCourse, setFilterCourse] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState(''); // ✅ Changed from Course
   const [filterStatus, setFilterStatus] = useState('');
   const [filterCounselor, setFilterCounselor] = useState('');
-  
-  // NEW: Search state for Student Name
   const [searchName, setSearchName] = useState('');
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterCase, filterCourse, filterStatus, filterCounselor, searchName]);
+  }, [filterCase, filterDepartment, filterStatus, filterCounselor, searchName]);
 
-  // --- EXISTING HELPERS ---
+  // --- HELPERS ---
   const getStudentName = (data) => {
     if (!data) return "N/A";
     return data.studentName || data.fullName || data.referrerName || "N/A";
   };
 
-  const getCourse = (data) => {
+  // ✅ NEW: Simple Department Extractor
+  const getDepartment = (data) => {
     if (!data) return "N/A";
-    if (data.courseYear && data.yearLevel) return `${data.courseYear} - ${data.yearLevel}`;
-    if (data.courseYear) return data.courseYear;
-    if (data.courseDescription) return data.courseDescription;
-    return "N/A";
-  };
-
-  const getBaseCourse = (courseString) => {
-    if (courseString === "N/A") return "N/A";
-    return courseString.split('-')[0].trim();
+    return data.department || "N/A";
   };
 
   const getDisplayDate = (req) => {
@@ -77,7 +68,8 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
   ];
 
   const caseOptions = buildOptions([...new Set(requests.map(r => r.serviceName))].filter(Boolean), "CASES");
-  const courseOptions = buildOptions([...new Set(requests.map(r => getBaseCourse(getCourse(r.requestData))))].filter(c => c !== "N/A"), "COURSE");
+  // ✅ NEW: Build options for Departments
+  const departmentOptions = buildOptions([...new Set(requests.map(r => getDepartment(r.requestData)))].filter(c => c !== "N/A"), "DEPARTMENT");
   const statusOptions = buildOptions([...new Set(requests.map(r => r.status))].filter(Boolean), "STATUS");
   const counselorOptions = buildOptions([...new Set(requests.map(r => r.assignedCounselor || 'Unassigned'))], "COUNSELOR");
 
@@ -87,11 +79,11 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
     
     const matchName = searchName === '' || actualName.toLowerCase().includes(searchName.toLowerCase());
     const matchCase = filterCase === '' || req.serviceName === filterCase;
-    const matchCourse = filterCourse === '' || getBaseCourse(getCourse(req.requestData)) === filterCourse;
+    const matchDepartment = filterDepartment === '' || getDepartment(req.requestData) === filterDepartment; // ✅ Filter by Dept
     const matchStatus = filterStatus === '' || req.status === filterStatus;
     const matchCounselor = filterCounselor === '' || (req.assignedCounselor || 'Unassigned') === filterCounselor;
     
-    return matchName && matchCase && matchCourse && matchStatus && matchCounselor;
+    return matchName && matchCase && matchDepartment && matchStatus && matchCounselor;
   });
 
   // --- PAGINATION ---
@@ -103,64 +95,21 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
   const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(prev => prev + 1); };
   const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(prev => prev - 1); };
 
-  // --- ✅ CUSTOM REACT-SELECT STYLING ---
-  // This makes the dropdown invisible until clicked, matching standard text headers
+  // --- CUSTOM REACT-SELECT STYLING ---
   const headerSelectStyles = {
     control: (base) => ({
-      ...base,
-      backgroundColor: 'transparent',
-      border: 'none',
-      boxShadow: 'none',
-      cursor: 'pointer',
-      minHeight: 'auto',
-      padding: '0'
+      ...base, backgroundColor: 'transparent', border: 'none', boxShadow: 'none', cursor: 'pointer', minHeight: 'auto', padding: '0'
     }),
     valueContainer: (base) => ({ ...base, padding: '0' }),
-    input: (base) => ({
-      ...base,
-      color: '#6b7280',
-      fontWeight: '700',
-      fontSize: '11px',
-      textTransform: 'uppercase',
-      margin: 0, padding: 0
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: '#6b7280',
-      fontWeight: '700',
-      fontSize: '11px',
-      textTransform: 'uppercase',
-      letterSpacing: '0.05em'
-    }),
+    input: (base) => ({ ...base, color: '#6b7280', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase', margin: 0, padding: 0 }),
+    singleValue: (base) => ({ ...base, color: '#6b7280', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }),
     indicatorSeparator: () => ({ display: 'none' }),
-    dropdownIndicator: (base) => ({
-      ...base,
-      padding: '0 0 0 4px',
-      color: '#6b7280',
-      '&:hover': { color: '#3b82f6' }
-    }),
-    menu: (base) => ({
-      ...base,
-      width: 'max-content',
-      minWidth: '100%',
-      zIndex: 50 // Ensures dropdown sits on top of table rows
-    }),
-    option: (base, state) => ({
-      ...base,
-      fontSize: '13px',
-      color: '#1e293b',
-      backgroundColor: state.isFocused ? '#f1f5f9' : 'white',
-      cursor: 'pointer'
-    })
+    dropdownIndicator: (base) => ({ ...base, padding: '0 0 0 4px', color: '#6b7280', '&:hover': { color: '#3b82f6' } }),
+    menu: (base) => ({ ...base, width: 'max-content', minWidth: '100%', zIndex: 50 }),
+    option: (base, state) => ({ ...base, fontSize: '13px', color: '#1e293b', backgroundColor: state.isFocused ? '#f1f5f9' : 'white', cursor: 'pointer' })
   };
 
-  const plainHeaderStyle = {
-    color: '#6b7280',
-    fontWeight: '700',
-    fontSize: '11px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em'
-  };
+  const plainHeaderStyle = { color: '#6b7280', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' };
 
   return (
     <div className="cases-table-container">
@@ -171,34 +120,22 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
       <table className="cases-table">
         <thead>
           <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
-            
             <th style={{ padding: '16px 10px 16px 20px', minWidth: '160px' }}>
-              <Select 
-                options={caseOptions}
-                styles={headerSelectStyles}
-                isSearchable={true}
-                value={caseOptions.find(o => o.value === filterCase)}
-                onChange={(option) => setFilterCase(option ? option.value : '')}
-              />
+              <Select options={caseOptions} styles={headerSelectStyles} isSearchable={true} value={caseOptions.find(o => o.value === filterCase)} onChange={(option) => setFilterCase(option ? option.value : '')} />
             </th>
             
             <th style={{ padding: '16px 20px' }}>
-              <input 
-                type="text" 
-                placeholder="🔍 STUDENT NAME..." 
-                value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
-                style={{ ...plainHeaderStyle, background: 'transparent', border: 'none', borderBottom: searchName ? '1px solid #3b82f6' : 'none', outline: 'none', width: '100%' }}
-              />
+              <input type="text" placeholder="🔍 STUDENT NAME..." value={searchName} onChange={(e) => setSearchName(e.target.value)} style={{ ...plainHeaderStyle, background: 'transparent', border: 'none', borderBottom: searchName ? '1px solid #3b82f6' : 'none', outline: 'none', width: '100%' }} />
             </th>
             
             <th style={{ padding: '16px 10px', minWidth: '160px' }}>
+              {/* ✅ NEW: Department Select */}
               <Select 
-                options={courseOptions}
-                styles={headerSelectStyles}
-                isSearchable={true}
-                value={courseOptions.find(o => o.value === filterCourse)}
-                onChange={(option) => setFilterCourse(option ? option.value : '')}
+                options={departmentOptions} 
+                styles={headerSelectStyles} 
+                isSearchable={true} 
+                value={departmentOptions.find(o => o.value === filterDepartment)} 
+                onChange={(option) => setFilterDepartment(option ? option.value : '')} 
               />
             </th>
             
@@ -206,23 +143,11 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
             <th style={{ ...plainHeaderStyle, padding: '16px 20px' }}>TIME</th>
             
             <th style={{ padding: '16px 10px', minWidth: '150px' }}>
-              <Select 
-                options={statusOptions}
-                styles={headerSelectStyles}
-                isSearchable={true}
-                value={statusOptions.find(o => o.value === filterStatus)}
-                onChange={(option) => setFilterStatus(option ? option.value : '')}
-              />
+              <Select options={statusOptions} styles={headerSelectStyles} isSearchable={true} value={statusOptions.find(o => o.value === filterStatus)} onChange={(option) => setFilterStatus(option ? option.value : '')} />
             </th>
             
             <th style={{ padding: '16px 10px', minWidth: '180px' }}>
-              <Select 
-                options={counselorOptions}
-                styles={headerSelectStyles}
-                isSearchable={true}
-                value={counselorOptions.find(o => o.value === filterCounselor)}
-                onChange={(option) => setFilterCounselor(option ? option.value : '')}
-              />
+              <Select options={counselorOptions} styles={headerSelectStyles} isSearchable={true} value={counselorOptions.find(o => o.value === filterCounselor)} onChange={(option) => setFilterCounselor(option ? option.value : '')} />
             </th>
             
             <th style={{ ...plainHeaderStyle, padding: '16px 20px' }}>ACTIONS</th>
@@ -247,7 +172,12 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
                   <span style={{ fontSize: '13px', color: '#1e293b' }}>{getStudentName(req.requestData)}</span>
                 )}
               </td>
-              <td style={{ padding: '16px 20px', fontSize: '13px', color: '#475569' }}>{getCourse(req.requestData)}</td>
+              
+              {/* ✅ NEW: Displays Department */}
+              <td style={{ padding: '16px 20px', fontSize: '13px', color: '#475569', fontWeight: '600' }}>
+                {getDepartment(req.requestData)}
+              </td>
+              
               <td style={{ padding: '16px 20px' }}>
                 <span style={{ fontSize: '13px', color: '#475569' }}>{getDisplayDate(req)}</span>
                 <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', fontWeight: '600', textTransform: 'uppercase' }}>
@@ -267,10 +197,7 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
                 }
               </td>
               <td style={{ padding: '16px 20px' }}>
-                <button 
-                  onClick={() => onView(req)}
-                  style={{ padding: '6px 16px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                >
+                <button onClick={() => onView(req)} style={{ padding: '6px 16px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
                   Open
                 </button>
               </td>
@@ -295,21 +222,9 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
 
         {totalPages > 1 && (
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <button 
-              onClick={handlePrevPage} disabled={currentPage === 1}
-              style={{ padding: '6px 12px', border: '1px solid #e2e8f0', backgroundColor: currentPage === 1 ? '#f8fafc' : '#ffffff', color: currentPage === 1 ? '#cbd5e1' : '#475569', borderRadius: '6px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '13px' }}
-            >
-              Prev
-            </button>
-            <span style={{ padding: '6px 14px', backgroundColor: '#fee2e2', color: '#ef4444', borderRadius: '6px', fontWeight: '700', fontSize: '13px' }}>
-              {currentPage}
-            </span>
-            <button 
-              onClick={handleNextPage} disabled={currentPage === totalPages}
-              style={{ padding: '6px 12px', border: '1px solid #e2e8f0', backgroundColor: currentPage === totalPages ? '#f8fafc' : '#ffffff', color: currentPage === totalPages ? '#cbd5e1' : '#475569', borderRadius: '6px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '13px' }}
-            >
-              Next
-            </button>
+            <button onClick={handlePrevPage} disabled={currentPage === 1} style={{ padding: '6px 12px', border: '1px solid #e2e8f0', backgroundColor: currentPage === 1 ? '#f8fafc' : '#ffffff', color: currentPage === 1 ? '#cbd5e1' : '#475569', borderRadius: '6px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '13px' }}>Prev</button>
+            <span style={{ padding: '6px 14px', backgroundColor: '#fee2e2', color: '#ef4444', borderRadius: '6px', fontWeight: '700', fontSize: '13px' }}>{currentPage}</span>
+            <button onClick={handleNextPage} disabled={currentPage === totalPages} style={{ padding: '6px 12px', border: '1px solid #e2e8f0', backgroundColor: currentPage === totalPages ? '#f8fafc' : '#ffffff', color: currentPage === totalPages ? '#cbd5e1' : '#475569', borderRadius: '6px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '13px' }}>Next</button>
           </div>
         )}
       </div>

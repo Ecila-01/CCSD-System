@@ -13,6 +13,17 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   const [fields, setFields] = useState([]); 
   const [selectedFile, setSelectedFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // ✅ NEW: State to hold the live database departments
+  const [departmentsDb, setDepartmentsDb] = useState([]);
+
+  // ✅ NEW: Fetch departments when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      axios.get('http://localhost:5000/api/departments')
+        .then(res => setDepartmentsDb(res.data))
+        .catch(err => console.error("Error fetching departments for form maker:", err));
+    }
+  }, [isOpen]);
 
   // 2. PRE-FILL FORM IF EDITING
   useEffect(() => {
@@ -183,19 +194,25 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   };
 
   const addAcademicProfile = () => {
+    // ✅ Dynamically map the names and all courses from the database
+    const deptOptions = departmentsDb.map(d => d.name);
+    
+    // Grabs every course from every department, removes duplicates, and sorts them alphabetically
+    const allCourses = [...new Set(departmentsDb.flatMap(d => d.courses || []))].sort();
+
     const academicFields = [
       {
         label: "School / Department",
         type: "select",
         required: true,
-        options: ["SBAA", "SCJPS", "SD", "SEA", "SIHTM", "SIT", "SNS", "SN", "STELA", "SL", "Other"]
+        // Fallback array just in case the DB hasn't loaded yet
+        options: deptOptions.length > 0 ? deptOptions : ["SBAA", "SIT", "SEA", "Other"]
       },
       {
-        // Changed to a text field with a clear instruction
-        label: "Course / Program (e.g. BSCS, BSBA)",
-        type: "text",
+        label: "Course / Program",
+        type: "select", // ✅ Changed from 'text' to 'select'
         required: true,
-        options: [] // Text fields don't need options
+        options: allCourses.length > 0 ? allCourses : ["BSCS", "BSIT", "BSBA", "Other"]
       },
       {
         label: "Year Level",
@@ -207,6 +224,7 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
 
     setFields([...fields, ...academicFields]);
   };
+  
   const addContactInfo = () => {
     const contactFields = [
       { label: "ID Number", type: "text", required: true, options: [] },

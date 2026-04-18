@@ -10,7 +10,7 @@ const path = require('path');
 const requestRoutes = require('./routes/requests');
 const announcementRoutes = require('./routes/announcements')
 const userRoutes = require('./routes/userRoutes');
-
+const departmentRoutes = require('./routes/departments');
 
 // Middleware
 app.use(cors());
@@ -28,7 +28,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'), {
 app.use('/api/requests', requestRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/users', userRoutes);
-
+app.use('/api/departments', departmentRoutes);
 
 // MongoDB Connection
 const connectDB = async () => {

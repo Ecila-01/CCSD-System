@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
+
 
 const serviceRequestSchema = new mongoose.Schema({
   serviceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Service' },
@@ -25,7 +27,13 @@ const serviceRequestSchema = new mongoose.Schema({
   timeSlot: { type: String },
 
   // --- THE FULL DYNAMIC FORM DATA ---
-  requestData: { type: mongoose.Schema.Types.Mixed, required: true }
+  requestData: { type: mongoose.Schema.Types.Mixed, required: true },
+
+  guestToken: { 
+    type: String, 
+    default: () => crypto.randomUUID(), // ✅ This generates a standard UUID v4
+    unique: true 
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('ServiceRequest', serviceRequestSchema);

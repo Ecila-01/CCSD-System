@@ -4,8 +4,8 @@ const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
   service: 'gmail', // ✅ Nodemailer handles the host/port for you
   auth: {
-    user: 'wiporamirez.01@gmail.com',
-    pass: 'zgzi gvxa brff eymu' // ✅ Your 16-character Google App Password
+    user: 'ecila070102@gmail.com',
+    pass: 'qomm klqn jzdy hfym' // ✅ Your 16-character Google App Password
   }
 });
 

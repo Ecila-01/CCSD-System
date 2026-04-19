@@ -72,11 +72,32 @@ const AddAnnouncementModal = ({ isOpen, onClose, onSuccess, editingAnnouncement 
   return (
     <div className="service-modal-overlay">
       <div className="service-modal-card add-service-card">
-        <div className="modal-header bg-red">
+        <div className="modal-header bg-red" style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          position: 'relative', // Ensures button positioning context
+          padding: '15px 20px' 
+        }}>
           <h2>{isEditing ? "EDIT ANNOUNCEMENT" : "CREATE ANNOUNCEMENT"}</h2>
-          <button className="close-btn" onClick={onClose}><MdClose size={24} /></button>
+          <button 
+            type="button" 
+            className="close-btn" 
+            onClick={onClose}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'white', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '5px'
+            }}
+          >
+            <MdClose size={28} />
+          </button>
         </div>
-
         <form onSubmit={handleSubmit} className="modal-form-wrapper">
           <div className="modal-body">
             

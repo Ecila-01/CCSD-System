@@ -25,14 +25,18 @@ function Navbar() {
           <NavLink to="/" className="navLink" onClick={closeMenu}>Home</NavLink>
           <NavLink to="/about" className="navLink" onClick={closeMenu}>About</NavLink>
           <NavLink to="/services" className="navLink" onClick={closeMenu}>Services</NavLink>
-          {/* Login button inside mobile menu */}
-          <button className="loginBtn" onClick={() => { setModalOpen(true); closeMenu(); }}>
+          
+          {/* Added 'mobile-login' class here */}
+          <button className="loginBtn mobile-login" onClick={() => { setModalOpen(true); closeMenu(); }}>
             Login
           </button>
         </nav>
 
         <div className="navRight">
-          <button className="loginBtn" onClick={() => setModalOpen(true)}>Login</button>
+          {/* Added 'desktop-login' class here */}
+          <button className="loginBtn desktop-login" onClick={() => { setModalOpen(true); closeMenu(); }}>
+            Login
+          </button>
         </div>
       </div>
 

@@ -25,10 +25,32 @@ const ServiceModal = ({ service, onClose, onEdit, onDelete }) => {
     <div className="service-modal-overlay">
       <div className="service-modal-card">
         
-        <div className="modal-header bg-red">
-          <h2>{service.name}</h2>
-          <button className="close-btn" onClick={onClose}>
-            <MdClose size={24} />
+        <div className="modal-header bg-red" style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          position: 'relative', // Ensures button positioning context
+          padding: '15px 20px' 
+        }}>
+          <h2 style={{ margin: 0, fontSize: '18px', color: 'white' }}>
+            {service.name}
+          </h2>
+          <button 
+            type="button" 
+            className="close-btn" 
+            onClick={onClose}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'white', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '5px'
+            }}
+          >
+            <MdClose size={28} />
           </button>
         </div>
 

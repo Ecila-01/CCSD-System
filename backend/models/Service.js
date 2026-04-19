@@ -7,7 +7,10 @@ const fieldSchema = new mongoose.Schema({
   options: [String],
   required: Boolean,
   section: Number, // <--- ADD THIS
-  content: String  // <--- ADD THIS (for the info type fields)
+  content: String, // <--- ADD THIS (for the info type fields)
+  // ✅ ADD THESE TWO LINES SO MONGOOSE SAVES THE CASCADING LOGIC
+  dependsOnLabel: { type: String, default: "" },
+  optionsMap: { type: mongoose.Schema.Types.Mixed, default: {} } // Mixed allows the dynamic Object mapping
 });
 
 const serviceSchema = new mongoose.Schema({

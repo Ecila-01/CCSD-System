@@ -194,31 +194,50 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   };
 
   const addAcademicProfile = () => {
-    // ✅ Dynamically map the names and all courses from the database
-    const deptOptions = departmentsDb.map(d => d.name);
+    // 1. Build the base arrays and ALWAYS append "Other" to the end
+    const rawDepts = departmentsDb.map(d => d.name).sort();
+    const deptOptions = rawDepts.length > 0 
+      ? [...rawDepts, "Other"] 
+      : ["SBAA", "SCJPS", "SEA", "SIHTM", "SIT", "SNS", "SOD", "SOL", "SON", "STELA", "Other"];
+
+    const rawCourses = [...new Set(departmentsDb.flatMap(d => d.courses || []))].sort();
+    const allCourses = rawCourses.length > 0 
+      ? [...rawCourses, "Other"] 
+      : ["BSCS", "BSIT", "BSBA", "Other"];
+
+    // 2. Create the Map and inject "Other" into every list
+    const deptCourseMap = {};
+    departmentsDb.forEach(d => {
+      // Add "Other" to the bottom of every department's specific course list
+      deptCourseMap[d.name] = [...(d.courses || []), "Other"]; 
+    });
     
-    // Grabs every course from every department, removes duplicates, and sorts them alphabetically
-    const allCourses = [...new Set(departmentsDb.flatMap(d => d.courses || []))].sort();
+    // 3. Failsafe: If the student chooses "Other" for their Department, 
+    // the Course map needs to know what to show them (just "Other")
+    deptCourseMap["Other"] = ["Other"];
+    deptCourseMap["Other:"] = ["Other"]; 
 
     const academicFields = [
       {
         label: "School / Department",
         type: "select",
         required: true,
-        // Fallback array just in case the DB hasn't loaded yet
-        options: deptOptions.length > 0 ? deptOptions : ["SBAA", "SIT", "SEA", "Other"]
+        options: deptOptions
       },
       {
         label: "Course / Program",
-        type: "select", // ✅ Changed from 'text' to 'select'
+        type: "select", 
         required: true,
-        options: allCourses.length > 0 ? allCourses : ["BSCS", "BSIT", "BSBA", "Other"]
+        options: allCourses, 
+        dependsOnLabel: "School / Department", 
+        optionsMap: deptCourseMap 
       },
       {
         label: "Year Level",
         type: "select",
         required: true,
-        options: ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year", "Graduate/Alumni", "N/A"]
+        options: ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year", "Graduate/Alumni", "N/A"],
+        dependsOnLabel: "Course / Program" 
       }
     ];
 
@@ -250,10 +269,32 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
     <div className="service-modal-overlay">
       <div className="service-modal-card add-service-card">
         
-        <div className="modal-header bg-red">
-          <h2>{isEditing ? `EDITING: ${name.toUpperCase()}` : "CREATE NEW SERVICE"}</h2>
-          <button type="button" className="close-btn" onClick={onClose}>
-            <MdClose size={24} />
+        <div className="modal-header bg-red" style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          position: 'relative', // Ensures button positioning context
+          padding: '15px 20px' 
+        }}>
+          <h2 style={{ margin: 0, fontSize: '18px', color: 'white' }}>
+            {isEditing ? `EDITING: ${name.toUpperCase()}` : "CREATE NEW SERVICE"}
+          </h2>
+          <button 
+            type="button" 
+            className="close-btn" 
+            onClick={onClose}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'white', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '5px'
+            }}
+          >
+            <MdClose size={28} />
           </button>
         </div>
 

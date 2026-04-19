@@ -11,6 +11,11 @@
   font-family: 'Raleway', sans-serif;
 }
 
+/* Hide the login button inside the nav menu on desktop */
+.navCenter .loginBtn {
+  display: none;
+}
+
 .brandLogo{
   width:120px;
 }

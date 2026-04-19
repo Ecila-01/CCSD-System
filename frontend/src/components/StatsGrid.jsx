@@ -17,9 +17,9 @@ const StatsGrid = ({ requests }) => {
         marginRight: '20px' 
     }}>
       
-      <div className="stat-card" style={{ background: 'white', padding: '20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-        <div style={{ background: '#ffebee', padding: '10px', borderRadius: '50%', color: '#d32f2f' }}>
-          <MdOutlineAccessTime size={24} />
+      <div className="stat-card" style={{ background: 'white', padding: '20px', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+        <div style={{  padding: '10px', color: '#d32f2f' }}>
+          <MdOutlineAccessTime size={30} />
         </div>
         <div>
           <h3 style={{ margin: 0, fontSize: '20px', color: '#333' }}>{totalCases}</h3>
@@ -27,9 +27,9 @@ const StatsGrid = ({ requests }) => {
         </div>
       </div>
 
-      <div className="stat-card" style={{ background: 'white', padding: '20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-        <div style={{ background: '#e8f5e9', padding: '10px', borderRadius: '50%', color: '#2e7d32' }}>
-          <MdOutlineCheckCircleOutline size={24} />
+      <div className="stat-card" style={{ background: 'white', padding: '20px',  display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+        <div style={{ padding: '10px', color: '#2e7d32' }}>
+          <MdOutlineCheckCircleOutline size={30} />
         </div>
         <div>
           <h3 style={{ margin: 0, fontSize: '20px', color: '#333' }}>{resolvedCases}</h3>
@@ -37,9 +37,9 @@ const StatsGrid = ({ requests }) => {
         </div>
       </div>
 
-      <div className="stat-card" style={{ background: 'white', padding: '20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-        <div style={{ background: '#fff8e1', padding: '10px', borderRadius: '50%', color: '#f57f17' }}>
-          <MdOutlinePendingActions size={24} />
+      <div className="stat-card" style={{ background: 'white', padding: '20px', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+        <div style={{ padding: '10px', color: '#f57f17' }}>
+          <MdOutlinePendingActions size={30} />
         </div>
         <div>
           <h3 style={{ margin: 0, fontSize: '20px', color: '#333' }}>{pendingCases}</h3>

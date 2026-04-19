@@ -23,7 +23,7 @@ const AnnouncementModal = ({ announcement, onClose, onEdit }) => {
           style={{ 
             marginBottom: '20px', 
             backgroundColor: '#f8f9fa', // Optional: light gray background for empty space
-            borderRadius: '8px',
+            
             display: 'flex',
             justifyContent: 'center'
           }}
@@ -35,7 +35,7 @@ const AnnouncementModal = ({ announcement, onClose, onEdit }) => {
               width: '100%', 
               maxHeight: '300px',    // Prevents the image from getting too tall
               objectFit: 'contain',  // THIS is the magic "zoom out to fit" property!
-              borderRadius: '8px', 
+               
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
             }}
           />

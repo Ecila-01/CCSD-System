@@ -1,6 +1,6 @@
 .sidebar {
   width: 260px;
-  background-color: #e0e0e0; /* Match that light grey sidebar in Figma */
+  background-color: #e0e0e0;
   height: 100vh;
   position: fixed;
   left: 0;
@@ -9,17 +9,26 @@
   flex-direction: column;
   padding: 20px 0;
   box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+  z-index: 100;
+  box-sizing: border-box; /* add this */
 }
 
 .sidebar-logo {
   padding: 0 20px 30px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
 }
 
-.sidebar-logo img {
-  width: 140px;
+.sidebar-ub-logo {
+  width: 100px;
 }
 
+.sidebar-ccsd-logo {
+  width: 80px;  /* smaller than UB logo */
+}
 .sidebar-section {
   margin-bottom: 25px;
   padding: 0 15px;
@@ -43,7 +52,7 @@
   color: #555;
   font-size: 14px;
   font-weight: 500;
-  border-radius: 6px;
+  
   transition: all 0.2s;
   background: none;
   border: none;

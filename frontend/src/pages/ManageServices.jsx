@@ -130,7 +130,7 @@ function ManageServices() {
           </div>
           <div className="header-right">
             <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-            <div className="user-pill">
+            <div className="user-pill"> <div style={{ margin: '10px' }}></div>
               <span className="role-tag">{user.role || 'Admin'}</span>
             </div>
           </div>
@@ -148,7 +148,7 @@ function ManageServices() {
           </div>
           <div className="services-stats-row">
             <div className="service-stat-card">
-              <div className="icon-box red"><MdOutlineShield size={24}/></div>
+              <div className="icon-box red"><MdOutlineShield size={32}/></div>
               <div className="stat-info">
                 <span className="stat-label">TOTAL SERVICES</span>
                 <span className="stat-number">{services.length}</span>
@@ -156,7 +156,7 @@ function ManageServices() {
             </div>
             
             <div className="service-stat-card">
-              <div className="icon-box green"><MdOutlineCheckCircle size={24}/></div>
+              <div className="icon-box green"><MdOutlineCheckCircle size={32}/></div>
               <div className="stat-info">
                 <span className="stat-label">ACTIVE</span>
                 <span className="stat-number">
@@ -166,7 +166,7 @@ function ManageServices() {
             </div>
             
             <div className="service-stat-card">
-              <div className="icon-box yellow"><MdOutlineWarning size={24}/></div>
+              <div className="icon-box yellow"><MdOutlineWarning size={32}/></div>
               <div className="stat-info">
                 <span className="stat-label">INACTIVE</span>
                 <span className="stat-number">

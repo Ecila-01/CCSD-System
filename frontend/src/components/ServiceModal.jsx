@@ -38,7 +38,7 @@ const ServiceModal = ({ service, onClose, onEdit, onDelete }) => {
           {service.image && (
             <div className="modal-detail-group">
               <label>SERVICE IMAGE</label>
-              <div className="modal-image-wrapper" style={{ textAlign: 'center', backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '8px', border: '1px solid #eee' }}>
+              <div className="modal-image-wrapper" style={{ textAlign: 'center', backgroundColor: '#f9f9f9', padding: '10px', border: '1px solid #eee' }}>
                 <img 
                   src={service.image} 
                   alt={service.name} 

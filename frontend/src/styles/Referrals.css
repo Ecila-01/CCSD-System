@@ -13,7 +13,7 @@
 .page-header p { margin: 0; color: #666; font-size: 14px; }
 
 .export-btn {
-  background: white; border-radius: 50px; border:  2px solid #ccc; padding: 8px 16px;  font-weight: 600; cursor: pointer; color: #444;
+  background: white;  border:  2px solid #ccc; padding: 8px 16px;  font-weight: 600; cursor: pointer; color: #444;
 }
 .export-btn:hover { background: #f5f5f5; }
 
@@ -28,7 +28,7 @@
 .stat-icon.gray { background: #f3f4f6; color: #6b7280; }
 .stat-icon.blue { background: #e0f2fe; color: #3b82f6; }
 .stat-icon.red { background: #fee2e2; color: #ef4444; }
-.stat-icon.green { background: #dcfce7; color: #22c55e; }
+.stat-icon.green { background: #dcfce7; color: #006b27; }
 .stat-card h3 { margin: 0; font-size: 22px; }
 .stat-card p { margin: 0; font-size: 12px; color: #666; }
 
@@ -65,7 +65,7 @@
 
 /* REASON TAGS */
 .reason-tag {
-  padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; display: inline-block;
+  padding: 4px 10px;  font-size: 12px; font-weight: 600; display: inline-block;
 }
 .reason-tag.frequent-absences { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
 .reason-tag.behavioral { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
@@ -73,14 +73,14 @@
 .reason-tag.failed-grades { background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
 
 /* STATUS PILLS */
-.status-pill { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+.status-pill { padding: 5px 12px;  font-size: 11px; font-weight: bold; text-transform: uppercase; }
 .status-pill.pending { background: #ffebee; color: #c62828; }
 .status-pill.reviewed { background: #fff8e1; color: #f57f17; }
 .status-pill.contacted { background: #e8f5e9; color: #2e7d32; }
 
 /* ACTIONS */
 .action-btn {
-  background: #f0f0f0;border-radius: 50px; border: 1px solid #ddd; padding: 6px 15px; cursor: pointer; font-size: 12px; font-weight: 600; color: #444; transition: all 0.2s;
+  background: #f0f0f0; border: 1px solid #ddd; padding: 6px 15px; cursor: pointer; font-size: 12px; font-weight: 600; color: #444; transition: all 0.2s;
 }
 .action-btn:hover { background: #e0e0e0; }
 

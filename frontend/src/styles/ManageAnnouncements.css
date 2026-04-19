@@ -17,7 +17,7 @@
   color: white;
   border: none;
   padding: 12px 24px;
-  border-radius: 8px;
+ 
   font-weight: 600;
   cursor: pointer;
   transition: 0.3s;
@@ -39,7 +39,7 @@
   flex: 1;
   background: white;
   padding: 20px;
-  border-radius: 12px;
+  
   display: flex;
   align-items: center;
   gap: 15px;
@@ -77,7 +77,7 @@
 
 .filter-pill {
   padding: 8px 18px;
-  border-radius: 20px;
+  
   border: 1px solid #ddd;
   background: white;
   color: #555;
@@ -102,7 +102,7 @@
 
 .ann-card {
   background: white;
-  border-radius: 12px;
+  
   overflow: hidden;
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
   display: flex;
@@ -133,7 +133,7 @@
   left: 10px; /* Changed from right to left */
   background: rgba(255, 255, 255, 0.9);
   padding: 4px 10px;
-  border-radius: 4px;
+  
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -184,7 +184,7 @@
 .ann-card-footer button {
   flex: 1;
   padding: 8px;
-  border-radius: 4px;
+  
   border: 1px solid #ddd;
   background: #f9f9f9;
   cursor: pointer;
@@ -209,7 +209,7 @@
   border: none;
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  
   display: flex;
   align-items: center;
   justify-content: center;
@@ -241,7 +241,7 @@
 .view-btn, .archive-btn {
   flex: 1;
   padding: 10px;
-  border-radius: 6px;
+ 
   font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
@@ -275,7 +275,7 @@
   background: #333;
   color: white;
   padding: 15px 30px;
-  border-radius: 50px;
+  
   display: flex;
   align-items: center;
   gap: 20px;
@@ -290,7 +290,7 @@
   border: none;
   color: white;
   padding: 8px 15px;
-  border-radius: 5px;
+  
   cursor: pointer;
 }
 .bulk-btns button.del { background: #cc0000; }
@@ -308,7 +308,7 @@
   display: flex;
   align-items: flex-start; /* Put checkbox at top-left */
   padding: 12px;
-  border-radius: 12px;
+  
 }
 .checkbox-overlay input[type="checkbox"] {
   width: 22px;
@@ -342,7 +342,7 @@
 /* --- Select Multiple Toggle Button --- */
 .select-toggle-btn {
   padding: 8px 20px;
-  border-radius: 20px; /* Matches the filter pills */
+  /* Matches the filter pills */
   border: 1px solid #ccc;
   background: white;
   color: #333;

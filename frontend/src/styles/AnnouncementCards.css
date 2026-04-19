@@ -11,7 +11,7 @@
   --ub-navy-pale:     #EAF0F8;
   --ub-white:         #FFFFFF;
   --ub-off-white:     #F8F7F5;
-  --ub-border:        rgba(27, 42, 74, 0.12);
+  --ub-border:        rgba(37, 37, 37, 0.12);
   --ub-border-hover:  rgba(139, 0, 0, 0.3);
   --ub-text-primary:  #3C3736;
   --ub-text-muted:    #929396;
@@ -76,7 +76,7 @@
 .ann-card {
   background: var(--ub-white);
   border: 1px solid var(--ub-border);
-  border-radius: var(--radius-card);
+ 
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -120,7 +120,7 @@
   text-transform: uppercase;
   letter-spacing: 0.07em;
   padding: 4px 10px;
-  border-radius: var(--radius-badge);
+  
 }
 
 .badge-event  { background: var(--ub-crimson);      color: var(--ub-white); }

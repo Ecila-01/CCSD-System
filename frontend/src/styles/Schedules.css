@@ -50,11 +50,11 @@
 .stat-icon {
   font-size: 24px;
   padding: 10px;
-  border-radius: 50%;
+  
 }
-.stat-icon.red { background: #fee2e2; color: #ef4444; }
-.stat-icon.blue { background: #e0f2fe; color: #3b82f6; }
-.stat-icon.green { background: #dcfce7; color: #22c55e; }
+.stat-icon.red {  color: #ef4444; }
+.stat-icon.blue { color: #3b82f6; }
+.stat-icon.green {  color: #22c55e; }
 .stat-icon.gray { background: #f3f4f6; color: #6b7280; }
 
 .sched-stat-card h3 { margin: 0; font-size: 20px; }
@@ -128,7 +128,7 @@
   grid-template-rows: 60px repeat(10, 75px); 
   border: 1px solid #e2e8f0;
   background-color: #fff;
-  border-radius: 8px;
+  
   overflow: hidden;
 }
 
@@ -176,7 +176,7 @@
 .cal-event {
   margin: 3px; 
   padding: 8px 10px;
-  border-radius: 6px;
+  
   font-size: 11px;
   line-height: 1.2;
   overflow: hidden;
@@ -215,7 +215,7 @@
 }
 
 .status-pill {
-  padding: 4px 10px; font-size: 11px; font-weight: bold; border-radius: 4px;
+  padding: 4px 10px; font-size: 11px; font-weight: bold; 
 }
 .status-pill.active { background: #dcfce7; color: #166534; }
 .status-pill.pending { background: #e0f2fe; color: #0369a1; }

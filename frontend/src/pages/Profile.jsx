@@ -74,7 +74,7 @@ function Profile() {
             {/* --- MAIN FORM CARD --- */}
             <div style={{ 
               background: 'white', 
-              borderRadius: '16px', 
+              //borderRadius: '16px', 
               border: '1px solid #e2e8f0', 
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
               overflow: 'hidden'
@@ -132,7 +132,7 @@ function Profile() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '15px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}>
                   <button type="button" style={{ 
                     padding: '12px 24px', 
-                    borderRadius: '8px', 
+                    //borderRadius: '8px', 
                     border: '1px solid #e2e8f0', 
                     background: 'white', 
                     color: '#475569', 
@@ -143,7 +143,7 @@ function Profile() {
                   </button>
                   <button type="submit" style={{ 
                     padding: '12px 32px', 
-                    borderRadius: '8px', 
+                    //borderRadius: '8px', 
                     border: 'none', 
                     background: '#c00000', 
                     color: 'white', 
@@ -187,7 +187,7 @@ const labelStyle = {
 const inputStyle = {
   width: '100%',
   padding: '12px 12px 12px 42px',
-  borderRadius: '10px',
+  //borderRadius: '10px',
   border: '1px solid #cbd5e1',
   fontSize: '14px',
   color: '#1e293b',
@@ -209,7 +209,7 @@ const miniCardStyle = {
   flex: 1,
   background: 'white',
   padding: '15px 20px',
-  borderRadius: '12px',
+  //borderRadius: '12px',
   border: '1px solid #e2e8f0',
   display: 'flex',
   alignItems: 'center',

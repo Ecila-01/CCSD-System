@@ -15,6 +15,7 @@ import {
 } from "react-icons/md";
 import '../styles/Sidebar.css';
 import ubLogo from "../assets/darkUBlogo.png";
+import ccsdLogo from "../assets/ccsdLogo.png"; // add this line
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -32,8 +33,10 @@ const Sidebar = () => {
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
-        <img src={ubLogo} alt="UB Logo" />
-      </div>
+         <img src={ccsdLogo} alt="CCSD Logo" className="sidebar-ccsd-logo" />
+  <img src={ubLogo} alt="UB Logo" className="sidebar-ub-logo" />
+ 
+</div>
 
       {/* SHARED SECTION: Both Admins and Counselors see the Main Menu */}
       <div className="sidebar-section">

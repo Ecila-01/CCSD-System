@@ -138,19 +138,19 @@ const ManageCounselors = () => {
            <div className="search-box"><input type="text" placeholder="Search accounts..." /></div>
            <div className="header-right">
              <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-             <div className="user-pill"><span className="role-tag">{user.role}</span></div>
+             <div className="user-pill"><div style={{ margin: '10px' }}></div><span className="role-tag">{user.role}</span></div>
            </div>
         </header>
 
         <section className="dashboard-view" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 style={{ color: '#3C3736', margin: 0 }}>Manage Staff Accounts</h2>
-            <button onClick={openModalForCreate} className="next-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#c00000', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+            <button onClick={openModalForCreate} className="next-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#c00000', color: 'white', border: 'none',  cursor: 'pointer', fontWeight: 'bold' }}>
               <MdAdd size={20} /> New Account
             </button>
           </div>
 
-          <div style={{ background: 'white', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+          <div style={{ background: 'white',  border: '1px solid #e5e7eb', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
                 <tr>
@@ -168,7 +168,7 @@ const ManageCounselors = () => {
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                         {u.assignedDepartments?.length > 0 ? u.assignedDepartments.map(d => (
-                          <span key={d} style={{ fontSize: '10px', background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>{d}</span>
+                          <span key={d} style={{ fontSize: '10px', background: '#f1f5f9', padding: '2px 8px',  border: '1px solid #e2e8f0' }}>{d}</span>
                         )) : <small style={{color: '#94a3b8'}}>None</small>}
                       </div>
                     </td>
@@ -186,7 +186,7 @@ const ManageCounselors = () => {
 
       {isModalOpen && (
         <div className="modal-overlay" style={overlayStyle}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
+          <div className="modal-content" style={{ backgroundColor: '#ffffff', padding: '30px',  width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
             <button onClick={() => setIsModalOpen(false)} style={closeBtnStyle}><MdClose size={24} /></button>
             <h2 style={{ textAlign: 'center', marginBottom: '20px', fontSize: '20px' }}>{editingUserId ? "Edit Account" : "Create New Account"}</h2>
             
@@ -255,10 +255,10 @@ const tdStyle = { padding: '15px 20px', fontSize: '14px', color: '#111827' };
 const overlayStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000 };
 const closeBtnStyle = { position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' };
 const labelStyle = { display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '6px' };
-const inputStyle = { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' };
-const checklistGridStyle = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' };
+const inputStyle = { width: '100%', padding: '10px',  border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' };
+const checklistGridStyle = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', background: '#f8fafc', padding: '15px',  border: '1px solid #e2e8f0' };
 const checkItemStyle = { display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' };
-const cancelBtnStyle = { padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' };
-const submitBtnStyle = { padding: '10px 20px', background: '#c00000', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' };
+const cancelBtnStyle = { padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none',  fontWeight: 'bold', cursor: 'pointer' };
+const submitBtnStyle = { padding: '10px 20px', background: '#c00000', color: 'white', border: 'none',  fontWeight: 'bold', cursor: 'pointer' };
 
 export default ManageCounselors;

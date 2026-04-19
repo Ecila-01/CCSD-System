@@ -17,7 +17,7 @@
   width: 100%;
   max-width: 750px; 
   height: 90vh; /* Fixed height relative to screen */
-  border-radius: 8px;
+  
   display: flex;
   flex-direction: column; 
   overflow: hidden; 
@@ -75,7 +75,7 @@
 }
 .form-scroll-area::-webkit-scrollbar-thumb {
   background: #c00000;
-  border-radius: 10px;
+  
 }
 
 .form-group {
@@ -170,7 +170,7 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, i
   color: white;
   border: none;
   padding: 10px 25px;
-  border-radius: 4px;
+  
   font-weight: bold;
   cursor: pointer;
 }
@@ -180,7 +180,7 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, i
   color: #c00000;
   border: none;
   padding: 10px 20px;
-  border-radius: 4px;
+ 
   cursor: pointer;
   font-weight: bold;
 }

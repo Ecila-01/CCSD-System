@@ -129,22 +129,22 @@ function Schedules() {
               width: '100%', 
               marginBottom: '30px' 
             }}>
-              <div className="sched-stat-card" style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <MdOutlineDateRange className="stat-icon red" size={40} style={{ color: '#ef4444', background: '#fee2e2', padding: '8px', borderRadius: '50%' }} />
+              <div className="sched-stat-card" style={{ background: 'white', padding: '20px',  display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <MdOutlineDateRange className="stat-icon red" size={42} style={{ color: '#C3151C',  padding: '8px'  }} />
                 <div>
                   <h3 style={{ margin: 0, fontSize: '24px', color: '#1e293b' }}>{scheduledRequests.length}</h3>
                   <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Total Appointments</p>
                 </div>
               </div>
-              <div className="sched-stat-card" style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <MdOutlineSchedule className="stat-icon blue" size={40} style={{ color: '#3b82f6', background: '#dbeafe', padding: '8px', borderRadius: '50%' }} />
+              <div className="sched-stat-card" style={{ background: 'white', padding: '20px',   display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <MdOutlineSchedule className="stat-icon blue" size={42} style={{ color: '#3b82f6',  padding: '8px' }} />
                 <div>
                   <h3 style={{ margin: 0, fontSize: '24px', color: '#1e293b' }}>{pendingCount}</h3>
                   <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Pending Requests</p>
                 </div>
               </div>
-              <div className="sched-stat-card" style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <MdOutlineCheckCircle className="stat-icon green" size={40} style={{ color: '#22c55e', background: '#dcfce7', padding: '8px', borderRadius: '50%' }} />
+              <div className="sched-stat-card" style={{ background: 'white', padding: '20px',  display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <MdOutlineCheckCircle className="stat-icon green" size={42} style={{ color: '#146b34',  padding: '8px' }} />
                 <div>
                   <h3 style={{ margin: 0, fontSize: '24px', color: '#1e293b' }}>{completedCount}</h3>
                   <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Completed</p>
@@ -157,13 +157,13 @@ function Schedules() {
               
               <div className="calendar-controls" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '15px' }}>
                 <div className="date-navigator" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <button onClick={handlePreviousWeek} style={{ padding: '6px 12px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>
+                  <button onClick={handlePreviousWeek} style={{ padding: '6px 12px', background: '#fff', border: '1px solid #cbd5e1',  cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>
                     &lt;
                   </button>
                   <span style={{ fontWeight: '700', minWidth: '150px', textAlign: 'center', color: '#1e293b' }}>
                     {formatWeekRange(currentWeekStart)}
                   </span>
-                  <button onClick={handleNextWeek} style={{ padding: '6px 12px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>
+                  <button onClick={handleNextWeek} style={{ padding: '6px 12px', background: '#fff', border: '1px solid #cbd5e1',  cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>
                     &gt;
                   </button>
                 </div>
@@ -298,7 +298,7 @@ function Schedules() {
                       background: 'rgba(255,255,255,0.85)', 
                       color: '#333',
                       padding: '3px 7px', // More padding for a "pill" look
-                      borderRadius: '12px', 
+                     
                       fontWeight: 'bold',
                       border: '1px solid rgba(0,0,0,0.1)',
                       display: 'flex',

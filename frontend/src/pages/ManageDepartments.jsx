@@ -114,6 +114,7 @@ const ManageDepartments = () => {
           <div className="search-box"><input type="text" placeholder="Search departments..." /></div>
           <div className="header-right">
             <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            <div style={{ margin: '5px' }}></div>
             <div className="user-pill"><span className="role-tag">{user.role}</span></div>
           </div>
         </header>
@@ -122,12 +123,12 @@ const ManageDepartments = () => {
         <section className="dashboard-view" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 style={{ color: '#3C3736', margin: 0 }}>Manage Departments & Courses</h2>
-            <button onClick={openModalForCreate} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#cc0000', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+            <button onClick={openModalForCreate} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#C3151C', color: 'white', border: 'none',  cursor: 'pointer', fontWeight: 'bold' }}>
               <MdAdd size={20} /> New Department
             </button>
           </div>
 
-          <div style={{ background: 'white', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+          <div style={{ background: 'white',  border: '1px solid #e5e7eb', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
                 <tr>
@@ -148,7 +149,7 @@ const ManageDepartments = () => {
                       <td style={tdStyle}>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                           {dept.courses?.length > 0 ? dept.courses.map(course => (
-                            <span key={course} style={{ fontSize: '11px', background: '#f1f5f9', color: '#334155', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', fontWeight: 'bold' }}>
+                            <span key={course} style={{ fontSize: '11px', background: '#f1f5f9', color: '#334155', padding: '4px 8px',  border: '1px solid #e2e8f0', fontWeight: 'bold' }}>
                               {course}
                             </span>
                           )) : <span style={{fontSize: '12px', color: '#94a3b8'}}>No courses added</span>}
@@ -170,7 +171,7 @@ const ManageDepartments = () => {
       {/* CREATE / EDIT MODAL */}
       {isModalOpen && (
         <div className="modal-overlay" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000 }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '500px', position: 'relative' }}>
+          <div className="modal-content" style={{ backgroundColor: '#ffffff', padding: '30px',  width: '100%', maxWidth: '500px', position: 'relative' }}>
             <button onClick={() => setIsModalOpen(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}><MdClose size={24} /></button>
             <h2 style={{ textAlign: 'center', marginBottom: '20px', fontSize: '20px' }}>{editingId ? "Edit Department" : "New Department"}</h2>
             
@@ -188,7 +189,7 @@ const ManageDepartments = () => {
               </div>
 
               {/* COURSE MANAGEMENT SECTION */}
-              <div style={{ marginTop: '10px', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ marginTop: '10px', background: '#f8fafc', padding: '15px',  border: '1px solid #e2e8f0' }}>
                 <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <MdSchool /> Associated Courses
                 </label>
@@ -202,7 +203,7 @@ const ManageDepartments = () => {
                     style={{ ...inputStyle, flex: 1 }} 
                     onKeyDown={(e) => { if(e.key === 'Enter') handleAddCourse(e); }} // Allows pressing enter to add
                   />
-                  <button type="button" onClick={handleAddCourse} style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', padding: '0 15px', fontWeight: 'bold', cursor: 'pointer' }}>
+                  <button type="button" onClick={handleAddCourse} style={{ background: '#2e2e2e', color: 'white', border: 'none',  padding: '0 15px', fontWeight: 'bold', cursor: 'pointer' }}>
                     Add
                   </button>
                 </div>
@@ -213,7 +214,7 @@ const ManageDepartments = () => {
                     <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>No courses added yet.</span>
                   ) : (
                     formData.courses.map(course => (
-                      <div key={course} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#e0f2fe', color: '#0369a1', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
+                      <div key={course} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#e0f2fe', color: '#0369a1', padding: '4px 10px',  fontSize: '12px', fontWeight: 'bold' }}>
                         {course}
                         <MdClose size={14} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={() => handleRemoveCourse(course)} />
                       </div>
@@ -223,8 +224,8 @@ const ManageDepartments = () => {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ padding: '10px 20px', background: '#cc0000', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none',  fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" style={{ padding: '10px 20px', background: '#cc0000', color: 'white', border: 'none',  fontWeight: 'bold', cursor: 'pointer' }}>
                   {editingId ? "Update Department" : "Save Department"}
                 </button>
               </div>
@@ -241,6 +242,6 @@ const ManageDepartments = () => {
 const thStyle = { padding: '12px 20px', fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' };
 const tdStyle = { padding: '15px 20px', fontSize: '14px', color: '#111827' };
 const labelStyle = { display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '6px' };
-const inputStyle = { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' };
+const inputStyle = { width: '100%', padding: '10px',  border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' };
 
 export default ManageDepartments;

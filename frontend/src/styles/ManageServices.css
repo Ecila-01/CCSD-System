@@ -29,11 +29,11 @@
 }
 
 .new-service-btn {
-  background: #ff4d4d;
+  background: #C3151C;
   color: white;
   border: none;
   padding: 10px 20px;
-  border-radius: 6px;
+  
   font-weight: bold;
   cursor: pointer;
 }
@@ -55,9 +55,9 @@
   align-items: center;
   /* Increased padding to make the cards feel more "premium" */
   padding: 30px 24px; 
-  border-radius: 10px;
+  
   border: 1px solid #eee;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   gap: 20px;
   transition: transform 0.2s ease;
 }
@@ -78,15 +78,14 @@
 
 .icon-box {
   padding: 15px;
-  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.icon-box.red { background: #ffebeb; color: #ff4d4d; }
-.icon-box.green { background: #eaffe6; color: #4CAF50; }
-.icon-box.yellow { background: #fffbe6; color: #ff9800; }
-.icon-box.blue { background: #e6f7ff; color: #2196F3; }
+.icon-box.red {  color: #ff4d4d; }
+.icon-box.green {  color: #4CAF50; }
+.icon-box.yellow {  color: #ff9800; }
+.icon-box.blue {  color: #2196F3; }
 
 .stat-info { display: flex; flex-direction: column; }
 .stat-label { font-size: 11px; font-weight: bold; color: #999; letter-spacing: 1px; }
@@ -100,7 +99,7 @@
 /* Table Wrapper */
 .services-table-wrapper {
   background: white;
-  border-radius: 8px;
+  
   border: 1px solid #eee;
   box-shadow: 0 2px 4px rgba(0,0,0,0.02);
   overflow: hidden;
@@ -163,7 +162,7 @@
   max-width: none; 
   line-height: 1.6; /* More breathing room between lines of text */
 }
-.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot { width: 8px; height: 8px;  display: inline-block; }
 .dot-red { background: #ff4d4d; }
 .dot-blue { background: #2196F3; }
 
@@ -180,7 +179,7 @@
 .btn-edit, .btn-delete {
   border: none;
   padding: 8px 16px; /* Bigger, easier to click buttons */
-  border-radius: 6px; /* Slightly rounder corners */
+   /* Slightly rounder corners */
   font-size: 13px; /* Larger button text */
   font-weight: bold;
   cursor: pointer;
@@ -207,7 +206,7 @@
   border: 1px solid #ddd;
   background: white;
   padding: 5px 12px;
-  border-radius: 4px;
+  
   cursor: pointer;
   color: #555;
 }
@@ -247,7 +246,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 20px;
+  
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;

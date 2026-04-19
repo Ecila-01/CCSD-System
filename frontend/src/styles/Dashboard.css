@@ -35,9 +35,9 @@
 }
 
 .view-schedule {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.5);
   border: solid white;
-  border-radius: 50px;
+  
   color: white;
   padding: 8px 15px;
   margin-top: 15px;
@@ -74,9 +74,9 @@
 }
 
 .role-tag {
-  background: #c00000;
+  background: #C3151C;
   color: white;
-  padding: 5px 12px;
+  padding: 5px 15px;
   border-radius: 12px;
   font-weight: bold;
   text-transform: capitalize;
@@ -128,7 +128,7 @@
 }
 
 .category-card {
-  background: #e9ecef;
+  background: #C3151C;
   padding: 20px;
   position: relative;
 }

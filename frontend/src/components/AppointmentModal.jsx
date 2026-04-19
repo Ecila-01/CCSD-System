@@ -66,37 +66,47 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
 
     setIsSubmitting(true);
     try {
+      // ✅ DYNAMIC EXTRACTION HELPER
+      // This finds which dynamic key (e.g. "studentName_1") belongs to which label
+      const getVal = (labelKeywords) => {
+        const field = service.fields.find(f => 
+          labelKeywords.some(keyword => f.label.toLowerCase().includes(keyword.toLowerCase()))
+        );
+        return field ? formData[field.name] : "";
+      };
+
       let extractedData = {};
 
       if (service.name.toUpperCase() === "REFERRAL") {
+        // Referral Specific Logic (Matches your Referral Image)
         extractedData = {
-          studentName: formData.studentName || "Unknown Student",
-          studentEmail: formData.studentContact || "", 
-          studentIdNumber: formData.studentContact || "", 
-          referrerName: formData.referrerName || "",
-          referrerEmail: formData.email || "", 
+          studentName: getVal(["Student to be referred", "Name of the Student"]),
+          studentEmail: getVal(["Mobile Number", "Contact"]), // Using mobile as the unique identifier for now
+          studentIdNumber: getVal(["ID Number (of Student)", "Student ID"]),
+          referrerName: getVal(["Referring Faculty", "Full Name (Referring"]),
+          referrerEmail: getVal(["Email Address (Referrer)"]),
         };
       } else {
+        // Standard Service Logic (Counseling, Good Moral, etc.)
         extractedData = {
-          studentName: formData.studentName || formData.fullName || "Unknown Student",
-          studentEmail: formData.email || "",
-          studentIdNumber: formData.idNumber || formData.studentId || "",
+          studentName: getVal(["Full Name", "Student Name"]) || "Unknown Student",
+          studentEmail: getVal(["Email Address", "Email"]),
+          studentIdNumber: getVal(["ID Number", "Student ID"]),
           referrerName: "",
           referrerEmail: "",
         };
       }
 
-      // BULLETPROOF PAYLOAD (No nulls, strict formatting)
       const payload = {
         serviceId: service._id,
         serviceName: service.name,
-        status: "Pending",
+        status: "Pending Review", // ✅ Matches your new Model
         ...extractedData,
-        
-        // Force Boolean and Strings so Mongoose doesn't crash
+
         requiresSchedule: Boolean(service.requiresScheduling),
-        appointmentDate: formData.prefDate || formData.preferredDate || "",
-        timeSlot: formData.prefTime || formData.preferredTime || "",
+        // Checks both common variations for scheduling keys
+        appointmentDate: formData.preferredDate || formData.prefDate || "",
+        timeSlot: formData.preferredTime || formData.prefTime || "",
         requestData: formData,
       };
 
@@ -109,16 +119,10 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
       });
 
       if (response.ok) {
-        // Capture the backend response which contains the guestToken
         const result = await response.json();
-        
-        // Store the token in our new state so the UI can see it
         setSubmittedToken(result.guestToken);
-        
-        // Now show the success screen
         setIsSuccess(true);
       } else {
-        // If it still 500s, this will log the server's error message
         const errorData = await response.json();
         console.error("Backend rejected the request:", errorData);
         alert("Server Error. Check the console.");

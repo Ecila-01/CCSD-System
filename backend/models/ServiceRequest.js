@@ -5,11 +5,30 @@ const crypto = require('crypto');
 const serviceRequestSchema = new mongoose.Schema({
   serviceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Service' },
   serviceName: { type: String, required: true },
-  status: { 
-    type: String, 
-    enum: ['Pending', 'Active', 'Completed', 'Declined', 'Cancelled'], 
-    default: 'Pending' 
-  },
+  status: {
+  type: String,
+  enum: [
+    'Pending Review', 
+    'In-Progress', 
+    'Processing',
+    'Action Required',
+    'Reschedule Requested', 
+    'Ready for Pickup',
+    'Follow-up Needed',
+    'Resolved', 
+    'Declined', 
+    'Cancelled',
+    'No-Show',
+    "Completed"
+  ],
+  default: 'Pending Review'
+},
+// Adding this helps with your Reports page later!
+statusUpdates: [{
+  status: String,
+  updatedAt: { type: Date, default: Date.now },
+  note: String // e.g., "Student missed the 10am slot"
+}],
   assignedCounselor: { type: String, default: 'Unassigned' },
   // --- THE VITAL EXTRACTED FIELDS ---
   // The Student (The primary subject of the service)

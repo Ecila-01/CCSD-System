@@ -37,17 +37,13 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/guest/:token", async (req, res) => {
+router.get('/guest/:token', async (req, res) => {
   try {
     const request = await ServiceRequest.findOne({ guestToken: req.params.token });
-    
-    if (!request) {
-      return res.status(404).json({ message: "Invalid or expired link." });
-    }
-    
+    if (!request) return res.status(404).json({ message: "Invalid tracking link" });
     res.json(request);
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server Error fetching guest request" });
   }
 });
 
@@ -64,75 +60,69 @@ router.get('/', async (req, res) => {
 // PATCH: Update Status (Accept/Decline/Reschedule)
 router.patch('/:id', async (req, res) => {
   try {
-    const { status, assignedCounselor } = req.body;
-    
+    const { status, assignedCounselor, statusNote } = req.body;
+
+    // Build the update object
+    const update = {
+      status,
+      assignedCounselor
+    };
+
+    // Prepare the history entry
+    const historyEntry = {
+      status,
+      note: statusNote || `Status updated to ${status}`,
+      updatedAt: new Date()
+    };
+
     const updatedRequest = await ServiceRequest.findByIdAndUpdate(
-      req.params.id, 
-      { status, assignedCounselor },
-      { returnDocument: 'after' }
+      req.params.id,
+      { 
+        $set: update, 
+        $push: { statusUpdates: historyEntry } // ✅ Push the new note to history
+      },
+      { new: true }
     );
 
     if (!updatedRequest) return res.status(404).json({ message: "Request not found" });
-
-    // ✅ Pass the guestToken into the mailer functions
-    if (updatedRequest.serviceName.toUpperCase() === "REFERRAL") {
-      if (updatedRequest.referrerEmail) {
-        await sendStatusUpdateToReferrer(
-          updatedRequest.referrerEmail, 
-          updatedRequest.studentName, 
-          status,
-          updatedRequest.guestToken // 👈 Pass the token here
-        );
-      }
-    } else {
-      if (updatedRequest.studentEmail) {
-        await sendStatusUpdateToStudent(
-          updatedRequest.studentEmail, 
-          updatedRequest.serviceName, 
-          status,
-          updatedRequest.guestToken // 👈 Pass the token here
-        );
-      }
-    }
-
+    
     res.json(updatedRequest);
   } catch (error) {
-    res.status(500).json({ error: "Failed to update status" });
+    console.error(error);
+    res.status(500).json({ message: "Server Error updating status" });
   }
 });
 
 // Student updating their own request via Guest Token
-router.patch("/guest-update/:token", async (req, res) => {
+router.patch('/guest/reschedule/:token', async (req, res) => {
   try {
-    const { action, appointmentDate, timeSlot } = req.body; // action: "Reschedule" or "Cancel"
-    
-    const request = await ServiceRequest.findOne({ guestToken: req.params.token });
-    if (!request) return res.status(404).json({ message: "Request not found" });
+    const { appointmentDate, timeSlot, statusNote } = req.body;
 
-    // Update the request
-    if (action === "Cancel") {
-      request.status = "Cancelled";
-    } else if (action === "Reschedule") {
-      request.appointmentDate = appointmentDate;
-      request.timeSlot = timeSlot;
-      request.status = "Pending"; // Reset to pending for review
-    }
-    
-    await request.save();
+    const historyEntry = {
+      status: "Pending Review",
+      note: statusNote || "Student updated the preferred schedule.",
+      updatedAt: new Date()
+    };
 
-    // Notify Counselors of the CHANGE
-    const studentDept = request.requestData.department;
-    if (studentDept) {
-      const counselors = await User.find({ assignedDepartments: studentDept });
-      const updates = counselors.map(c => 
-        sendCounselorNotification(c.email, request.studentName, studentDept, request.serviceName, `Student ${action}`)
-      );
-      await Promise.all(updates);
-    }
+    const updatedRequest = await ServiceRequest.findOneAndUpdate(
+      { guestToken: req.params.token },
+      { 
+        $set: { 
+          appointmentDate, 
+          timeSlot, 
+          status: "Pending Review" // ✅ Reverts to Pending for counselor to see
+        },
+        $push: { statusUpdates: historyEntry }
+      },
+      { new: true }
+    );
 
-    res.json(request);
+    if (!updatedRequest) return res.status(404).json({ message: "Request not found" });
+
+    res.json(updatedRequest);
   } catch (error) {
-    res.status(500).json({ message: "Update failed" });
+    console.error(error);
+    res.status(500).json({ message: "Server Error rescheduling" });
   }
 });
 module.exports = router;

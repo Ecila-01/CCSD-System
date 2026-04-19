@@ -1,0 +1,205 @@
+.servicesPage {
+  min-height: 100vh;
+}
+
+/* SECTION & CONTAINER */
+.servicesSection {
+  padding: 25px 0 0;
+}
+
+.servicesContainer {
+  padding: 0 40px 40px;
+  max-width: 1600px;
+  margin: auto;
+}
+
+/* HEADER */
+.servicesHeader {
+  margin-bottom: 14px;
+}
+
+.servicesHeader h2 {
+  margin: 0;
+  color: #c00000; /* UB Red */
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* GRID */
+.servicesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 20px; 
+  justify-content: center;
+}
+
+/* INDIVIDUAL CARD */
+.serviceCard {
+  display: flex; /* Flexbox is better here to keep the image and text side-by-side */
+  flex-direction: row;
+  align-items: stretch; /* Forces the text container to reach the bottom */
+  gap: 20px;
+  padding: 30px 20px; 
+  min-height: 250px; /* Ensures all cards stay roughly the same height */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.0.9);
+  transition: all 0.2s ease;
+}
+
+.serviceCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+/* CARD BACKGROUND COLORS */
+.serviceCard:nth-child(1) { background: #ffbaba; }
+.serviceCard:nth-child(2) { background: #dfdde0; }
+.serviceCard:nth-child(3) { background: #ffdada; }
+.serviceCard:nth-child(4) { background: #e5f0d9; }
+.serviceCard:nth-child(5) { background: #dfe9ef; }
+.serviceCard:nth-child(6) { background: #f4dede; }
+
+/* TEXT SIDE */
+.serviceText {
+  flex: 1; /* Takes up all available space on the left */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  height: 100%; /* Forces this container to touch the bottom of the card */
+}
+
+.serviceText h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+  letter-spacing: -0.2px; 
+  color: #3C3736;
+}
+
+.serviceText p {
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: #444;
+  margin-bottom: 20px;
+  padding-right: 5px; 
+}
+
+/* BUTTON */
+.scheduleBtn {
+  margin-top: auto; /* THE MAGIC FIX: Pushes the button to the floor */
+  background-color: #EF0000; /* UB Red */
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.scheduleBtn:hover {
+  background-color: #a00000;
+}
+
+/* IMAGE SIDE */
+.serviceImageWrapper {
+  width: 130px; /* Fixed width so images don't stretch the card */
+  flex-shrink: 0; /* Prevents the image container from being squished by text */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.serviceImage {
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* FOOTER */
+.servicesFooter {
+  background: #c00000;
+  color: white;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 20px;
+  flex-wrap: wrap;
+}
+
+.footerItem {
+  font-size: 13px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 1100px) {
+  .servicesGrid {
+    grid-template-columns: repeat(2, 1fr); /* Switch to 2 columns on medium screens */
+  }
+}
+
+@media (max-width: 650px) {
+  .servicesContainer {
+    padding: 0 18px 20px;
+  }
+
+  .servicesHeader h2 {
+    font-size: 20px;
+  }
+
+  .servicesGrid {
+    grid-template-columns: 1fr; /* Switch to 1 column on phones */
+  }
+
+  .serviceCard {
+    min-height: auto; 
+    flex-direction: column-reverse; /* Put the image above the text on mobile */
+    align-items: center;
+    text-align: center;
+    padding: 25px 20px;
+  }
+
+  .serviceText {
+    align-items: center; /* Center everything on mobile */
+  }
+
+  .serviceText p {
+    padding-right: 0;
+  }
+
+  .serviceImageWrapper {
+    margin-bottom: 20px; /* Space between image and text when stacked */
+  }
+
+  .footerItem {
+    width: 100%;
+    white-space: normal;
+  }
+}
+
+/* --- SKELETON LOADER --- */
+@keyframes pulse {
+  0% { background-color: #e0e0e0; }
+  50% { background-color: #f5f5f5; }
+  100% { background-color: #e0e0e0; }
+}
+
+.skeleton-card {
+  height: 280px; /* Match your ServiceCard height */
+  border-radius: 12px;
+  background-color: #ffffff;
+  display: flex;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  gap: 20px;
+}
+
+.skeleton-text-block { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.skeleton-image { width: 120px; height: 120px; border-radius: 8px; animation: pulse 1.5s infinite; align-self: center; }
+.skeleton-title { height: 24px; width: 60%; border-radius: 4px; animation: pulse 1.5s infinite; margin-bottom: 10px; }
+.skeleton-line { height: 14px; width: 90%; border-radius: 4px; animation: pulse 1.5s infinite; }
+.skeleton-line.short { width: 70%; }
+.skeleton-button { height: 36px; width: 140px; border-radius: 6px; animation: pulse 1.5s infinite; margin-top: auto; }

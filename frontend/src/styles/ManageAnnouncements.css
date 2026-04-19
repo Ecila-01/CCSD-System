@@ -1,0 +1,371 @@
+/* Container & Header */
+.announcements-view {
+  padding: 30px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.add-btn-primary {
+  background-color: #cc0000; /* UB Red */
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.add-btn-primary:hover {
+  background-color: #a00000;
+  transform: translateY(-2px);
+}
+
+/* Stats Row - Flexbox layout */
+.stats-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  flex: 1;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+}
+
+.stat-card .icon {
+  font-size: 32px;
+  color: #cc0000;
+}
+
+.stat-card .icon.green { color: #2e7d32; }
+.stat-card .icon.orange { color: #ef6c00; }
+
+.stat-card span {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.stat-card strong {
+  font-size: 24px;
+  color: #333;
+}
+
+/* Filter Pills */
+.filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.filter-pill {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  background: white;
+  color: #555;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.filter-pill.active {
+  background: #cc0000;
+  color: white;
+  border-color: #cc0000;
+}
+
+/* Grid & Cards */
+.announcement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+  /* This ensures all cards in a row stretch to the height of the tallest card */
+  align-items: stretch; 
+}
+
+.ann-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: auto; 
+  transition: 0.3s;
+}
+.ann-card:hover {
+  transform: translateY(-5px);
+}
+
+.ann-card-image {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.ann-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.status-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px; /* Changed from right to left */
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.status-badge.active { color: #2e7d32; }
+.status-badge.archived { color: #757575; }
+
+.ann-card-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* This is the key: it forces the content area to grow */
+}
+
+.ann-card-content h3 {
+  margin-bottom: 10px;
+  color: #333;
+  height: 50px; /* Adjust based on your font size to fit 2 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ann-card-content p {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+  /* Force a consistent height for the text area (approx 3 lines) */
+  height: 65px; 
+  overflow: hidden;
+  margin-bottom: 15px;
+  /* Adds a subtle fade if text is too long */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* Card Buttons */
+.ann-card-footer {
+  margin-top: auto; 
+  display: flex;
+  gap: 10px;
+  padding-top: 15px; /* Adds space between text and buttons */
+}
+.ann-card-footer button {
+  flex: 1;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.ann-card-footer button.del {
+  color: #cc0000;
+  border-color: #ffcdd2;
+}
+
+.ann-card-footer button:hover {
+  background: #eee;
+}
+/* Delete Icon Button (Top Left of Image) */
+/* Move Trash Icon to the Right */
+.delete-icon-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px; /* Changed from left to right */
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cc0000;
+  cursor: pointer;
+  opacity: 0; 
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+/* Card hover effect remains the same */
+.ann-card:hover .delete-icon-btn {
+  opacity: 1;
+}
+
+.delete-icon-btn:hover {
+  background: #cc0000;
+  color: white;
+}
+
+/* Main Footer Buttons */
+.ann-card-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.view-btn, .archive-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  border: 1px solid #ddd;
+}
+
+.view-btn {
+  background: #f8f9fa;
+  color: #333;
+}
+
+.view-btn:hover {
+  background: #eee;
+}
+
+.archive-btn {
+  background: white;
+  color: #666;
+}
+
+.archive-btn:hover {
+  border-color: #666;
+  color: #333;
+}
+/* Bulk Action Bar - Sticky at the bottom or top */
+.bulk-action-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  animation: slideUp 0.3s ease;
+}
+
+.bulk-btns { display: flex; gap: 10px; }
+.bulk-btns button {
+  background: #555;
+  border: none;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.bulk-btns button.del { background: #cc0000; }
+
+/* Checkbox Overlay */
+.checkbox-overlay {
+  position: absolute;
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0;
+  background: rgba(204, 0, 0, 0.05); /* Very light tint of UB Red */
+  z-index: 50; /* Ensure it's above the image and buttons */
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start; /* Put checkbox at top-left */
+  padding: 12px;
+  border-radius: 12px;
+}
+.checkbox-overlay input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  accent-color: #cc0000; /* UB Red for the checkmark */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.checkbox-overlay input {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.ann-card.selected {
+  outline: 3px solid #cc0000;
+  outline-offset: -3px;
+  transform: scale(0.97);
+  box-shadow: 0 4px 12px rgba(204, 0, 0, 0.2);
+}
+.ann-card.selected .ann-card-footer,
+.ann-card.selected .delete-icon-btn {
+  pointer-events: none;
+  opacity: 0.5;
+}
+@keyframes slideUp {
+  from { bottom: -100px; opacity: 0; }
+  to { bottom: 20px; opacity: 1; }
+}
+/* --- Select Multiple Toggle Button --- */
+.select-toggle-btn {
+  padding: 8px 20px;
+  border-radius: 20px; /* Matches the filter pills */
+  border: 1px solid #ccc;
+  background: white;
+  color: #333;
+  font-weight: 600; /* Slightly bolder to stand out from filters */
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.select-toggle-btn:hover {
+  border-color: #999;
+  background-color: #f8f9fa;
+}
+
+/* When Selection Mode is ON ("Cancel Selection") */
+.select-toggle-btn.active {
+  background: #333; /* Dark background to indicate a special mode */
+  color: white;
+  border-color: #333;
+}
+
+.select-toggle-btn.active:hover {
+  background: #555;
+  border-color: #555;
+}

@@ -1,0 +1,195 @@
+/* ─── Google Fonts ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&display=swap');
+
+/* ─── UB Brand Tokens ───────────────────────────────────────── */
+:root {
+  --ub-crimson:       #C3151C;
+  --ub-crimson-light: #B22222;
+  --ub-crimson-pale:  #FFFFFF;
+  --ub-navy:          #3C3736;
+  --ub-navy-light:    #929396;
+  --ub-navy-pale:     #EAF0F8;
+  --ub-white:         #FFFFFF;
+  --ub-off-white:     #F8F7F5;
+  --ub-border:        rgba(27, 42, 74, 0.12);
+  --ub-border-hover:  rgba(139, 0, 0, 0.3);
+  --ub-text-primary:  #3C3736;
+  --ub-text-muted:    #929396;
+  --ub-text-faint:    #8A97A8;
+  --transition:       0.22s ease;
+}
+
+/* ─── Section wrapper ───────────────────────────────────────── */
+.announcements-section {
+  padding: 1rem 0;
+  font-family: 'Raleway', sans-serif;
+  margin: 40PX;
+  margin-top: 0;
+}
+
+.announcements-header {
+  margin-bottom: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.announcements-eyebrow {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ub-crimson);
+   text-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+.announcements-title {
+  font-family: 'Raleway', sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--ub-navy);
+  margin: 0;
+  line-height: 1.2;
+  text-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* ─── Grid ──────────────────────────────────────────────────── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+@media (max-width: 900px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Card ──────────────────────────────────────────────────── */
+.ann-card {
+  background: var(--ub-white);
+  border: 1px solid var(--ub-border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.ann-card:hover {
+  border-color: var(--ub-border-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(139, 0, 0, 0.08);
+}
+
+/* ─── Image wrapper ─────────────────────────────────────────── */
+.card-img-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--ub-navy-pale);
+}
+
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+.ann-card:hover .card-img {
+  transform: scale(1.04);
+}
+
+/* ─── Badge (overlaid on image) ─────────────────────────────── */
+.card-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 4px 10px;
+  border-radius: var(--radius-badge);
+}
+
+.badge-event  { background: var(--ub-crimson);      color: var(--ub-white); }
+.badge-news   { background: var(--ub-navy);          color: var(--ub-white); }
+.badge-alert  { background: #C0392B;                 color: var(--ub-white); }
+.badge-update { background: #E00000;                 color: var(--ub-white); }
+.badge-memo   { background: var(--ub-navy-light);    color: var(--ub-white); }
+.badge-info   { background: #3C3736;                 color: var(--ub-white); }
+
+/* ─── Card body ─────────────────────────────────────────────── */
+.card-body {
+  padding: 1rem 1.15rem 1.15rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-title {
+  font-family: 'Raleway', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ub-text-primary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: var(--ub-text-muted);
+  line-height: 1.65;
+  margin: 0;
+  flex: 1;
+}
+
+/* ─── Card footer ───────────────────────────────────────────── */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--ub-border);
+  margin-top: 4px;
+}
+
+.card-date {
+  font-size: 11.5px;
+  color: var(--ub-text-faint);
+}
+
+.card-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ub-crimson);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: color var(--transition);
+}
+
+.card-link:hover {
+  color: var(--ub-crimson-light);
+}
+
+.card-link-arrow {
+  transition: transform var(--transition);
+}
+
+.card-link:hover .card-link-arrow {
+  transform: translateX(3px);
+}

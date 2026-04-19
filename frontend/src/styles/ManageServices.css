@@ -1,0 +1,291 @@
+/* Note: .dashboard-container, .main-content, and .content-header 
+   should be handled by your global CSS or Sidebar/Schedules CSS. 
+   These styles are specific to the Services view! */
+
+.services-view {
+  padding: 40px; /* Increased padding around the edges */
+  max-width: 95%; /* Use percentages instead of hard pixels to stretch beautifully on wide monitors */
+  margin: 0 auto;
+}
+
+/* Header Area */
+.services-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+.services-page-header h2 {
+  margin: 0 0 5px 0;
+  font-size: 24px;
+  color: #333;
+}
+
+.services-page-header p {
+  margin: 0;
+  color: #777;
+  font-size: 14px;
+}
+
+.new-service-btn {
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.new-service-btn:hover { background: #e60000; }
+
+/* Stats Row */
+/* Stats Row */
+.services-stats-row {
+  display: grid;
+  /* This creates 3 equal columns that stretch to fill the space */
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 25px; /* Slightly more gap looks better with 3 items */
+  margin-bottom: 30px;
+}
+
+.service-stat-card {
+  background: white;
+  display: flex;
+  align-items: center;
+  /* Increased padding to make the cards feel more "premium" */
+  padding: 30px 24px; 
+  border-radius: 10px;
+  border: 1px solid #eee;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  gap: 20px;
+  transition: transform 0.2s ease;
+}
+
+/* Optional: Subtle hover effect to make the dashboard feel alive */
+.service-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+}
+
+.stat-number { 
+  font-size: 36px; /* Bumped up the size since we have more room */
+  font-weight: bold; 
+  color: #333; 
+  margin-top: 2px; 
+  line-height: 1;
+}
+
+.icon-box {
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-box.red { background: #ffebeb; color: #ff4d4d; }
+.icon-box.green { background: #eaffe6; color: #4CAF50; }
+.icon-box.yellow { background: #fffbe6; color: #ff9800; }
+.icon-box.blue { background: #e6f7ff; color: #2196F3; }
+
+.stat-info { display: flex; flex-direction: column; }
+.stat-label { font-size: 11px; font-weight: bold; color: #999; letter-spacing: 1px; }
+.stat-number { 
+  font-size: 32px; /* Bigger numbers! */
+  font-weight: bold; 
+  color: #333; 
+  margin-top: 5px; 
+}
+
+/* Table Wrapper */
+.services-table-wrapper {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  overflow: hidden;
+}
+
+.services-table-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  background: #fdfdfd;
+}
+
+.services-table-header h3 { 
+  margin: 0; 
+  font-size: 16px; 
+  color: #333; 
+}
+.services-table-header span { color: #aaa; font-weight: normal; }
+
+/* Table Styles */
+.services-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.services-table th {
+  text-align: left;
+  padding: 18px 24px; /* Thicker headers */
+  color: #999;
+  font-size: 13px; /* Slightly larger header text */
+  font-weight: bold; /* Make headers pop a bit more */
+  border-bottom: 1px solid #eee;
+  background: #fdfdfd;
+}
+.services-table th:nth-child(4), /* Status Header */
+.services-table th:nth-child(5) { /* Action Header */
+    text-align: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+.status-col, 
+.action-col {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.services-table td {
+  padding: 20px 24px; 
+  border-bottom: 1px solid #f9f9f9;
+  color: #555;
+  font-size: 15px; 
+  vertical-align: middle; /* Ensures text and buttons align exactly in the vertical center */
+}
+
+.index-col { color: #aaa !important; }
+.name-col { font-weight: bold; color: #333 !important; display: flex; align-items: center; gap: 10px; }
+.desc-col { 
+  font-size: 14px !important; /* Slightly larger description */
+  color: #777 !important; 
+  width: 50%; 
+  max-width: none; 
+  line-height: 1.6; /* More breathing room between lines of text */
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot-red { background: #ff4d4d; }
+.dot-blue { background: #2196F3; }
+
+
+/* Centers the text of the very last column header */
+.services-table th:last-child {
+  text-align: center;
+}
+.action-col { 
+  /* Remove flexbox so the table can vertically center it naturally */
+  text-align: center; 
+  vertical-align: middle; 
+}
+.btn-edit, .btn-delete {
+  border: none;
+  padding: 8px 16px; /* Bigger, easier to click buttons */
+  border-radius: 6px; /* Slightly rounder corners */
+  font-size: 13px; /* Larger button text */
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease; /* Adds a smooth hover effect */
+}
+.btn-edit { background: #e6f7ff; color: #2196F3; }
+.btn-delete { background: #ffebeb; color: #ff4d4d; }
+.btn-edit:hover { background: #d0efff; } /* Darkens slightly on hover */
+.btn-delete:hover { background: #ffd6d6; } /* Darkens slightly on hover */
+
+/* Footer & Pagination */
+.table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  color: #777;
+  font-size: 13px;
+  background: #fafafa;
+}
+
+.pagination { display: flex; gap: 5px; }
+.pagination button {
+  border: 1px solid #ddd;
+  background: white;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #555;
+}
+.pagination button.active {
+  background: #ff4d4d;
+  color: white;
+  border-color: #ff4d4d;
+  font-weight: bold;
+}
+
+.btn-view:hover {
+    background: #e9d5ff;
+}
+
+.status-toggle-btn.active {
+    background: #eaffe6;
+    color: #2e7d32;
+    border-color: #a5d6a7;
+}
+
+.status-toggle-btn.inactive {
+    background: #fff1f0;
+    color: #d32f2f;
+    border-color: #ffa39e;
+}
+
+.status-toggle-btn:hover {
+  filter: brightness(0.9);
+  transform: scale(1.02);
+}
+/* --- UNIFIED BUTTON STYLES (WITH BORDERS) --- */
+
+.status-toggle-btn, 
+.btn-view {
+  width: 110px;        /* Identical Width */
+  height: 34px;       /* Identical Height */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1.5px solid; /* Consistent border thickness for both */
+  text-decoration: none;
+}
+
+/* Status: Active (Green) */
+.status-toggle-btn.active {
+  background: #eaffe6;
+  color: #2e7d32;
+  border-color: #a5d6a7;
+}
+
+/* Status: Inactive (Red) */
+.status-toggle-btn.inactive {
+  background: #fff1f0;
+  color: #d32f2f;
+  border-color: #ffa39e;
+}
+
+/* Action: View (Purple) */
+.btn-view {
+  background: #f3e8ff;
+  color: #9333ea;
+  border-color: #d8b4fe; /* Adding the purple border to match */
+}
+
+/* Hover States for both */
+.status-toggle-btn:hover,
+.btn-view:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.status-toggle-btn:active,
+.btn-view:active {
+  transform: translateY(0);
+}

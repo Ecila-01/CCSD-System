@@ -1,0 +1,523 @@
+/* --- THE MODAL OVERLAY --- */
+.service-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6); 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; 
+  backdrop-filter: blur(3px); 
+}
+
+/* --- THE MODAL CARD --- */
+.service-modal-card {
+  background: white;
+  width: 100%;
+  max-width: 650px;
+  border-radius: 8px; /* Slightly sharper corners */
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; 
+  overflow: hidden; /* Keeps the red header perfectly inside the border radius */
+}
+
+/* Red Header matching your mockup */
+.modal-header.bg-red {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 30px;
+  background-color: #c90000; /* Deep UB Red */
+  color: white; 
+}
+
+.modal-header.bg-red h2 {
+  margin: 0;
+  font-size: 22px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.modal-header.bg-red .close-btn {
+  background: transparent;
+  border: none;
+  color: #ffcccc;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.modal-header.bg-red .close-btn:hover { color: white; }
+
+.modal-body {
+  padding: 30px;
+  overflow-y: auto; 
+}
+
+.modal-detail-group {
+  margin-bottom: 30px;
+}
+
+.modal-detail-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.modal-detail-group p {
+  margin: 0;
+  color: #444;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* --- PREVIEW LIST OF THE FORM FIELDS --- */
+.fields-preview-list {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+}
+
+.field-preview-item {
+  padding: 18px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.field-preview-item:last-child { border-bottom: none; }
+
+.field-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.field-label-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1; 
+}
+
+.field-req { 
+  color: #ef4444; 
+  font-weight: bold; 
+  font-size: 18px;
+  margin-top: -2px; 
+}
+
+.field-label { 
+  color: #334155; 
+  font-size: 15px; 
+  font-weight: 600; 
+  line-height: 1.5;
+}
+
+/* The beautiful new UI Badge */
+.field-type-badge { 
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b; 
+  padding: 6px 12px; 
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap; 
+}
+
+/* The Options list (for dropdowns) */
+.field-options-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-left: 20px; 
+}
+
+.options-label {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: bold;
+}
+
+.option-pill {
+  background: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.no-fields { font-style: italic; color: #999 !important; }
+
+/* --- MODAL FOOTER (EDIT/DELETE BUTTONS) --- */
+.modal-footer {
+  padding: 20px 30px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: center; /* Centered buttons like the mockup */
+  gap: 16px;
+  background: #fafafa;
+}
+
+.btn-delete-large {
+  background: transparent;
+  color: #ff4d4d;
+  border: 1px solid #ff4d4d;
+  padding: 10px 30px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-delete-large:hover { background: #fff0f0; }
+
+.btn-edit-large {
+  background: #2196F3;
+  color: white;
+  border: none;
+  padding: 10px 40px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-edit-large:hover { background: #1976D2; }
+.field-info-preview {
+  /* The Box Styling */
+  background-color: #f8fafc; /* A very soft, clean slate background */
+  border: 1px solid #e2e8f0; /* Light gray border around the whole box */
+  border-left: 4px solid #3b82f6; /* A nice blue accent line on the left edge! */
+  border-radius: 6px; /* Slightly rounded corners */
+  padding: 16px; /* Lots of breathing room inside the box */
+  margin-top: 16px; /* Pushes the box down from the label */
+  
+  /* The Text Styling */
+  font-size: 13px;
+  color: #475569; /* Dark slate text for high readability */
+  font-style: normal; /* Removed italics to make long text easier to read */
+  line-height: 1.6; /* Adds nice spacing between the lines of text */
+  white-space: pre-wrap; /* Ensures any line breaks from your database are respected */
+}
+
+/* --- ADD SERVICE FORM STYLES (Safely Scoped) --- */
+.add-service-card {
+  max-width: 750px; 
+}
+
+.add-service-card .modal-form-wrapper {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; 
+}
+
+.add-service-card .form-section {
+  margin-bottom: 24px;
+}
+
+/* By adding .add-service-card in front, this prevents 
+  the red underline from breaking your Sidebar! 
+*/
+.add-service-card .section-title {
+  font-size: 14px;
+  color: #c90000;
+  text-transform: uppercase;
+  margin: 0 0 16px 0;
+  border-bottom: 2px solid #fee2e2;
+  padding-bottom: 8px;
+}
+
+.add-service-card .input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.add-service-card .input-group label {
+  font-size: 11px;
+  font-weight: bold;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.add-service-card .input-group input, 
+.add-service-card .input-group select, 
+.add-service-card .input-group textarea {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #334155;
+  background: #f8fafc;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.add-service-card .input-group input:focus, 
+.add-service-card .input-group select:focus, 
+.add-service-card .input-group textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: white;
+}
+
+.add-service-card .divider {
+  border: 0;
+  height: 1px;
+  background: #e2e8f0;
+  margin: 24px 0;
+}
+
+/* Form Builder Specifics */
+.add-service-card .section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.add-service-card .section-header-row .section-title { 
+  margin: 0; border: none; padding: 0; 
+}
+
+.add-service-card .btn-add-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.add-service-card .btn-add-field:hover { background: #e2e8f0; }
+
+.add-service-card .no-fields-msg {
+  text-align: center;
+  padding: 30px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.add-service-card .fields-editor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.add-service-card .field-editor-box {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #3b82f6;
+  padding: 16px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.add-service-card .editor-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end; 
+}
+
+.add-service-card .flex-1 { flex: 1; }
+.add-service-card .flex-2 { flex: 2; }
+
+.add-service-card .btn-remove-field {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  padding: 10px;
+  margin-bottom: 16px; 
+  cursor: pointer;
+  border-radius: 4px;
+}
+.add-service-card .btn-remove-field:hover { background: #fee2e2; }
+
+.add-service-card .options-input input { border-color: #bae6fd; background: #f0f9ff; }
+.add-service-card .info-input textarea { border-color: #fde047; background: #fefce8; }
+
+.add-service-card .checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.add-service-card .checkbox-group label {
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+}
+
+/* Footer Buttons */
+.add-service-card .btn-cancel {
+  background: white;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.add-service-card .btn-cancel:hover { background: #f1f5f9; }
+
+.add-service-card .btn-save {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 10px 30px;
+}
+
+.auto-page-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 25px 0 10px 0;
+  padding: 10px;
+  background: #f1f5f9; /* Soft gray background */
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+}
+
+.auto-page-divider span {
+  font-size: 10px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+/* Container for the upload area */
+.image-upload-container {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* The clickable box */
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 120px;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  background-color: #fafafa;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-placeholder:hover {
+  border-color: #cc0000; /* UB Red */
+  background-color: #fff5f5;
+  color: #cc0000;
+}
+
+.upload-placeholder span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Hide the actual file input entirely */
+.upload-placeholder input[type="file"] {
+  display: none;
+}
+
+/* Styles for the Preview Box */
+.preview-box {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #eee;
+}
+
+.preview-box img {
+  width: 100%;
+  display: block;
+  max-height: 200px;
+  object-fit: cover;
+}
+
+.change-img-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.change-img-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+/* --- Secondary Action: Close Preview --- */
+.btn-cancel {
+  flex: 1;
+  padding: 12px 20px;
+  background-color: white;
+  color: #555;
+  border: 1px solid #ccc;
+  border-radius: 8px; /* Matches the rounded corners of your image */
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background-color: #f8f9fa;
+  border-color: #999;
+  color: #333;
+}
+
+/* --- Primary Action: Edit Announcement --- */
+.btn-save {
+  flex: 1;
+  padding: 12px 20px;
+  background-color: #333; /* Dark gray to match your theme */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle drop shadow */
+}
+
+.btn-save:hover {
+  background-color: #555;
+  transform: translateY(-2px); /* Makes the button "lift" when hovered */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Optional: If you want the Edit button to be UB Red instead of Dark Gray */
+/* Just change background-color to #cc0000 and hover to #a00000 */

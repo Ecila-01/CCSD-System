@@ -170,15 +170,15 @@ const GuestRequestView = () => {
                     <div style={{ display: 'grid', gap: '15px', marginBottom: '20px' }}>
                        <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} style={inputStyle} />
                        {/* Inside the GuestRequestView Reschedule Form */}
-<input 
-  type="time" 
-  value={newTime} 
-  onChange={(e) => setNewTime(e.target.value)} 
-  min="08:00" 
-  max="17:00" 
-  step="1800" // 1800 seconds = 30 minute increments
-  style={inputStyle} 
-/>
+                      <input 
+                        type="time" 
+                        value={newTime} 
+                        onChange={(e) => setNewTime(e.target.value)} 
+                        min="08:00" 
+                        max="17:00" 
+                        step="1800" // 1800 seconds = 30 minute increments
+                        style={inputStyle} 
+                      />
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button onClick={() => setIsRescheduling(false)} style={{ ...secondaryBtnStyle, flex: 1 }}>Cancel</button>

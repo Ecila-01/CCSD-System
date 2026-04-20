@@ -3,22 +3,36 @@ const router = express.Router();
 const ServiceRequest = require('../models/ServiceRequest');
 const User = require('../models/User'); // Import your User model
 const {sendGuestLink, sendCounselorNotification, sendStatusUpdateToStudent, sendStatusUpdateToReferrer } = require('../utils/mailer');
+const Service = require('../models/Service');
 
 router.post("/", async (req, res) => {
   try {
     const newRequest = new ServiceRequest(req.body);
     const savedRequest = await newRequest.save();
 
-    // 1. Notify Student/Referrer
+    // ✅ 1. Fetch the related Service template
+    const relatedService = await Service.findById(savedRequest.serviceId);
+    let serviceInfoText = null;
+
+    // ✅ 2. Search the 'fields' array for the info block
+    if (relatedService && relatedService.fields) {
+      const infoField = relatedService.fields.find(field => field.type === 'info');
+      if (infoField && infoField.content) {
+        serviceInfoText = infoField.content; // Extract the text content
+      }
+    }
+
+    // 3. Notify Student/Referrer
     const isReferral = savedRequest.serviceName.toUpperCase() === "REFERRAL";
     const recipientEmail = isReferral ? savedRequest.referrerEmail : savedRequest.studentEmail;
 
     if (recipientEmail) {
-      await sendGuestLink(recipientEmail, savedRequest.serviceName, savedRequest.guestToken);
+      // ✅ Pass the extracted serviceInfoText as the 4th parameter
+      await sendGuestLink(recipientEmail, savedRequest.serviceName, savedRequest.guestToken, serviceInfoText);
     }
 
-    // 2. Notify Assigned Counselors
-    const studentDept = req.body.requestData.department; 
+    // 4. Notify Assigned Counselors
+    const studentDept = req.body.requestData?.department; 
     if (studentDept) {
       const counselors = await User.find({ 
         assignedDepartments: studentDept, 
@@ -26,13 +40,14 @@ router.post("/", async (req, res) => {
       });
 
       const notifications = counselors.map(c => 
-        sendCounselorNotification(c.email, savedRequest.studentName, studentDept, savedRequest.serviceName, "New Request")
+        sendCounselorNotification(c.email, savedRequest.studentName, studentDept, savedRequest.serviceName)
       );
       await Promise.all(notifications);
     }
 
     res.status(201).json(savedRequest);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });

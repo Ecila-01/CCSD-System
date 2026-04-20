@@ -5,7 +5,8 @@ import {
   MdAdd, MdOutlineEdit, MdOutlineDelete, MdClose, MdBusiness, MdSchool 
 } from "react-icons/md";
 import Sidebar from '../components/Sidebar'; 
-import '../styles/Dashboard.css'; // Reusing your dashboard styles
+import StatusModal from '../components/StatusModal'; // ✅ Imported StatusModal
+import '../styles/Dashboard.css'; 
 
 const ManageDepartments = () => {
   const [departments, setDepartments] = useState([]);
@@ -19,7 +20,12 @@ const ManageDepartments = () => {
 
   // Form State
   const [formData, setFormData] = useState({ name: '', fullName: '', courses: [] });
-  const [courseInput, setCourseInput] = useState(''); // Temporary state for typing a new course
+  const [courseInput, setCourseInput] = useState(''); 
+
+  // ✅ Status Modal State
+  const [statusModal, setStatusModal] = useState({ 
+    isOpen: false, type: 'confirm', title: '', message: '', onConfirm: null, onCancel: null 
+  });
 
   const fetchDepartments = async () => {
     try {
@@ -36,7 +42,7 @@ const ManageDepartments = () => {
   useEffect(() => {
     const loggedInUser = JSON.parse(localStorage.getItem("user"));
     if (!loggedInUser || loggedInUser.role !== 'admin') {
-      navigate('/dashboard'); // Kick out non-admins
+      navigate('/dashboard'); 
     } else {
       setUser(loggedInUser);
       fetchDepartments();
@@ -64,7 +70,7 @@ const ManageDepartments = () => {
     const cleanCourse = courseInput.trim().toUpperCase();
     if (cleanCourse && !formData.courses.includes(cleanCourse)) {
       setFormData({ ...formData, courses: [...formData.courses, cleanCourse] });
-      setCourseInput(''); // Clear the input field
+      setCourseInput(''); 
     }
   };
 
@@ -75,30 +81,72 @@ const ManageDepartments = () => {
     });
   };
 
-  // --- SUBMIT / DELETE ---
+  // --- SUBMIT / DELETE LOGIC (USING STATUS MODAL) ---
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    setIsModalOpen(false); // Close the form modal first
+    setStatusModal({ isOpen: true, type: 'loading', title: 'Saving...', message: 'Please wait' });
+
     try {
       if (editingId) {
         await axios.put(`http://localhost:5000/api/departments/${editingId}`, formData);
       } else {
         await axios.post('http://localhost:5000/api/departments', formData);
       }
-      setIsModalOpen(false);
+      
       fetchDepartments();
+      
+      setStatusModal({
+        isOpen: true,
+        type: 'success',
+        title: editingId ? 'Updated!' : 'Created!',
+        message: `Department successfully ${editingId ? 'updated' : 'added'}.`,
+        onConfirm: () => setStatusModal({ ...statusModal, isOpen: false })
+      });
+
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to save department.");
+      setStatusModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Error',
+        message: error.response?.data?.message || "Failed to save department.",
+        onConfirm: () => setStatusModal({ ...statusModal, isOpen: false })
+      });
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this department?")) {
-      try {
-        await axios.delete(`http://localhost:5000/api/departments/${id}`);
-        fetchDepartments();
-      } catch (error) {
-        alert("Failed to delete department.");
-      }
+  const triggerDelete = (id) => {
+    setStatusModal({
+      isOpen: true,
+      type: 'delete_confirm',
+      title: 'Delete Department?',
+      message: 'Are you sure you want to permanently delete this department?',
+      onConfirm: () => finalDelete(id),
+      onCancel: () => setStatusModal({ ...statusModal, isOpen: false })
+    });
+  };
+
+  const finalDelete = async (id) => {
+    setStatusModal({ isOpen: true, type: 'loading', title: 'Deleting...', message: 'Please wait...' });
+    try {
+      await axios.delete(`http://localhost:5000/api/departments/${id}`);
+      fetchDepartments();
+      
+      setStatusModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Deleted!',
+        message: 'Department successfully deleted.',
+        onConfirm: () => setStatusModal({ ...statusModal, isOpen: false })
+      });
+    } catch (error) {
+      setStatusModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Error',
+        message: "Failed to delete department.",
+        onConfirm: () => setStatusModal({ ...statusModal, isOpen: false })
+      });
     }
   };
 
@@ -123,12 +171,12 @@ const ManageDepartments = () => {
         <section className="dashboard-view" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 style={{ color: '#3C3736', margin: 0 }}>Manage Departments & Courses</h2>
-            <button onClick={openModalForCreate} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#C3151C', color: 'white', border: 'none',  cursor: 'pointer', fontWeight: 'bold' }}>
+            <button onClick={openModalForCreate} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#C3151C', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
               <MdAdd size={20} /> New Department
             </button>
           </div>
 
-          <div style={{ background: 'white',  border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+          <div style={{ background: 'white', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
                 <tr>
@@ -149,7 +197,7 @@ const ManageDepartments = () => {
                       <td style={tdStyle}>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                           {dept.courses?.length > 0 ? dept.courses.map(course => (
-                            <span key={course} style={{ fontSize: '11px', background: '#f1f5f9', color: '#334155', padding: '4px 8px',  border: '1px solid #e2e8f0', fontWeight: 'bold' }}>
+                            <span key={course} style={{ fontSize: '11px', background: '#f1f5f9', color: '#334155', padding: '4px 8px', border: '1px solid #e2e8f0', fontWeight: 'bold' }}>
                               {course}
                             </span>
                           )) : <span style={{fontSize: '12px', color: '#94a3b8'}}>No courses added</span>}
@@ -157,7 +205,7 @@ const ManageDepartments = () => {
                       </td>
                       <td style={tdStyle}>
                         <button onClick={() => openModalForEdit(dept)} style={{ color: '#1d4ed8', background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px' }}><MdOutlineEdit size={18} /></button>
-                        <button onClick={() => handleDelete(dept._id)} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}><MdOutlineDelete size={18} /></button>
+                        <button onClick={() => triggerDelete(dept._id)} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}><MdOutlineDelete size={18} /></button>
                       </td>
                     </tr>
                   ))
@@ -171,7 +219,7 @@ const ManageDepartments = () => {
       {/* CREATE / EDIT MODAL */}
       {isModalOpen && (
         <div className="modal-overlay" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000 }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', padding: '30px',  width: '100%', maxWidth: '500px', position: 'relative' }}>
+          <div className="modal-content" style={{ backgroundColor: '#ffffff', padding: '30px', width: '100%', maxWidth: '500px', position: 'relative' }}>
             <button onClick={() => setIsModalOpen(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}><MdClose size={24} /></button>
             <h2 style={{ textAlign: 'center', marginBottom: '20px', fontSize: '20px' }}>{editingId ? "Edit Department" : "New Department"}</h2>
             
@@ -189,7 +237,7 @@ const ManageDepartments = () => {
               </div>
 
               {/* COURSE MANAGEMENT SECTION */}
-              <div style={{ marginTop: '10px', background: '#f8fafc', padding: '15px',  border: '1px solid #e2e8f0' }}>
+              <div style={{ marginTop: '10px', background: '#f8fafc', padding: '15px', border: '1px solid #e2e8f0' }}>
                 <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <MdSchool /> Associated Courses
                 </label>
@@ -201,9 +249,9 @@ const ManageDepartments = () => {
                     onChange={(e) => setCourseInput(e.target.value)} 
                     placeholder="Type course (e.g. BSCS) and click Add" 
                     style={{ ...inputStyle, flex: 1 }} 
-                    onKeyDown={(e) => { if(e.key === 'Enter') handleAddCourse(e); }} // Allows pressing enter to add
+                    onKeyDown={(e) => { if(e.key === 'Enter') handleAddCourse(e); }} 
                   />
-                  <button type="button" onClick={handleAddCourse} style={{ background: '#2e2e2e', color: 'white', border: 'none',  padding: '0 15px', fontWeight: 'bold', cursor: 'pointer' }}>
+                  <button type="button" onClick={handleAddCourse} style={{ background: '#2e2e2e', color: 'white', border: 'none', padding: '0 15px', fontWeight: 'bold', cursor: 'pointer' }}>
                     Add
                   </button>
                 </div>
@@ -214,7 +262,7 @@ const ManageDepartments = () => {
                     <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>No courses added yet.</span>
                   ) : (
                     formData.courses.map(course => (
-                      <div key={course} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#e0f2fe', color: '#0369a1', padding: '4px 10px',  fontSize: '12px', fontWeight: 'bold' }}>
+                      <div key={course} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#e0f2fe', color: '#0369a1', padding: '4px 10px', fontSize: '12px', fontWeight: 'bold' }}>
                         {course}
                         <MdClose size={14} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={() => handleRemoveCourse(course)} />
                       </div>
@@ -224,8 +272,8 @@ const ManageDepartments = () => {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none',  fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ padding: '10px 20px', background: '#cc0000', color: 'white', border: 'none',  fontWeight: 'bold', cursor: 'pointer' }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" style={{ padding: '10px 20px', background: '#cc0000', color: 'white', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
                   {editingId ? "Update Department" : "Save Department"}
                 </button>
               </div>
@@ -234,6 +282,16 @@ const ManageDepartments = () => {
           </div>
         </div>
       )}
+
+      {/* THE GLOBAL STATUS MODAL */}
+      <StatusModal 
+        isOpen={statusModal.isOpen} 
+        type={statusModal.type} 
+        title={statusModal.title} 
+        message={statusModal.message} 
+        onConfirm={statusModal.onConfirm}
+        onCancel={statusModal.onCancel} 
+      />
     </div>
   );
 };
@@ -242,6 +300,6 @@ const ManageDepartments = () => {
 const thStyle = { padding: '12px 20px', fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' };
 const tdStyle = { padding: '15px 20px', fontSize: '14px', color: '#111827' };
 const labelStyle = { display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '6px' };
-const inputStyle = { width: '100%', padding: '10px',  border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' };
+const inputStyle = { width: '100%', padding: '10px', border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' };
 
 export default ManageDepartments;

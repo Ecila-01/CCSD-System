@@ -86,7 +86,7 @@ function ManageAnnouncements() {
     }
   };
 
-  // --- ARCHIVE/RESTORE LOGIC (MATCHES SERVICES STATUS CHANGE) ---
+  // --- ARCHIVE/RESTORE LOGIC ---
   const handleStatusToggle = async (id, currentStatus) => {
     const newStatus = currentStatus === 'Active' ? 'Archived' : 'Active';
     
@@ -101,13 +101,22 @@ function ManageAnnouncements() {
       // Local state update for snappy UI
       setAnnouncements(prev => prev.map(a => a._id === id ? { ...a, status: newStatus } : a));
       
+      // ✅ FIX: Show the success message instead of just closing it
       setTimeout(() => {
-        setStatusModal({ isOpen: false });
+        setStatusModal({ 
+          isOpen: true, 
+          type: 'success', 
+          title: newStatus === 'Archived' ? 'Archived!' : 'Restored!', 
+          message: `The announcement is now ${newStatus.toLowerCase()}.`,
+          onConfirm: () => setStatusModal(prev => ({ ...prev, isOpen: false }))
+        });
       }, 500);
+      
     } catch (err) {
       setStatusModal({ 
         isOpen: true, type: 'error', 
-        title: 'Update Failed', message: 'Could not change status.' 
+        title: 'Update Failed', message: 'Could not change status.',
+        onConfirm: () => setStatusModal(prev => ({ ...prev, isOpen: false }))
       });
     }
   };

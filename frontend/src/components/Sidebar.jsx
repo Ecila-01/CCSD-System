@@ -50,6 +50,9 @@ const Sidebar = () => {
         <NavLink to="/referrals" className="sidebar-link">
           <MdOutlineAssignment /> Referrals
         </NavLink>
+        <NavLink to="/reports" className="sidebar-link">
+            <MdOutlineBarChart /> Reports
+        </NavLink>
       </div>
 
       {/* ADMIN EXCLUSIVE SECTION: Only Admins see the Management tools */}
@@ -64,9 +67,6 @@ const Sidebar = () => {
           </NavLink>
           <NavLink to="/manage-services" className="sidebar-link">
             <MdOutlineCategory /> Services
-          </NavLink>
-          <NavLink to="/reports" className="sidebar-link">
-            <MdOutlineBarChart /> Reports
           </NavLink>
           <NavLink to="/departments" className="sidebar-link">
             <MdAccountBalance /> Departments

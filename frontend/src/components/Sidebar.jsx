@@ -5,7 +5,8 @@ import {
   MdOutlineCalendarMonth, 
   MdOutlinePeopleAlt, 
   MdOutlineCampaign, 
-  MdOutlineSettings, 
+  MdOutlineSettings,
+  MdInfoOutline, 
   MdOutlineLogout, 
   MdOutlineAssignment,
   MdOutlineCategory,
@@ -70,6 +71,9 @@ const Sidebar = () => {
           </NavLink>
           <NavLink to="/departments" className="sidebar-link">
             <MdAccountBalance /> Departments
+          </NavLink>
+          <NavLink to="/manage-about" className="sidebar-link">
+            <MdInfoOutline /> About
           </NavLink>
         </div>
       )}

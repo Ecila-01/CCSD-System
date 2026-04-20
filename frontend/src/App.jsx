@@ -16,7 +16,7 @@ import Profile from "./pages/Profile";
 import GuestRequestView from "./pages/GuestRequestView";
 import ManageDepartments from './pages/ManageDepartments';
 import Reports from "./pages/Reports";
-
+import ManageAbout from "./pages/ManageAbout";
 
 function Footer() {
   return (
@@ -43,7 +43,8 @@ export default function App() {
     "/reports",           // Added missing route
     "/profile",           // Added missing route
     "/settings",           // Added missing route
-    "/departments"
+    "/departments",
+    "/manage-about"
   ];
   const isAppView = appPages.includes(location.pathname);
 
@@ -69,6 +70,8 @@ export default function App() {
         <Route path="/profile" element={<Profile/>} /> 
         <Route path="/departments" element={<ManageDepartments />} />
         <Route path="/reports" element={<Reports/>} />
+        <Route path="/manage-about" element={<ManageAbout/>} />
+        
       </Routes>
 
       {/* Hide public footer if on ANY admin page */}

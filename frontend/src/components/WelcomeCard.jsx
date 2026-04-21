@@ -109,7 +109,7 @@ const WelcomeCard = ({ user, sessionsToday, displayQueue, yourActive, isAdmin })
           <MdOutlineFolderShared size={28} style={{ color: '#fdfdfd', marginBottom: '10px' }} /> {/* Added Gold accent icon */}
           <div style={{ fontSize: '36px', fontWeight: '900', lineHeight: '1', color: '#fff' }}>{yourActive}</div>
           <div style={{ fontSize: '11px', opacity: '0.8', marginTop: '8px', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-            {isAdmin ? "Overall Total" : "Your Cases"}
+            {isAdmin ? "Total Cases" : "Your Cases"}
           </div>
         </div>
 

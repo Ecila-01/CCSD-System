@@ -79,39 +79,37 @@ const WelcomeCard = ({ user, sessionsToday, displayQueue, yourActive, isAdmin })
 
       <div className="welcome-stats" style={{ display: 'flex', gap: '20px' }}>
         
-      {/* Box 1: Pending */}
+        {/* Box 1: Pending */}
         <div style={{ 
-          background: '#3C3736', 
+          background: '#3C3736', // ✅ Darker background for more "pop"
           padding: '25px', 
+          //borderRadius: '16px', 
           minWidth: '140px',
           textAlign: 'center',
           border: '1px solid rgba(255,255,255,0.1)',
           boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)'
         }}>
-          <MdOutlinePendingActions size={28} style={{ color: '#ffffff', marginBottom: '10px' }} />
-          <div style={{ fontSize: '36px', fontWeight: '900', lineHeight: '1', color: '#fff' }}>
-            {displayQueue}
-          </div>
+          <MdOutlinePendingActions size={28} style={{ color: '#ffffff', marginBottom: '10px' }} /> {/* Added Gold accent icon */}
+          <div style={{ fontSize: '36px', fontWeight: '900', lineHeight: '1', color: '#fff' }}>{displayQueue}</div>
           <div style={{ fontSize: '11px', opacity: '0.8', marginTop: '8px', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-            {isAdmin ? "Total Pending" : "Dept Pending"}
+            {isAdmin ? "Total Pending" : "Pending"}
           </div>
         </div>
 
-        {/* Box 2: Total Cases */}
+        {/* Box 2: Active */}
         <div style={{ 
           background: '#929396', 
           padding: '25px', 
+          //borderRadius: '16px', 
           minWidth: '160px',
           textAlign: 'center',
           border: '1px solid rgba(255,255,255,0.1)',
           boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)'
         }}>
-          <MdOutlineFolderShared size={28} style={{ color: '#fdfdfd', marginBottom: '10px' }} />
-          <div style={{ fontSize: '36px', fontWeight: '900', lineHeight: '1', color: '#fff' }}>
-            {totalCases} {/* 👈 Render the new variable here */}
-          </div>
+          <MdOutlineFolderShared size={28} style={{ color: '#fdfdfd', marginBottom: '10px' }} /> {/* Added Gold accent icon */}
+          <div style={{ fontSize: '36px', fontWeight: '900', lineHeight: '1', color: '#fff' }}>{yourActive}</div>
           <div style={{ fontSize: '11px', opacity: '0.8', marginTop: '8px', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-            {isAdmin ? "Overall Total" : "Your Cases"} {/* 👈 Updated Labels */}
+            {isAdmin ? "Overall Total" : "Your Cases"}
           </div>
         </div>
 

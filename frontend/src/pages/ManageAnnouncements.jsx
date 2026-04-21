@@ -38,7 +38,7 @@ function ManageAnnouncements() {
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/announcements');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/announcements`);
       setAnnouncements(res.data);
       setIsLoading(false);
     } catch (err) {
@@ -64,7 +64,7 @@ function ManageAnnouncements() {
     setStatusModal({ isOpen: true, type: 'loading', title: 'Deleting...', message: 'Please wait...' });
     
     try {
-      await axios.delete(`http://localhost:5000/api/announcements/${id}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/announcements/${id}`);
       setViewingAnnouncement(null);
       fetchAnnouncements();
 
@@ -86,7 +86,7 @@ function ManageAnnouncements() {
     }
   };
 
-  // --- ARCHIVE/RESTORE LOGIC (MATCHES SERVICES STATUS CHANGE) ---
+  // --- ARCHIVE/RESTORE LOGIC ---
   const handleStatusToggle = async (id, currentStatus) => {
     const newStatus = currentStatus === 'Active' ? 'Archived' : 'Active';
     
@@ -96,18 +96,27 @@ function ManageAnnouncements() {
     });
 
     try {
-      await axios.patch(`http://localhost:5000/api/announcements/${id}`, { status: newStatus });
+      await axios.patch(`${import.meta.env.VITE_API_URL}/api/announcements/${id}`, { status: newStatus });
       
       // Local state update for snappy UI
       setAnnouncements(prev => prev.map(a => a._id === id ? { ...a, status: newStatus } : a));
       
+      // ✅ FIX: Show the success message instead of just closing it
       setTimeout(() => {
-        setStatusModal({ isOpen: false });
+        setStatusModal({ 
+          isOpen: true, 
+          type: 'success', 
+          title: newStatus === 'Archived' ? 'Archived!' : 'Restored!', 
+          message: `The announcement is now ${newStatus.toLowerCase()}.`,
+          onConfirm: () => setStatusModal(prev => ({ ...prev, isOpen: false }))
+        });
       }, 500);
+      
     } catch (err) {
       setStatusModal({ 
         isOpen: true, type: 'error', 
-        title: 'Update Failed', message: 'Could not change status.' 
+        title: 'Update Failed', message: 'Could not change status.',
+        onConfirm: () => setStatusModal(prev => ({ ...prev, isOpen: false }))
       });
     }
   };
@@ -127,7 +136,7 @@ const handleBulkArchive = async () => {
 
   try {
     await Promise.all(selectedIds.map(id => 
-      axios.patch(`http://localhost:5000/api/announcements/${id}`, { status: 'Archived' })
+      axios.patch(`${import.meta.env.VITE_API_URL}/api/announcements/${id}`, { status: 'Archived' })
     ));
     
     setIsSelectMode(false);
@@ -165,7 +174,7 @@ const handleBulkDelete = () => {
       setStatusModal({ isOpen: true, type: 'loading', title: 'Deleting...', message: 'Please wait...' });
       
       try {
-        await Promise.all(selectedIds.map(id => axios.delete(`http://localhost:5000/api/announcements/${id}`)));
+        await Promise.all(selectedIds.map(id => axios.delete(`${import.meta.env.VITE_API_URL}/api/announcements/${id}`)));
         setIsSelectMode(false);
         setSelectedIds([]);
         fetchAnnouncements();
@@ -198,7 +207,7 @@ const handleBulkRestore = async () => {
 
   try {
     await Promise.all(selectedIds.map(id => 
-      axios.patch(`http://localhost:5000/api/announcements/${id}`, { status: 'Active' })
+      axios.patch(`${import.meta.env.VITE_API_URL}/api/announcements/${id}`, { status: 'Active' })
     ));
     
     setIsSelectMode(false);
@@ -306,7 +315,14 @@ const handleBulkRestore = async () => {
                 )}
 
                 <div className="ann-card-image">
-                  <img src={ann.image} alt={ann.title} />
+                  <img 
+                    src={
+                      ann.image?.startsWith('http') 
+                        ? ann.image 
+                        : `${import.meta.env.VITE_API_URL}${ann.image}`
+                    } 
+                    alt={ann.title} 
+                  />
                   <span className={`status-badge ${ann.status.toLowerCase()}`}>
                     {ann.status}
                   </span>

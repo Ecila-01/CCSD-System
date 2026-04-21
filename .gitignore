@@ -8,6 +8,7 @@ frontend/node_modules/
 # This protects your MongoDB credentials
 .env
 backend/.env
+frontend/.env
 .env.local
 .env.development.local
 .env.test.local

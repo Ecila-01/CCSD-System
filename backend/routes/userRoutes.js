@@ -33,7 +33,7 @@ router.post('/register', async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      assignedDepartments: assignedDepartments || [] // ✅ Save the departments array
+      assignedDepartments: assignedDepartments || [] 
     });
 
     await newUser.save();
@@ -44,41 +44,45 @@ router.post('/register', async (req, res) => {
 });
 
 // @route   PUT /api/users/:id
-// @desc    Update user details (including departments and password)
+// @desc    Update user details (Handles both Admin Dashboard AND Profile Page)
+// @route   PUT /api/users/:id
+// @desc    Update user details (Handles Admin Dashboard AND Profile Page)
 router.put('/:id', async (req, res) => {
   try {
-    const { name, email, password, role, assignedDepartments } = req.body;
+    const { name, email, password, newPassword, role, assignedDepartments } = req.body;
     
-    // 1. Find the user first
     let user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // 2. Prepare update object
-    const updateData = {
-      name,
-      email,
-      role,
-      assignedDepartments: assignedDepartments || [] // ✅ Update departments
-    };
+    const updateData = {};
 
-    // 3. Only hash and update password if a new one was typed
-    if (password && password.trim() !== "") {
+    // 1. Only update Identity fields if provided (for Admins)
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (role) updateData.role = role;
+    if (assignedDepartments) updateData.assignedDepartments = assignedDepartments;
+
+    // 2. Handle Password (check for 'password' from admin dashboard OR 'newPassword' from profile)
+    const passwordInput = newPassword || password;
+    if (passwordInput && passwordInput.trim() !== "") {
       const salt = await bcrypt.genSalt(10);
-      updateData.password = await bcrypt.hash(password, salt);
+      updateData.password = await bcrypt.hash(passwordInput, salt);
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       { $set: updateData },
-      { 
-        returnDocument: 'after', // ✅ Modern syntax
-        runValidators: true      // ✅ Recommended: ensures email/role logic is followed
-      }
+      { new: true, runValidators: true }
     ).select('-password');
 
-    res.json(updatedUser);
+    // Return the updated user object so the frontend can update LocalStorage
+    res.json({ 
+      message: "Update successful", 
+      user: updatedUser 
+    });
+
   } catch (error) {
-    console.error(error);
+    console.error("Update error:", error);
     res.status(500).json({ message: "Server Error updating user" });
   }
 });

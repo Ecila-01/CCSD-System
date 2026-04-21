@@ -64,35 +64,69 @@
   display: inline-block;
   text-align: center;
 }
+/* --- 1. ENTRY POINT (Ambers/Yellows) --- */
+.case-status-badge.pending-review { 
+  background-color: #fef3c7; 
+  color: #d97706; 
+}
 
-/* 1. PENDING - Waiting for review (Light Blue) */
-.case-status-badge.pending { 
+.case-status-badge.action-required { 
+  background-color: #fffbeb; 
+  color: #b45309; 
+  border: 1px solid #fcd34d; /* Extra emphasis as it needs attention */
+}
+
+/* --- 2. WORKFLOW: COUNSELING (Blues) --- */
+.case-status-badge.in-progress { 
+  background-color: #e0f2fe; 
+  color: #0369a1; 
+}
+
+.case-status-badge.reschedule-requested { 
+  background-color: #ffedd5; 
+  color: #ea580c; 
+}
+
+.case-status-badge.follow-up-needed { 
   background-color: #e1f5fe; 
-  color: #0277bd; 
+  color: #0288d1; 
 }
 
-/* 2. ACTIVE - Currently ongoing (Your custom UB Red) */
-.case-status-badge.active {
-  background-color: #fce4e4; 
-  color: #c00000; 
+/* --- 3. WORKFLOW: DOCUMENTS (Indigos/Purples) --- */
+.case-status-badge.processing { 
+  background-color: #e0e7ff; 
+  color: #4338ca; 
 }
 
-/* 3. COMPLETED - Successfully finished (Green) */
-.case-status-badge.completed { 
-  background-color: #e8f5e9; 
-  color: #2e7d32; 
+.case-status-badge.ready-for-pickup { 
+  background-color: #dcfce7; 
+  color: #15803d; 
+  font-weight: 800; /* Make it pop for the student */
 }
 
-/* 4. DECLINED - Rejected by counselor (Amber/Orange) */
-.case-status-badge.declined {
-  background-color: #fff8e1; 
-  color: #f57f17; 
+/* --- 4. FINAL STATES (Greens, Reds, and Grays) --- */
+.case-status-badge.resolved,
+.case-status-badge.completed,
+.case-status-badge.issued { 
+  background-color: #dcfce7; 
+  color: #16a34a; 
 }
 
-/* 5. CANCELLED - Aborted by student (Muted Slate/Gray) */
+.case-status-badge.declined,
+.case-status-badge.closed {
+  background-color: #fee2e2; 
+  color: #c00000; /* Your custom UB Red */
+}
+
+.case-status-badge.no-show,
 .case-status-badge.cancelled {
   background-color: #f1f5f9;
   color: #475569;
+}
+
+.case-status-badge.referred-externally {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
 }
 
 /* Actions */

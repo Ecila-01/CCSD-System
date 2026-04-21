@@ -111,3 +111,25 @@
     margin-top: 4px;
   }
 }
+/* --- RESPONSIVE LOGIN BUTTONS --- */
+
+/* On Desktop (Screens wider than 768px): Hide the mobile login button */
+@media screen and (min-width: 769px) {
+  .mobile-login {
+    display: none;
+  }
+}
+
+/* On Mobile (Screens 768px and smaller): Hide the desktop login button */
+@media screen and (max-width: 768px) {
+  .desktop-login {
+    display: none;
+  }
+  
+  /* Optional: Make the mobile login button look good in the dropdown */
+  .mobile-login {
+    display: block;
+    width: 100%;
+    margin-top: 15px;
+  }
+}

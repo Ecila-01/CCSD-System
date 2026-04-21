@@ -29,7 +29,7 @@ function ManageServices() {
 
   const fetchServices = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/services');
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/services`);
       setServices(response.data);
       setIsLoading(false);
     } catch (error) {
@@ -56,7 +56,7 @@ function ManageServices() {
     setStatusModal({ isOpen: true, type: 'loading', title: 'Deleting...', message: 'Please wait while we remove the service.' });
     
     try {
-      await axios.delete(`http://localhost:5000/api/services/${id}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/services/${id}`);
       
       // Close the viewing modal if it was open
       setViewingService(null); 
@@ -100,7 +100,7 @@ function ManageServices() {
 
     try {
       // We hit a PATCH route (which we will create next)
-      await axios.patch(`http://localhost:5000/api/services/${id}`, { status: newStatus });
+      await axios.patch(`${import.meta.env.VITE_API_URL}/api/services/${id}`, { status: newStatus });
       
       // Update local state immediately so the UI feels snappy
       setServices(prev => prev.map(s => s._id === id ? { ...s, status: newStatus } : s));

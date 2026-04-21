@@ -9,11 +9,22 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const sendGuestLink = async (toEmail, serviceName, token) => {
+
+const sendGuestLink = async (toEmail, serviceName, token, serviceInfo) => {
   const viewLink = `http://localhost:5173/view-request/${token}`;
 
+  // ✅ Conditionally create an info block if serviceInfo exists
+  const infoHtmlBlock = serviceInfo 
+    ? `
+      <div style="background-color: #f8fafc; border-left: 4px solid #c00000; padding: 15px; margin: 20px 0;">
+        <h4 style="margin: 0 0 8px 0; color: #1e293b;">Important Information regarding this service:</h4>
+        <p style="margin: 0; color: #475569; font-size: 14px; white-space: pre-wrap;">${serviceInfo}</p>
+      </div>
+    ` 
+    : '';
+
   const mailOptions = {
-    from: '"UB CCSD Team" <your-email@gmail.com>', // ✅ Use the same Gmail address here
+    from: '"UB CCSD Team" <ecila070102@gmail.com>', 
     to: toEmail,
     subject: `Request Received: ${serviceName}`,
     html: `
@@ -21,7 +32,8 @@ const sendGuestLink = async (toEmail, serviceName, token) => {
         <h2 style="color: #c00000;">University of Baguio - CCSD</h2>
         <p>Hello,</p>
         <p>We have received your request for <strong>${serviceName}</strong>.</p>
-        <p>You can track the status of your request via your secure guest link below:</p>
+        
+        ${infoHtmlBlock} <p>You can track the status of your request via your secure guest link below:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${viewLink}" style="background-color: #c00000; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
             View My Request
@@ -113,10 +125,36 @@ const sendStatusUpdateToReferrer = async (toEmail, studentName, newStatus, token
   };
   return transporter.sendMail(mailOptions);
 };
-
+// ✅ NEW: Notify Staff for Password Reset (OTP)
+const sendPasswordResetOtp = async (toEmail, otp) => {
+  const mailOptions = {
+    from: '"UB CCSD Team" <ecila070102@gmail.com>', // Matches your configured auth user
+    to: toEmail,
+    subject: `UB CCSD - Password Reset OTP`,
+    html: `
+      <div style="font-family: sans-serif; border: 1px solid #eee; padding: 30px; max-width: 600px; text-align: center; margin: 0 auto;">
+        <h2 style="color: #c00000; margin-bottom: 10px;">Password Reset Request</h2>
+        <p style="color: #475569; font-size: 15px;">You requested to reset your password for the UB CCSD Admin Portal.</p>
+        
+        <p style="margin-top: 30px; color: #1e293b;">Your One-Time Password (OTP) is:</p>
+        <div style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #1e293b; margin: 10px 0 20px 0; padding: 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; display: inline-block;">
+          ${otp}
+        </div>
+        
+        <p style="color: #dc2626; font-weight: bold; font-size: 13px;">This code will expire in 10 minutes.</p>
+        
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+          If you did not request a password reset, please ignore this email. Your account remains secure.
+        </div>
+      </div>
+    `
+  };
+  return transporter.sendMail(mailOptions);
+};
 module.exports = { 
   sendGuestLink, 
   sendCounselorNotification, 
   sendStatusUpdateToStudent, 
-  sendStatusUpdateToReferrer 
+  sendStatusUpdateToReferrer,
+  sendPasswordResetOtp,
 };

@@ -12,7 +12,7 @@ const WalkInModal = ({ isOpen, onClose, onSuccess, counselorName }) => {
 
   useEffect(() => {
     if (isOpen) {
-      axios.get('http://localhost:5000/api/services').then(res => setServices(res.data));
+      axios.get(`${import.meta.env.VITE_API_URL}/api/services`).then(res => setServices(res.data));
       setStep(1);
       setFormData({});
     }
@@ -45,7 +45,7 @@ const WalkInModal = ({ isOpen, onClose, onSuccess, counselorName }) => {
     };
 
     try {
-      await axios.post('http://localhost:5000/api/requests/walk-in', payload);
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/requests/walk-in`, payload);
       onSuccess();
       onClose();
     } catch (error) {

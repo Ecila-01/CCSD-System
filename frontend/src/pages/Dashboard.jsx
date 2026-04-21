@@ -61,15 +61,20 @@ useEffect(() => {
     return isToday && req.assignedCounselor === user.name; 
   }).length;
 
-  // 3. Department Queue (Awaiting Review)
-  // ✅ Super simple now: authorizedRequests already filters out other departments!
-  const displayQueue = authorizedRequests.filter(req => req.status === 'Pending Review').length;
+  // 3. Pending Queue
+  const displayQueue = authorizedRequests.filter(req => {
+    if (isAdmin) return req.status === 'Pending Review'; // Admin: ALL pending
+    
+    // Counselor: ONLY pending in their specific department
+    return req.status === 'Pending Review' && req.department === user.department; 
+  }).length;
 
-  // 4. "YOUR" Active Cases
-  // ✅ Also simplified
-  const yourActive = authorizedRequests.filter(req => {
-    if (isAdmin) return req.status === 'Active'; 
-    return req.status === 'Active' && req.assignedCounselor === user.name;
+  // 4. Total Cases 
+  const totalCases = authorizedRequests.filter(req => {
+    if (isAdmin) return true; // Admin: OVERALL Total (counts literally every request)
+    
+    // Counselor: ALL cases assigned to them, regardless of status (Active, Closed, etc.)
+    return req.assignedCounselor === user.name; 
   }).length;
 
   // 5. SMART EMAIL CALCULATION 
@@ -135,7 +140,7 @@ useEffect(() => {
             user={user} 
             sessionsToday={sessionsToday} 
             displayQueue={displayQueue} 
-            yourActive={yourActive} // 👈 Simplified
+            yourActive={totalCases} // 👈 Pass the new totalCases variable here
             isAdmin={isAdmin}
           />
           

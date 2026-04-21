@@ -89,11 +89,11 @@
 .ccsd-hero {
   background:
     linear-gradient(rgba(41, 40, 39, 0.72), rgba(49, 47, 47, 0.783)),
-    url('src/assets/ccsd-teampic.jpg') center 20%/contain no-repeat;
+   url('../assets/ccsd-teampic.jpg') center 20%/contain no-repeat;
     background-color: #d6d4d3;
   background-image:
     linear-gradient(rgba(60, 55, 54, 0.72), rgba(60, 55, 54, 0.72)),
-     url('src/assets/ccsd-teampic.jpg');
+     url('../assets/ccsd-teampic.jpg');
   background-size: cover;
   background-position: center 30%;
   background-repeat: no-repeat;

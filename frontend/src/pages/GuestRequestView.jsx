@@ -17,7 +17,7 @@ const GuestRequestView = () => {
   useEffect(() => {
     const fetchRequest = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/requests/guest/${token}`);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/requests/guest/${token}`);
         setRequest(res.data);
       } catch (err) {
         console.error("Invalid or expired link");
@@ -35,7 +35,7 @@ const GuestRequestView = () => {
     setIsSubmitting(true);
     try {
       // Update request: change date/time and set status back to "Pending Review"
-      const res = await axios.patch(`http://localhost:5000/api/requests/guest/reschedule/${token}`, {
+      const res = await axios.patch(`${import.meta.env.VITE_API_URL}/api/requests/guest/reschedule/${token}`, {
         appointmentDate: newDate,
         timeSlot: newTime,
         status: "Pending Review",

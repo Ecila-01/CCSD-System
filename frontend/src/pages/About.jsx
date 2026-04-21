@@ -6,7 +6,18 @@ import "../styles/About.css";
 const OrgCard = ({ name, role, tag, imageUrl, small }) => (
   <div className={`org-card${small ? " org-card--small" : ""}`}>
     <div className="org-card__photo-wrap">
-      <img src={imageUrl || "https://www.gravatar.com/avatar/?d=mp"} alt={name} className="org-card__photo" />
+      <img 
+        src={
+          !imageUrl 
+            ? "https://www.gravatar.com/avatar/?d=mp" 
+            : imageUrl.startsWith('http') 
+              ? imageUrl 
+              : `${import.meta.env.VITE_API_URL}${imageUrl}`
+        } 
+        alt={name} 
+        className="org-card__photo" 
+        onError={(e) => { e.target.src = "https://www.gravatar.com/avatar/?d=mp"; }}
+      />
     </div>
     <div className="org-card__info">
       {tag && <span className="org-card__tag">{tag}</span>}
@@ -24,7 +35,7 @@ export default function About() {
   useEffect(() => {
     const fetchAboutData = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/about");
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/about`);
         setAboutData(res.data);
       } catch (error) {
         console.error("Error fetching About content:", error);

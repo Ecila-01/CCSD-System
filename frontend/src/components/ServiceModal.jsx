@@ -61,12 +61,16 @@ const ServiceModal = ({ service, onClose, onEdit, onDelete }) => {
             <div className="modal-detail-group">
               <label>SERVICE IMAGE</label>
               <div className="modal-image-wrapper" style={{ textAlign: 'center', backgroundColor: '#f9f9f9', padding: '10px', border: '1px solid #eee' }}>
-                <img 
-                  src={service.image} 
-                  alt={service.name} 
-                  style={{ maxHeight: '180px', maxWidth: '100%', objectFit: 'contain' }}
-                  onError={(e) => { e.target.style.display = 'none'; }} // Hides the image tag if the URL is broken
-                />
+              <img 
+                src={
+                  service.image?.startsWith('http') 
+                    ? service.image 
+                    : `${import.meta.env.VITE_API_URL}${service.image}`
+                } 
+                alt={service.name} 
+                style={{ maxHeight: '180px', maxWidth: '100%', objectFit: 'contain' }}
+                onError={(e) => { e.target.style.display = 'none'; }} 
+              />
               </div>
             </div>
           )}

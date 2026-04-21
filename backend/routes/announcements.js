@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
 router.post('/', upload.single('image'), async (req, res) => {
   try {
     const imageUrl = req.file 
-      ? `http://localhost:5000/uploads/${req.file.filename}` 
+      ? `${process.env.BASE_URL || 'http://localhost:5000'}/uploads/${req.file.filename}` 
       : null;
 
     const news = new Announcement({
@@ -87,7 +87,7 @@ router.patch('/:id', upload.single('image'), async (req, res) => {
 
     // If there's an image, handle the URL
     if (req.file) {
-      updateData.image = `http://localhost:5000/uploads/${req.file.filename}`;
+      updateData.image = `${process.env.BASE_URL || 'http://localhost:5000'}/uploads/${req.file.filename}`;
     }
 
     const updated = await Announcement.findByIdAndUpdate(

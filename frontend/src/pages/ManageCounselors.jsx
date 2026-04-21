@@ -34,7 +34,7 @@ const ManageCounselors = () => {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('http://localhost:5000/api/users');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users`);
       setUsers(res.data);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -46,7 +46,7 @@ const ManageCounselors = () => {
   // ✅ NEW: Fetch Live Departments
   const fetchDepartments = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/departments');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/departments`);
       setDepartmentsDb(res.data);
     } catch (error) {
       console.error("Error fetching departments:", error);
@@ -104,10 +104,10 @@ const ManageCounselors = () => {
     e.preventDefault();
     try {
       if (editingUserId) {
-        await axios.put(`http://localhost:5000/api/users/${editingUserId}`, formData);
+        await axios.put(`${import.meta.env.VITE_API_URL}/api/users/${editingUserId}`, formData);
         alert("Account updated successfully!");
       } else {
-        await axios.post('http://localhost:5000/api/users/register', formData);
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/users/register`, formData);
         alert("Account created successfully!");
       }
       setIsModalOpen(false);
@@ -120,7 +120,7 @@ const ManageCounselors = () => {
   const handleDelete = async (userId) => {
     if (window.confirm("Are you sure you want to delete this account?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/users/${userId}`);
+        await axios.delete(`${import.meta.env.VITE_API_URL}/api/users/${userId}`);
         fetchUsers();
       } catch (error) {
         alert("Failed to delete account.");

@@ -23,7 +23,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     // We need to parse 'fields' if it's sent as a stringified array.
     
     const imageUrl = req.file 
-      ? `http://localhost:5000/uploads/${req.file.filename}` 
+      ? `${process.env.BASE_URL || 'http://localhost:5000'}/uploads/${req.file.filename}` 
       : req.body.image; // Fallback to URL if no file uploaded
 
     const service = new Service({
@@ -106,7 +106,7 @@ router.patch('/:id', upload.single('image'), async (req, res) => {
 
     // 3. Handle the image ONLY if a new file was actually uploaded
     if (req.file) {
-      updateData.image = `http://localhost:5000/uploads/${req.file.filename}`;
+      updateData.image = `${process.env.BASE_URL || 'http://localhost:5000'}/uploads/${req.file.filename}`;
     }
 
     const updatedService = await Service.findByIdAndUpdate(

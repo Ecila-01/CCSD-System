@@ -28,7 +28,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
     const fetchServiceTemplate = async () => {
       try {
         setIsLoadingFields(true);
-        const response = await axios.get(`http://localhost:5000/api/services/${request.serviceId}`);
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/services/${request.serviceId}`);
         setServiceFields(response.data.fields || []);
       } catch (error) {
         console.error("Error fetching service fields:", error);
@@ -73,7 +73,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
         counselorToAssign = currentUser.name; 
       }
 
-      await axios.patch(`http://localhost:5000/api/requests/${request._id}`, {
+      await axios.patch(`${import.meta.env.VITE_API_URL}/api/requests/${request._id}`, {
         status: pendingStatus,
         assignedCounselor: counselorToAssign,
         statusNote: statusNote

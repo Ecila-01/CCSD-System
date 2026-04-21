@@ -42,7 +42,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     return res.status(400).json({ message: 'No file uploaded' });
   }
   // This constructs the URL using your static uploads route
-  const imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+  const imageUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/uploads/${req.file.filename}`;
   res.status(200).json({ imageUrl });
 });
 

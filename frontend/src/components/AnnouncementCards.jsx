@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../styles/AnnouncementCards.css';
 
+// Define the fallback image as a constant for easy updates
+const FALLBACK_IMAGE = "https://placehold.co/600x400/8b0000/ffffff?text=University+News";
+
 export default function AnnouncementCards() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -9,8 +12,7 @@ export default function AnnouncementCards() {
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/announcements");
-        // Only show Active ones to the students
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/announcements`);
         const activeNews = response.data.filter(ann => ann.status === 'Active');
         setAnnouncements(activeNews);
       } catch (error) {
@@ -22,11 +24,10 @@ export default function AnnouncementCards() {
     fetchAnnouncements();
   }, []);
 
-  // Helper to map DB categories to your existing CSS badge classes
   const getBadgeClass = (category) => {
     switch (category?.toUpperCase()) {
       case 'EVENT': return 'badge-event';
-      case 'UPDATE': return 'badge-alert'; // or badge-update
+      case 'UPDATE': return 'badge-alert';
       case 'MEMO': return 'badge-memo';
       case 'INFO': return 'badge-info';
       default: return 'badge-news';
@@ -55,10 +56,21 @@ export default function AnnouncementCards() {
             <article className="ann-card" key={ann._id}>
               <div className="card-img-wrapper">
                 <img
-                  src={ann.image}
+                  // 1. Use the fallback if there's no image in the DB
+                  // 2. Otherwise, check if it's already a full URL (external) or just a path
+                  src={
+                    !ann.image 
+                      ? FALLBACK_IMAGE 
+                      : ann.image.startsWith('http') 
+                        ? ann.image 
+                        : `${import.meta.env.VITE_API_URL}${ann.image}`
+                  }
                   alt={ann.title}
                   className="card-img"
-                  onError={(e) => { e.target.src = 'https://placehold.co/600x340?text=News'; }}
+                  onError={(e) => { 
+                    e.target.onerror = null; 
+                    e.target.src = FALLBACK_IMAGE; 
+                  }}
                 />
                 <span className={`card-badge ${getBadgeClass(ann.category)}`}>
                   {ann.category}

@@ -19,7 +19,7 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   // ✅ NEW: Fetch departments when modal opens
   useEffect(() => {
     if (isOpen) {
-      axios.get('http://localhost:5000/api/departments')
+      axios.get(`${import.meta.env.VITE_API_URL}/api/departments`)
         .then(res => setDepartmentsDb(res.data))
         .catch(err => console.error("Error fetching departments for form maker:", err));
     }
@@ -163,8 +163,8 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
 
     try {
       const url = editingService 
-        ? `http://localhost:5000/api/services/${editingService._id}`
-        : 'http://localhost:5000/api/services';
+        ? `${import.meta.env.VITE_API_URL}/api/services/${editingService._id}`
+        : `${import.meta.env.VITE_API_URL}/api/services`;
       
       const method = editingService ? 'patch' : 'post';
 

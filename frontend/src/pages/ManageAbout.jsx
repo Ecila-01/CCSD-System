@@ -23,7 +23,7 @@ const ManageAbout = () => {
   useEffect(() => {
     const fetchAbout = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/about');
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/about`);
         setFormData(res.data);
       } catch (err) {
         console.error("Error fetching about data:", err);
@@ -88,7 +88,7 @@ const ManageAbout = () => {
     setIsUploading(true);
     try {
       // Send the file to our new backend route
-      const res = await axios.post('http://localhost:5000/api/upload', uploadData, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/upload`, uploadData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       // Set the returned local URL into the member form
@@ -103,7 +103,7 @@ const ManageAbout = () => {
   const handleSave = async () => {
     setStatusModal({ isOpen: true, type: 'loading', title: 'Saving...', message: 'Publishing changes to the live site.' });
     try {
-      await axios.put('http://localhost:5000/api/about', formData);
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/about`, formData);
       setStatusModal({
         isOpen: true, type: 'success', title: 'Published!', message: 'The About page has been successfully updated.',
         onConfirm: () => setStatusModal({ isOpen: false })
@@ -190,7 +190,18 @@ const ManageAbout = () => {
                 {directors.map((member) => (
                   <div key={member.originalIndex} className="visual-profile-card" style={profileCardStyle}>
                     <div style={profilePhotoWrap}>
-                      <img src={member.imageUrl || "https://www.gravatar.com/avatar/?d=mp"} alt={member.name} style={profilePhoto} />
+                      <img 
+                        src={
+                          !member.imageUrl 
+                            ? "https://www.gravatar.com/avatar/?d=mp" 
+                            : member.imageUrl.startsWith('http') 
+                              ? member.imageUrl 
+                              : `${import.meta.env.VITE_API_URL}${member.imageUrl}`
+                        } 
+                        alt={member.name} 
+                        style={profilePhoto} 
+                        onError={(e) => { e.target.src = "https://www.gravatar.com/avatar/?d=mp"; }}
+                      />
                     </div>
                     <div style={{ textAlign: 'center', marginTop: '45px' }}>
                       {member.departmentTag && <span style={profileTag}>{member.departmentTag}</span>}
@@ -216,7 +227,18 @@ const ManageAbout = () => {
                 {staff.map((member) => (
                   <div key={member.originalIndex} className="visual-profile-card" style={profileCardStyle}>
                     <div style={profilePhotoWrap}>
-                      <img src={member.imageUrl || "https://www.gravatar.com/avatar/?d=mp"} alt={member.name} style={profilePhoto} />
+                      <img 
+                        src={
+                          !member.imageUrl 
+                            ? "https://www.gravatar.com/avatar/?d=mp" 
+                            : member.imageUrl.startsWith('http') 
+                              ? member.imageUrl 
+                              : `${import.meta.env.VITE_API_URL}${member.imageUrl}`
+                        } 
+                        alt={member.name} 
+                        style={profilePhoto} 
+                        onError={(e) => { e.target.src = "https://www.gravatar.com/avatar/?d=mp"; }}
+                      />
                     </div>
                     <div style={{ textAlign: 'center', marginTop: '45px' }}>
                       {member.departmentTag && <span style={profileTag}>{member.departmentTag}</span>}
@@ -242,7 +264,18 @@ const ManageAbout = () => {
                 {assistants.map((member) => (
                   <div key={member.originalIndex} className="visual-profile-card" style={profileCardStyle}>
                     <div style={profilePhotoWrap}>
-                      <img src={member.imageUrl || "https://www.gravatar.com/avatar/?d=mp"} alt={member.name} style={profilePhoto} />
+                      <img 
+                        src={
+                          !member.imageUrl 
+                            ? "https://www.gravatar.com/avatar/?d=mp" 
+                            : member.imageUrl.startsWith('http') 
+                              ? member.imageUrl 
+                              : `${import.meta.env.VITE_API_URL}${member.imageUrl}`
+                        } 
+                        alt={member.name} 
+                        style={profilePhoto} 
+                        onError={(e) => { e.target.src = "https://www.gravatar.com/avatar/?d=mp"; }}
+                      />
                     </div>
                     <div style={{ textAlign: 'center', marginTop: '45px' }}>
                       {member.departmentTag && <span style={profileTag}>{member.departmentTag}</span>}
@@ -271,7 +304,24 @@ const ManageAbout = () => {
             
             <form onSubmit={saveMemberModal} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                 <img src={memberForm.imageUrl || "https://www.gravatar.com/avatar/?d=mp"} alt="Preview" style={{width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0'}} />
+                 <img 
+                    src={
+                      !memberForm.imageUrl 
+                        ? "https://www.gravatar.com/avatar/?d=mp" 
+                        : (memberForm.imageUrl.startsWith('blob:') || memberForm.imageUrl.startsWith('http'))
+                          ? memberForm.imageUrl 
+                          : `${import.meta.env.VITE_API_URL}${memberForm.imageUrl}`
+                    } 
+                    alt="Preview" 
+                    style={{
+                      width: '60px', 
+                      height: '60px', 
+                      borderRadius: '50%', 
+                      objectFit: 'cover', 
+                      border: '2px solid #e2e8f0'
+                    }}
+                    onError={(e) => { e.target.src = "https://www.gravatar.com/avatar/?d=mp"; }}
+                  />
                  <div style={{ flex: 1 }}>
                    <label style={labelStyle}>Profile Photo</label>
                    

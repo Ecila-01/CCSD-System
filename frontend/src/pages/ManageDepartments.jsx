@@ -30,7 +30,7 @@ const ManageDepartments = () => {
   const fetchDepartments = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('http://localhost:5000/api/departments');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/departments`);
       setDepartments(res.data);
     } catch (error) {
       console.error("Error fetching departments:", error);
@@ -89,9 +89,9 @@ const ManageDepartments = () => {
 
     try {
       if (editingId) {
-        await axios.put(`http://localhost:5000/api/departments/${editingId}`, formData);
+        await axios.put(`${import.meta.env.VITE_API_URL}/api/departments/${editingId}`, formData);
       } else {
-        await axios.post('http://localhost:5000/api/departments', formData);
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/departments`, formData);
       }
       
       fetchDepartments();
@@ -129,7 +129,7 @@ const ManageDepartments = () => {
   const finalDelete = async (id) => {
     setStatusModal({ isOpen: true, type: 'loading', title: 'Deleting...', message: 'Please wait...' });
     try {
-      await axios.delete(`http://localhost:5000/api/departments/${id}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/departments/${id}`);
       fetchDepartments();
       
       setStatusModal({

@@ -15,7 +15,7 @@ function Referrals() {
   // 1. FETCH ACTUAL DATA
   const fetchRequests = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/requests");
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/requests`);
       const data = await response.json();
       setRequests(data);
     } catch (error) {

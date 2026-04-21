@@ -51,15 +51,20 @@ const AnnouncementModal = ({ announcement, onClose, onEdit }) => {
           }}
         >
           <img 
-            src={announcement.image} 
+            src={
+              announcement.image?.startsWith('http') 
+                ? announcement.image 
+                : `${import.meta.env.VITE_API_URL}${announcement.image}`
+            } 
             alt={announcement.title} 
             style={{ 
               width: '100%', 
-              maxHeight: '300px',    // Prevents the image from getting too tall
-              objectFit: 'contain',  // THIS is the magic "zoom out to fit" property!
-               
+              maxHeight: '300px',
+              objectFit: 'contain',
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
             }}
+            // Added an error handler just in case the modal hits a broken link
+            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=800'; }}
           />
         </div>
 

@@ -53,9 +53,9 @@ const AddAnnouncementModal = ({ isOpen, onClose, onSuccess, editingAnnouncement 
 
     try {
       if (editingAnnouncement) {
-        await axios.patch(`http://localhost:5000/api/announcements/${editingAnnouncement._id}`, formData);
+        await axios.patch(`${import.meta.env.VITE_API_URL}/api/announcements/${editingAnnouncement._id}`, formData);
       } else {
-        await axios.post('http://localhost:5000/api/announcements', formData);
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/announcements`, formData);
       }
       onSuccess();
       onClose();

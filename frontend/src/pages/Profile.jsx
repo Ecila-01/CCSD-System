@@ -76,7 +76,7 @@ function Profile() {
       const userId = user._id || user.id;
       
       // ✅ Using your existing /:id route
-      const response = await axios.put(`http://localhost:5000/api/users/${userId}`, payload);
+      const response = await axios.put(`${import.meta.env.VITE_API_URL}/api/users/${userId}`, payload);
 
       // ✅ SUCCESS: Update Local Storage so Sidebar/Navbar updates immediately
       if (response.data.user) {

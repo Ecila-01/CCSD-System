@@ -63,7 +63,7 @@ useEffect(() => {
 
   // 3. Department Queue (Awaiting Review)
   // ✅ Super simple now: authorizedRequests already filters out other departments!
-  const displayQueue = authorizedRequests.filter(req => req.status === 'Pending').length;
+  const displayQueue = authorizedRequests.filter(req => req.status === 'Pending Review').length;
 
   // 4. "YOUR" Active Cases
   // ✅ Also simplified

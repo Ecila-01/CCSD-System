@@ -1,5 +1,5 @@
 import "./App.css";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate} from "react-router-dom";
 
 // Page & Component Imports
 import Home from "./pages/Home"; // Imported the new separate file
@@ -17,6 +17,23 @@ import GuestRequestView from "./pages/GuestRequestView";
 import ManageDepartments from './pages/ManageDepartments';
 import Reports from "./pages/Reports";
 import ManageAbout from "./pages/ManageAbout";
+
+
+// Helper component for security
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const user = JSON.parse(localStorage.getItem("user")); // Or however you store auth
+  const token = localStorage.getItem("token");
+
+  if (!token || !user) {
+    return <Navigate to="/" replace />; // Send to home/login if not logged in
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" replace />; // Send to dashboard if unauthorized for that page
+  }
+
+  return children;
+};
 
 function Footer() {
   return (
@@ -60,18 +77,19 @@ export default function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/view-request/:token" element={<GuestRequestView />} />
         
-        {/* Admin Routes */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/schedules" element={<Schedules />} /> 
-        <Route path="/referrals" element={<Referrals />} /> 
-        <Route path="/manage-services" element={<ManageServices />} /> 
-        <Route path="/manage-announcements" element={<ManageAnnouncements />} /> 
-        <Route path="/manage-counselors" element={<ManageCounselors />} /> 
-        <Route path="/profile" element={<Profile/>} /> 
-        <Route path="/departments" element={<ManageDepartments />} />
-        <Route path="/reports" element={<Reports/>} />
-        <Route path="/manage-about" element={<ManageAbout/>} />
-        
+        {/* SHARED Routes (Admin & Counselor) */}
+        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'counselor']}><Dashboard /></ProtectedRoute>} />
+        <Route path="/schedules" element={<ProtectedRoute allowedRoles={['admin', 'counselor']}><Schedules /></ProtectedRoute>} /> 
+        <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin', 'counselor']}><Reports/></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute allowedRoles={['admin', 'counselor']}><Profile/></ProtectedRoute>} /> 
+
+        {/* ADMIN ONLY Routes */}
+        <Route path="/referrals" element={<ProtectedRoute allowedRoles={['admin']}><Referrals /></ProtectedRoute>} /> 
+        <Route path="/manage-services" element={<ProtectedRoute allowedRoles={['admin']}><ManageServices /></ProtectedRoute>} /> 
+        <Route path="/manage-announcements" element={<ProtectedRoute allowedRoles={['admin']}><ManageAnnouncements /></ProtectedRoute>} /> 
+        <Route path="/manage-counselors" element={<ProtectedRoute allowedRoles={['admin']}><ManageCounselors /></ProtectedRoute>} /> 
+        <Route path="/departments" element={<ProtectedRoute allowedRoles={['admin']}><ManageDepartments /></ProtectedRoute>} />
+        <Route path="/manage-about" element={<ProtectedRoute allowedRoles={['admin']}><ManageAbout/></ProtectedRoute>} />
       </Routes>
 
       {/* Hide public footer if on ANY admin page */}

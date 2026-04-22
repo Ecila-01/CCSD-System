@@ -18,20 +18,7 @@ function ManageAnnouncements() {
   const [selectedIds, setSelectedIds] = useState([]);
   const visibleAnnouncements = announcements.filter(ann => filter === 'All' || ann.status === filter);
   const isAllSelected = visibleAnnouncements.length > 0 && selectedIds.length === visibleAnnouncements.length;
-  // 1. Auth Check Logic
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user')); // Adjust key based on your app
-    const token = localStorage.getItem('token');
 
-    if (!token || !user || user.role !== 'admin') {
-      // If not logged in or not admin, kick them out
-      navigate('/login'); 
-    } else {
-      setIsAdmin(true);
-    }
-    setCheckingAuth(false);
-  }, [navigate]);
-  
   const toggleSelectAll = () => {
     if (isAllSelected) {
       setSelectedIds([]); // Deselect all if they are already selected

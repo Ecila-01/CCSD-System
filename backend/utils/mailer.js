@@ -1,19 +1,22 @@
 // backend/utils/mailer.js
 const nodemailer = require('nodemailer');
 
+// Set up the dynamic frontend URL. 
+// It will look for the Render variable first, and fall back to localhost for your own testing.
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // ✅ Nodemailer handles the host/port for you
+  service: 'gmail', 
   auth: {
     user: 'ecila070102@gmail.com',
-    pass: 'qomm klqn jzdy hfym' // ✅ Your 16-character Google App Password
+    pass: 'qomm klqn jzdy hfym' 
   }
 });
 
-
 const sendGuestLink = async (toEmail, serviceName, token, serviceInfo) => {
-  const viewLink = `http://localhost:5173/view-request/${token}`;
+  // ✅ Dynamically injects the frontend URL
+  const viewLink = `${FRONTEND_URL}/view-request/${token}`;
 
-  // ✅ Conditionally create an info block if serviceInfo exists
   const infoHtmlBlock = serviceInfo 
     ? `
       <div style="background-color: #f8fafc; border-left: 4px solid #c00000; padding: 15px; margin: 20px 0;">
@@ -47,12 +50,9 @@ const sendGuestLink = async (toEmail, serviceName, token, serviceInfo) => {
   return transporter.sendMail(mailOptions);
 };
 
-// utils/mailer.js
-
-// ✅ NEW: Function to notify assigned counselors
 const sendCounselorNotification = async (counselorEmail, studentName, department, serviceName) => {
   const mailOptions = {
-    from: '"UB CCSD System" <your-gmail@gmail.com>',
+    from: '"UB CCSD System" <ecila070102@gmail.com>',
     to: counselorEmail,
     subject: `New Request: ${department} - ${studentName}`,
     html: `
@@ -70,12 +70,9 @@ const sendCounselorNotification = async (counselorEmail, studentName, department
   return transporter.sendMail(mailOptions);
 };
 
-// utils/mailer.js
-
-// ✅ Notify the Student (Standard Services)
-// ✅ Updated: Notify the Student (Standard Services) with Guest Link
 const sendStatusUpdateToStudent = async (toEmail, serviceName, newStatus, token) => {
-  const viewLink = `http://localhost:5173/view-request/${token}`; // Re-generate the link
+  // ✅ Dynamically injects the frontend URL
+  const viewLink = `${FRONTEND_URL}/view-request/${token}`; 
 
   const mailOptions = {
     from: '"UB CCSD Team" <wiporamirez.01@gmail.com>',
@@ -99,9 +96,9 @@ const sendStatusUpdateToStudent = async (toEmail, serviceName, newStatus, token)
   return transporter.sendMail(mailOptions);
 };
 
-// ✅ Updated: Notify the Referrer (Referral Service) with Guest Link
 const sendStatusUpdateToReferrer = async (toEmail, studentName, newStatus, token) => {
-  const viewLink = `http://localhost:5173/view-request/${token}`;
+  // ✅ Dynamically injects the frontend URL
+  const viewLink = `${FRONTEND_URL}/view-request/${token}`;
 
   const mailOptions = {
     from: '"UB CCSD Team" <wiporamirez.01@gmail.com>',
@@ -125,10 +122,10 @@ const sendStatusUpdateToReferrer = async (toEmail, studentName, newStatus, token
   };
   return transporter.sendMail(mailOptions);
 };
-// ✅ NEW: Notify Staff for Password Reset (OTP)
+
 const sendPasswordResetOtp = async (toEmail, otp) => {
   const mailOptions = {
-    from: '"UB CCSD Team" <ecila070102@gmail.com>', // Matches your configured auth user
+    from: '"UB CCSD Team" <ecila070102@gmail.com>', 
     to: toEmail,
     subject: `UB CCSD - Password Reset OTP`,
     html: `
@@ -151,6 +148,7 @@ const sendPasswordResetOtp = async (toEmail, otp) => {
   };
   return transporter.sendMail(mailOptions);
 };
+
 module.exports = { 
   sendGuestLink, 
   sendCounselorNotification, 

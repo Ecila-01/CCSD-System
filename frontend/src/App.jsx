@@ -1,5 +1,8 @@
 import "./App.css";
-import { Routes, Route, useLocation, Navigate} from "react-router-dom";
+import { Routes, Route, useLocation, Navigate, useEffect, useCallback, useNavigate} from "react-router-dom";
+import axios from 'axios';
+
+
 
 // Page & Component Imports
 import Home from "./pages/Home"; // Imported the new separate file
@@ -18,6 +21,49 @@ import ManageDepartments from './pages/ManageDepartments';
 import Reports from "./pages/Reports";
 import ManageAbout from "./pages/ManageAbout";
 
+
+// Global bouncer: If the backend returns 401 (Unauthorized), force logout
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.clear();
+      window.location.href = "/"; // Hard redirect to home
+    }
+    return Promise.reject(error);
+  }
+);
+//for auto logout
+const useAutoLogout = (timeoutInMinutes = 120) => {
+  const navigate = useNavigate();
+
+  const logout = useCallback(() => {
+    localStorage.clear(); // Clear token and user data
+    navigate('/');        // Redirect to login/home
+    alert("Session expired due to inactivity.");
+  }, [navigate]);
+
+  useEffect(() => {
+    const timeoutMs = timeoutInMinutes * 60 * 1000;
+    let timer;
+
+    const resetTimer = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(logout, timeoutMs);
+    };
+
+    // Events that signal the user is still there
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+
+    resetTimer();
+    events.forEach(event => window.addEventListener(event, resetTimer));
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      events.forEach(event => window.removeEventListener(event, resetTimer));
+    };
+  }, [logout, timeoutInMinutes]);
+};
 
 // Helper component for security
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -48,7 +94,7 @@ function Footer() {
 
 export default function App() {
   const location = useLocation();
-
+  useAutoLogout(1)
   // Logic to hide public nav/footer on admin pages
   const appPages = [
     "/dashboard", 

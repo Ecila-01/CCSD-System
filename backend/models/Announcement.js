@@ -6,6 +6,7 @@ const AnnouncementSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  shortDescription: { type: String, required: true },
   content: {
     type: String,
     required: true

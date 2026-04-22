@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../styles/AnnouncementCards.css';
-
+import FullAnnouncementModal from './FullAnnouncementModal';
 // Define the fallback image as a constant for easy updates
 const FALLBACK_IMAGE = "https://placehold.co/600x400/8b0000/ffffff?text=University+News";
 
 export default function AnnouncementCards() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  // ✅ NEW: State to track the selected article
+  const [selectedAnn, setSelectedAnn] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
@@ -43,7 +45,11 @@ export default function AnnouncementCards() {
       </section>
     );
   }
-
+  const handleReadMore = (e, ann) => {
+    e.preventDefault();
+    setSelectedAnn(ann);
+    setIsModalOpen(true);
+  };
   return (
     <section className="announcements-section">
       <div className="cards-grid">
@@ -56,8 +62,6 @@ export default function AnnouncementCards() {
             <article className="ann-card" key={ann._id}>
               <div className="card-img-wrapper">
                 <img
-                  // 1. Use the fallback if there's no image in the DB
-                  // 2. Otherwise, check if it's already a full URL (external) or just a path
                   src={
                     !ann.image 
                       ? FALLBACK_IMAGE 
@@ -78,22 +82,32 @@ export default function AnnouncementCards() {
               </div>
               <div className="card-body">
                 <h3 className="card-title">{ann.title}</h3>
+                
+                {/* ✅ UPDATED: Use shortDescription if it exists, otherwise chop the main content */}
                 <p className="card-desc">
-                  {ann.content.length > 150 
-                    ? `${ann.content.substring(0, 150)}...` 
-                    : ann.content}
+                  {ann.shortDescription 
+                    ? ann.shortDescription 
+                    : (ann.content.length > 150 ? `${ann.content.substring(0, 150)}...` : ann.content)}
                 </p>
+
                 <div className="card-footer">
                   <span className="card-date">{ann.eventDate || new Date(ann.datePosted).toLocaleDateString()}</span>
-                  <a href={`/news/${ann._id}`} className="card-link" onClick={(e) => e.preventDefault()}>
-                    Read more <span className="card-link-arrow">→</span>
-                  </a>
+                  
+                  {/* Note: Right now this link prevents default. We will need to route this to an actual article page! */}
+                  <a href="#" className="card-link" onClick={(e) => handleReadMore(e, ann)}>
+                  Read more <span className="card-link-arrow">→</span>
+                 </a>
                 </div>
               </div>
             </article>
           ))
         )}
       </div>
+      <FullAnnouncementModal 
+        isOpen={isModalOpen} 
+        announcement={selectedAnn} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </section>
   );
 }

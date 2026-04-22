@@ -245,3 +245,43 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, i
   justify-content: center;
   font-size: 13px;
 }
+/* --- MOBILE RESPONSIVENESS --- */
+@media screen and (max-width: 768px) {
+  .modal-container {
+    width: 95% !important; /* Take up most of the screen */
+    max-height: 90vh !important; /* Leave a little space top and bottom */
+    padding: 15px !important;
+    border-radius: 12px !important;
+  }
+
+  .modal-header h2 {
+    font-size: 18px; /* Slightly smaller title */
+  }
+
+  /* Make the scroll area fill the space */
+  .form-scroll-area {
+    max-height: 60vh; 
+    padding-right: 5px;
+  }
+
+  /* Stack footer buttons for easier tapping */
+  .modal-footer {
+    flex-direction: column-reverse; /* Puts Primary button on top, Cancel on bottom */
+    gap: 10px;
+  }
+
+  .footer-left, .footer-right {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Make all buttons full width on mobile */
+  .back-btn, .cancel-btn, .next-btn, .submit-btn {
+    width: 100%;
+    padding: 14px 10px; /* Bigger touch target for thumbs */
+    font-size: 16px;
+    justify-content: center;
+  }
+}

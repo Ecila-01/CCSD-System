@@ -12,12 +12,9 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
     ? Math.max(...service.fields.map(f => f.section || 1)) 
     : 1;
 
-  // INITIALIZE ALL FIELDS TO EMPTY STRINGS TO PREVENT REACT WARNINGS
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
-      
-      // Pre-fill the state with empty strings based on the service fields
       if (service?.fields) {
         const initialData = {};
         service.fields.forEach(field => {
@@ -66,8 +63,6 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
 
     setIsSubmitting(true);
     try {
-      // ✅ DYNAMIC EXTRACTION HELPER
-      // This finds which dynamic key (e.g. "studentName_1") belongs to which label
       const getVal = (labelKeywords) => {
         const field = service.fields.find(f => 
           labelKeywords.some(keyword => f.label.toLowerCase().includes(keyword.toLowerCase()))
@@ -78,16 +73,14 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
       let extractedData = {};
 
       if (service.name.toUpperCase() === "REFERRAL") {
-        // Referral Specific Logic (Matches your Referral Image)
         extractedData = {
           studentName: getVal(["Student to be referred", "Name of the Student"]),
-          studentEmail: getVal(["Mobile Number", "Contact"]), // Using mobile as the unique identifier for now
+          studentEmail: getVal(["Mobile Number", "Contact"]), 
           studentIdNumber: getVal(["ID Number (of Student)", "Student ID"]),
           referrerName: getVal(["Referring Faculty", "Full Name (Referring"]),
           referrerEmail: getVal(["Email Address (Referrer)"]),
         };
       } else {
-        // Standard Service Logic (Counseling, Good Moral, etc.)
         extractedData = {
           studentName: getVal(["Full Name", "Student Name"]) || "Unknown Student",
           studentEmail: getVal(["Email Address", "Email"]),
@@ -100,19 +93,15 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
       const payload = {
         serviceId: service._id,
         serviceName: service.name,
-        status: "Pending Review", // ✅ Matches your new Model
+        status: "Pending Review", 
         ...extractedData,
-
         requiresSchedule: Boolean(service.requiresScheduling),
-        // Checks both common variations for scheduling keys
         appointmentDate: formData.preferredDate || formData.prefDate || "",
         timeSlot: formData.preferredTime || formData.prefTime || "",
         requestData: formData,
       };
 
-      console.log("Submitting Payload:", payload);
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/requests"`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -141,26 +130,28 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
         {isSuccess ? (
           <div style={{ 
               display: "flex", flexDirection: "column", alignItems: "center", 
-              justifyContent: "center", height: "100%", textAlign: "center", padding: "60px 40px" 
+              justifyContent: "center", height: "100%", textAlign: "center", 
+              /* ✅ Adjusted padding for mobile friendliness */
+              padding: "5% 15px", boxSizing: "border-box" 
           }}>
             <div style={{ 
-              width: "80px", height: "80px", borderRadius: "50%", backgroundColor: "#e8f5e9", 
-              color: "#2e7d32", fontSize: "40px", display: "flex", alignItems: "center", 
+              width: "70px", height: "70px", borderRadius: "50%", backgroundColor: "#e8f5e9", 
+              color: "#2e7d32", fontSize: "35px", display: "flex", alignItems: "center", 
               justifyContent: "center", margin: "0 auto 20px auto" 
             }}>
               ✓
             </div>
-            <h2 style={{ color: "#333", margin: "0 0 15px 0", fontSize: "28px" }}>Request Submitted!</h2>
+            <h2 style={{ color: "#333", margin: "0 0 10px 0", fontSize: "24px" }}>Request Submitted!</h2>
             
-            <p style={{ color: "#666", lineHeight: "1.6", margin: "0 0 20px 0", fontSize: "16px" }}>
+            <p style={{ color: "#666", lineHeight: "1.5", margin: "0 0 20px 0", fontSize: "15px" }}>
               Your request for <strong>{service.name}</strong> has been sent.
             </p>
 
-            <div style={{ backgroundColor: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '30px', width: '100%' }}>
-              <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Your Secure Tracking Link</p>
+            <div style={{ backgroundColor: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px', width: '100%', boxSizing: "border-box" }}>
+              <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Your Secure Tracking Link</p>
               
-              <code style={{ fontSize: '13px', color: '#0f172a', wordBreak: 'break-all', display: 'block' }}>
-                {`http://localhost:5173/view-request/${submittedToken}`}
+              <code style={{ fontSize: '12px', color: '#0f172a', wordBreak: 'break-all', display: 'block' }}>
+                {`${window.location.origin}/view-request/${submittedToken}`}
               </code>
               
               <p style={{ margin: '10px 0 0 0', fontSize: '11px', color: '#94a3b8' }}>
@@ -170,7 +161,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                 }
               </p>
             </div>
-            <button onClick={onClose} style={{ backgroundColor: "#cc0000", color: "white", border: "none", padding: "12px 32px", fontSize: "16px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}>
+            <button onClick={onClose} style={{ width: "100%", backgroundColor: "#cc0000", color: "white", border: "none", padding: "14px", fontSize: "16px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}>
               Done
             </button>
           </div>
@@ -201,7 +192,6 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                         {field.type === "select" ? (
                           <div className="select-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {(() => {
-                              // ✅ CASCADING & DEPENDENCY LOGIC
                               let displayOptions = field.options || [];
                               let isWaitingForParent = false;
 
@@ -211,17 +201,14 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                                   const parentValue = formData[parentField.name];
                                   
                                   if (!parentValue) {
-                                    // Parent is empty -> Lock this field
                                     isWaitingForParent = true;
                                     displayOptions = [];
                                   } else if (field.optionsMap && field.optionsMap[parentValue]) {
-                                    // Parent has value AND there's a map -> Load courses
                                     displayOptions = field.optionsMap[parentValue];
                                   }
                                 }
                               }
 
-                              // Determine current select value
                               const selectValue = formData[field.name]?.startsWith("Other:") ? "Other:" : (formData[field.name] || "");
 
                               return (
@@ -252,7 +239,6 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                                           [field.name]: isOther ? "Other: " : val,
                                         };
                                         
-                                        // ✅ SMART CLEAR: Wipe out child AND grandchild if parent changes
                                         const childField = service.fields.find(f => f.dependsOnLabel === field.label);
                                         if (childField) {
                                           updatedData[childField.name] = ""; 
@@ -262,7 +248,6 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                                             updatedData[grandChildField.name] = ""; 
                                           }
                                         }
-                                        
                                         return updatedData;
                                       });
                                     }}
@@ -284,7 +269,6 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                                     })}
                                   </select>
 
-                                  {/* RENDER THE TEXT INPUT IF "OTHER" IS SELECTED */}
                                   {formData[field.name]?.startsWith("Other:") && (
                                     <input
                                       type="text"
@@ -300,7 +284,8 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                                         backgroundColor: '#f8fafc', 
                                         fontSize: '14px',
                                         outline: 'none',
-                                        marginTop: '5px'
+                                        marginTop: '5px',
+                                        boxSizing: 'border-box'
                                       }}
                                     />
                                   )}
@@ -316,6 +301,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                             rows="4"
                             value={formData[field.name] || ""}
                             placeholder="Your answer"
+                            style={{ width: '100%', boxSizing: 'border-box', padding: '10px' }}
                           />
                         ) : (
                           <input
@@ -325,6 +311,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                             onChange={handleChange}
                             value={formData[field.name] || ""}
                             placeholder="Your answer"
+                            style={{ width: '100%', boxSizing: 'border-box', padding: '10px' }}
                           />
                         )}
                       </>

@@ -95,7 +95,7 @@ function Footer() {
 
 export default function App() {
   const location = useLocation();
-  useAutoLogout(1)
+  useAutoLogout(240)
   // Logic to hide public nav/footer on admin pages
   const appPages = [
     "/dashboard", 

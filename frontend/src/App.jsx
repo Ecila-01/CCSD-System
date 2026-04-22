@@ -78,10 +78,10 @@ export default function App() {
         <Route path="/view-request/:token" element={<GuestRequestView />} />
         
         {/* SHARED Routes (Admin & Counselor) */}
-        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'counselor']}><Dashboard /></ProtectedRoute>} />
-        <Route path="/schedules" element={<ProtectedRoute allowedRoles={['admin', 'counselor']}><Schedules /></ProtectedRoute>} /> 
-        <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin', 'counselor']}><Reports/></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute allowedRoles={['admin', 'counselor']}><Profile/></ProtectedRoute>} /> 
+        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Dashboard /></ProtectedRoute>} />
+        <Route path="/schedules" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Schedules /></ProtectedRoute>} /> 
+        <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Reports/></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Profile/></ProtectedRoute>} /> 
 
         {/* ADMIN ONLY Routes */}
         <Route path="/referrals" element={<ProtectedRoute allowedRoles={['admin']}><Referrals /></ProtectedRoute>} /> 

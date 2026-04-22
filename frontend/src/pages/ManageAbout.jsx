@@ -397,8 +397,22 @@ const ManageAbout = () => {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-                <button type="button" onClick={() => setIsMemberModalOpen(false)} style={addBtnStyle}>Cancel</button>
-                <button type="submit" style={saveBtnStyle}>Save Member</button>
+                <button type="button" onClick={() => setIsMemberModalOpen(false)} style={addBtnStyle}>
+                  Cancel
+                </button>
+                
+                {/* ✅ UPDATED: Disable button while uploading and change text */}
+                <button 
+                  type="submit" 
+                  style={{
+                    ...saveBtnStyle, 
+                    opacity: isUploading ? 0.6 : 1, // Make it look faded when disabled
+                    cursor: isUploading ? 'not-allowed' : 'pointer'
+                  }} 
+                  disabled={isUploading}
+                >
+                  {isUploading ? 'Uploading...' : 'Save Member'}
+                </button>
               </div>
             </form>
           </div>

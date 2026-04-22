@@ -133,3 +133,12 @@
     margin-top: 15px;
   }
 }
+.navLeft a {
+  text-decoration: none;
+  display: flex; /* Keeps the logo centered in the link box */
+  align-items: center;
+}
+
+.brandLogo {
+  cursor: pointer; /* Ensures users see the "hand" icon when hovering */
+}

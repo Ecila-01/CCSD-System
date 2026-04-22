@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import '../styles/LoginModal.css';
 import ubLogo from "../assets/darkUBlogo.png";
 import { useNavigate } from 'react-router-dom'; 
+import { MdVisibility, MdVisibilityOff } from 'react-icons/md'; // ✅ Import Eye Icons
 
 const LoginModal = ({ isOpen, onClose }) => {
   // View states: 'LOGIN', 'FORGOT_EMAIL', 'FORGOT_OTP', 'RESET_PWD'
@@ -13,6 +14,11 @@ const LoginModal = ({ isOpen, onClose }) => {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // ✅ NEW: Visibility states for passwords
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Status states
   const [error, setError] = useState('');
@@ -31,6 +37,10 @@ const LoginModal = ({ isOpen, onClose }) => {
     setOtp('');
     setNewPassword('');
     setConfirmPassword('');
+    // ✅ Reset eye toggles
+    setShowPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
   };
 
   const handleClose = () => {
@@ -44,7 +54,6 @@ const LoginModal = ({ isOpen, onClose }) => {
     e.preventDefault();
     setError('');
 
-    // Pre-flight check for long credentials
     if (email.length > 100 || password.length > 50) {
       setError("Credentials exceed maximum allowed length.");
       return;
@@ -159,7 +168,7 @@ const LoginModal = ({ isOpen, onClose }) => {
 
       if (response.ok) {
         alert("Password reset successfully! Please log in.");
-        handleClose(); // Close and reset back to login
+        handleClose(); 
       } else {
         setError(data.message || "Failed to reset password.");
       }
@@ -177,6 +186,21 @@ const LoginModal = ({ isOpen, onClose }) => {
       {message && <div style={{ color: '#16a34a', backgroundColor: '#dcfce7', padding: '10px', borderRadius: '6px', fontSize: '13px', marginBottom: '15px', fontWeight: 'bold' }}>{message}</div>}
     </>
   );
+
+  // ✅ NEW: Reusable style for the eye button
+  const eyeBtnStyle = {
+    position: 'absolute',
+    right: '12px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: '#64748b',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0'
+  };
 
   return (
     <div className="modalOverlay" onClick={handleClose}>
@@ -204,21 +228,33 @@ const LoginModal = ({ isOpen, onClose }) => {
                 type="email" 
                 placeholder="Enter your UB email" 
                 value={email}
-                maxLength={100} // HTML level length restriction
+                maxLength={100}
                 onChange={(e) => setEmail(e.target.value)}
                 required 
               />
             </div>
             <div className="inputGroup">
               <label>Password</label>
-              <input 
-                type="password" 
-                placeholder="Enter password" 
-                value={password}
-                maxLength={50} // HTML level length restriction
-                onChange={(e) => setPassword(e.target.value)}
-                required 
-              />
+              {/* ✅ Wrapped input in a relative div to position the eye icon */}
+              <div style={{ position: 'relative', display: 'flex' }}>
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  placeholder="Enter password" 
+                  value={password}
+                  maxLength={50} 
+                  onChange={(e) => setPassword(e.target.value)}
+                  required 
+                  style={{ width: '100%', paddingRight: '40px' }} // Extra padding so text doesn't hide under icon
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)} 
+                  style={eyeBtnStyle}
+                  tabIndex="-1" // Prevents the tab key from focusing the eye icon while typing
+                >
+                  {showPassword ? <MdVisibilityOff size={20} /> : <MdVisibility size={20} />}
+                </button>
+              </div>
             </div>
             <div className="forgotPassword" style={{ textAlign: 'right', marginBottom: '15px' }}>
               <span 
@@ -268,7 +304,7 @@ const LoginModal = ({ isOpen, onClose }) => {
                 placeholder="000000" 
                 value={otp}
                 maxLength={6}
-                onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))} // Force numbers only
+                onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))} 
                 required 
                 style={{ letterSpacing: '4px', textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}
               />
@@ -289,25 +325,47 @@ const LoginModal = ({ isOpen, onClose }) => {
           <form onSubmit={handleResetPassword}>
             <div className="inputGroup">
               <label>New Password</label>
-              <input 
-                type="password" 
-                placeholder="Enter new password" 
-                value={newPassword}
-                maxLength={50}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required 
-              />
+              <div style={{ position: 'relative', display: 'flex' }}>
+                <input 
+                  type={showNewPassword ? "text" : "password"} 
+                  placeholder="Enter new password" 
+                  value={newPassword}
+                  maxLength={50}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required 
+                  style={{ width: '100%', paddingRight: '40px' }}
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowNewPassword(!showNewPassword)} 
+                  style={eyeBtnStyle}
+                  tabIndex="-1"
+                >
+                  {showNewPassword ? <MdVisibilityOff size={20} /> : <MdVisibility size={20} />}
+                </button>
+              </div>
             </div>
             <div className="inputGroup">
               <label>Confirm New Password</label>
-              <input 
-                type="password" 
-                placeholder="Re-type new password" 
-                value={confirmPassword}
-                maxLength={50}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required 
-              />
+              <div style={{ position: 'relative', display: 'flex' }}>
+                <input 
+                  type={showConfirmPassword ? "text" : "password"} 
+                  placeholder="Re-type new password" 
+                  value={confirmPassword}
+                  maxLength={50}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required 
+                  style={{ width: '100%', paddingRight: '40px' }}
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
+                  style={eyeBtnStyle}
+                  tabIndex="-1"
+                >
+                  {showConfirmPassword ? <MdVisibilityOff size={20} /> : <MdVisibility size={20} />}
+                </button>
+              </div>
             </div>
             <button type="submit" className="loginSubmitBtn" disabled={isLoading}>
               {isLoading ? 'RESETTING...' : 'RESET PASSWORD'}

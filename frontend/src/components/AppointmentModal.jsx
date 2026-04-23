@@ -307,25 +307,42 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                             style={{ ...styledInput, resize: 'vertical' }}
                           />
                         ) : field.type === "date" ? (
-                            /* ✅ UPGRADED: Fully Styled Custom React DatePicker */
-                            <div className="custom-datepicker-wrapper">
-                              <DatePicker
-                                selected={formData[field.name] ? new Date(formData[field.name]) : null}
-                                onChange={(date) => {
-                                  // Format back to YYYY-MM-DD for your database
-                                  const formattedDate = date ? date.toISOString().split('T')[0] : "";
-                                  setFormData({ ...formData, [field.name]: formattedDate });
-                                }}
-                                minDate={new Date()} // Today
-                                maxDate={new Date(new Date().setMonth(new Date().getMonth() + 2))} // Exactly 2 months from today
-                                filterDate={(date) => date.getDay() !== 0} // 🔥 MAGIC: Greys out and disables all Sundays!
-                                placeholderText="Select a date"
-                                dateFormat="MMMM d, yyyy"
-                                className="react-datepicker-custom-input" // For styling the input box
-                                calendarClassName="ub-custom-calendar" // For styling the popup
-                              />
-                            </div>
-                          ) : field.type === "time" ? (
+                          /* ✅ UPGRADED: Smart DatePicker (Detects DOB vs Appointment) */
+                          <div className="custom-datepicker-wrapper">
+                            {(() => {
+                              // Detect if this is a Birthday field by checking keywords in the label
+                              const lowerLabel = field.label ? field.label.toLowerCase() : "";
+                              const isDOB = lowerLabel.includes("birth") || lowerLabel.includes("dob");
+
+                              return (
+                                <DatePicker
+                                  selected={formData[field.name] ? new Date(formData[field.name]) : null}
+                                  onChange={(date) => {
+                                    // Format back to YYYY-MM-DD for your database
+                                    const formattedDate = date ? date.toISOString().split('T')[0] : "";
+                                    setFormData({ ...formData, [field.name]: formattedDate });
+                                  }}
+                                  // --- CONDITIONAL RESTRICTIONS ---
+                                  // DOB: No minimum date. Appointments: Minimum is today.
+                                  minDate={isDOB ? null : new Date()} 
+                                  // DOB: Max is today (can't be born in future). Appointments: Max is 2 months from today.
+                                  maxDate={isDOB ? new Date() : new Date(new Date().setMonth(new Date().getMonth() + 2))} 
+                                  // DOB: Allow all days. Appointments: Block Sundays (0).
+                                  filterDate={isDOB ? undefined : (date) => date.getDay() !== 0} 
+                                  
+                                  placeholderText={isDOB ? "Select your birth date" : "Select an appointment date"}
+                                  dateFormat="MMMM d, yyyy"
+                                  className="react-datepicker-custom-input"
+                                  calendarClassName="ub-custom-calendar"
+
+                                  showYearDropdown={isDOB}
+                                  showMonthDropdown={isDOB}
+                                  dropdownMode="select"
+                                />
+                              );
+                            })()}
+                          </div>
+                        ) : field.type === "time" ? (
                           /* ✅ UPGRADED: Calendly-Style Time Pill Grid */
                           <div className="time-pill-grid">
                             {timeSlots.map((slot) => {

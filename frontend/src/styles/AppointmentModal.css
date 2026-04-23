@@ -285,3 +285,161 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, i
     justify-content: center;
   }
 }
+
+/* --- CUSTOM DATEPICKER STYLES --- */
+
+/* The wrapper that holds the input */
+.custom-datepicker-wrapper {
+  width: 100%;
+  position: relative; /* Keeps the popup anchored correctly */
+}
+
+.custom-datepicker-wrapper .react-datepicker-wrapper,
+.custom-datepicker-wrapper .react-datepicker__input-container {
+  width: 100%;
+  display: block;
+}
+
+.react-datepicker-custom-input {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #fff;
+  font-size: 15px;
+  color: #1e293b;
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+  font-family: inherit;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  transition: border-color 0.2s ease;
+}
+
+.react-datepicker-custom-input:focus {
+  border-color: #8b0000;
+}
+
+/* The Popup Calendar Box */
+.ub-custom-calendar {
+  font-family: inherit !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+  overflow: hidden;
+  background-color: white !important;
+}
+
+/* The Calendar Header (Month/Year) */
+.ub-custom-calendar .react-datepicker__header {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding-top: 15px;
+}
+
+.ub-custom-calendar .react-datepicker__current-month {
+  color: #0f172a !important;
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+}
+
+/* The Day Names (Su, Mo, Tu...) */
+.ub-custom-calendar .react-datepicker__day-name {
+  color: #64748b !important;
+  font-weight: bold;
+}
+
+/* The Days (1, 2, 3...) */
+.ub-custom-calendar .react-datepicker__day {
+  border-radius: 50% !important;
+  transition: all 0.2s ease;
+  color: #334155;
+}
+
+.ub-custom-calendar .react-datepicker__day:hover {
+  background-color: #fce4e4 !important; /* Light red hover */
+  color: #c00000 !important;
+}
+
+/* The Selected Day */
+.ub-custom-calendar .react-datepicker__day--selected,
+.ub-custom-calendar .react-datepicker__day--keyboard-selected {
+  background-color: #c00000 !important; /* UB Red */
+  color: white !important;
+  font-weight: bold;
+}
+
+/* Disabled Days (Sundays and Past/Future dates) */
+.ub-custom-calendar .react-datepicker__day--disabled {
+  color: #cbd5e1 !important;
+  text-decoration: line-through; 
+}
+.ub-custom-calendar .react-datepicker__day--disabled:hover {
+  background-color: transparent !important;
+}
+
+/* --- 📱 MOBILE RESPONSIVENESS FIXES --- */
+@media (max-width: 480px) {
+  /* Forces the calendar to scale down slightly on very small phones (like iPhone SE) */
+  .ub-custom-calendar {
+    font-size: 0.9rem !important; 
+  }
+  
+  /* Shrinks the padding inside the calendar cells so it fits narrow screens */
+  .ub-custom-calendar .react-datepicker__day,
+  .ub-custom-calendar .react-datepicker__day-name {
+    width: 1.5rem !important;
+    line-height: 1.5rem !important;
+    margin: 0.1rem !important;
+  }
+}
+
+/* --- CUSTOM TIME PILL GRID --- */
+
+.time-pill-grid {
+  display: grid;
+  /* This automatically fits as many pills as possible in a row, scaling perfectly on mobile */
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.time-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 5px;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  user-select: none; /* Prevents text highlighting when clicking fast */
+}
+
+/* Hide the actual radio circle, but keep it in the DOM for HTML5 validation */
+.time-pill .hidden-radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Hover effect */
+.time-pill:hover {
+  border-color: #8b0000;
+  color: #8b0000;
+  background-color: #fce4e4;
+}
+
+/* The Selected State */
+.time-pill.selected {
+  background-color: #c00000; /* UB Red */
+  border-color: #c00000;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(192, 0, 0, 0.2);
+}

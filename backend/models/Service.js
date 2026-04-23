@@ -6,11 +6,12 @@ const fieldSchema = new mongoose.Schema({
   type: String,
   options: [String],
   required: Boolean,
-  section: Number, // <--- ADD THIS
-  content: String, // <--- ADD THIS (for the info type fields)
-  // ✅ ADD THESE TWO LINES SO MONGOOSE SAVES THE CASCADING LOGIC
+  section: Number, 
+  content: String,
   dependsOnLabel: { type: String, default: "" },
-  optionsMap: { type: mongoose.Schema.Types.Mixed, default: {} } // Mixed allows the dynamic Object mapping
+  optionsMap: { type: mongoose.Schema.Types.Mixed, default: {} },
+  isSystemLinked: String 
+  
 });
 
 const serviceSchema = new mongoose.Schema({

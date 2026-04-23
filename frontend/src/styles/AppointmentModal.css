@@ -443,3 +443,111 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, i
   color: white;
   box-shadow: 0 4px 6px -1px rgba(192, 0, 0, 0.2);
 }
+/* --- 📱 MOBILE & UI POLISH --- */
+
+/* 1. Give form groups more breathing room */
+.form-group {
+  margin-bottom: 20px !important;
+}
+
+/* 2. Fix the DatePicker Wrapper so it perfectly matches other inputs */
+.custom-datepicker-wrapper, 
+.styled-date-wrapper {
+  width: 100%;
+  display: block;
+}
+
+.custom-datepicker-wrapper .react-datepicker-wrapper {
+  width: 100%;
+  display: block;
+}
+
+/* 3. Completely overhaul the Footer for Mobile and Desktop */
+.modal-footer {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 15px 20px !important;
+  background-color: #fff;
+  border-top: 1px solid #e2e8f0;
+  gap: 10px;
+}
+
+.footer-left {
+  flex: 0 1 auto;
+}
+
+.footer-right {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 10px !important;
+  align-items: center;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+/* 4. Standardize Button Styles so they look like a set */
+.back-btn, .cancel-btn, .next-btn, .submit-btn {
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  text-align: center !important;
+  transition: all 0.2s ease !important;
+  font-family: inherit !important;
+}
+
+/* Cancel Button: Give it a nice grey "Secondary Button" look */
+.cancel-btn {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.cancel-btn:hover {
+  background-color: #e2e8f0 !important;
+}
+
+/* Back Button: Subtle text button */
+.back-btn {
+  background-color: transparent !important;
+  color: #64748b !important;
+  border: 1px solid transparent !important;
+  padding-left: 0 !important; /* Pull it flush left */
+}
+
+/* Next / Submit Buttons: Bold UB Red */
+.next-btn, .submit-btn {
+  background-color: #c00000 !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(192, 0, 0, 0.2) !important;
+}
+
+.next-btn:hover, .submit-btn:hover {
+  background-color: #a00000 !important;
+}
+
+/* --- MOBILE SPECIFIC TWEAKS (< 600px) --- */
+@media (max-width: 600px) {
+  /* On small screens, make the Next/Cancel buttons split the available width evenly */
+  .footer-right {
+    width: 100%;
+  }
+  
+  .cancel-btn, .next-btn, .submit-btn {
+    flex: 1; /* This makes Cancel and Next exactly 50% width each */
+  }
+
+  /* Reduce modal padding slightly so inputs have more width */
+  .modal-container {
+    width: 95% !important;
+    max-height: 90vh !important;
+  }
+  
+  .modal-body, .form-scroll-area {
+    padding: 15px !important;
+  }
+}

@@ -10,7 +10,7 @@ router.post("/", async (req, res) => {
     const newRequest = new ServiceRequest(req.body);
     const savedRequest = await newRequest.save();
 
-    // ✅ 1. Fetch the related Service template
+    // ✅ 1. Fetch the related Service template (Keep this awaited, we need this fast)
     const relatedService = await Service.findById(savedRequest.serviceId);
     let serviceInfoText = null;
 
@@ -18,34 +18,40 @@ router.post("/", async (req, res) => {
     if (relatedService && relatedService.fields) {
       const infoField = relatedService.fields.find(field => field.type === 'info');
       if (infoField && infoField.content) {
-        serviceInfoText = infoField.content; // Extract the text content
+        serviceInfoText = infoField.content; 
       }
     }
 
-    // 3. Notify Student/Referrer
+    // --- BACKGROUND TASKS START HERE ---
+
+    // 3. Notify Student/Referrer (Fire & Forget)
     const isReferral = savedRequest.serviceName.toUpperCase() === "REFERRAL";
     const recipientEmail = isReferral ? savedRequest.referrerEmail : savedRequest.studentEmail;
 
     if (recipientEmail) {
-      // ✅ Pass the extracted serviceInfoText as the 4th parameter
-      await sendGuestLink(recipientEmail, savedRequest.serviceName, savedRequest.guestToken, serviceInfoText);
+      // 🚨 REMOVED AWAIT: Let this run in the background
+      sendGuestLink(recipientEmail, savedRequest.serviceName, savedRequest.guestToken, serviceInfoText)
+        .catch(err => console.error("Failed to send guest link email:", err));
     }
 
-    // 4. Notify Assigned Counselors
+    // 4. Notify Assigned Counselors (Fire & Forget)
     const studentDept = req.body.requestData?.department; 
     if (studentDept) {
+      // Keep this awaited because we need to query the DB fast
       const counselors = await User.find({ 
         assignedDepartments: studentDept, 
         role: 'counsellor' 
       });
 
-      const notifications = counselors.map(c => 
+      // 🚨 REMOVED AWAIT: Process all counselor emails in the background
+      Promise.all(counselors.map(c => 
         sendCounselorNotification(c.email, savedRequest.studentName, studentDept, savedRequest.serviceName)
-      );
-      await Promise.all(notifications);
+      )).catch(err => console.error("Failed to send counselor notifications:", err));
     }
 
+    // ✅ 5. Respond immediately! The frontend will now see success in milliseconds.
     res.status(201).json(savedRequest);
+    
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });

@@ -208,7 +208,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
             <h2 style={{ color: "#333", margin: "0 0 10px 0", fontSize: "24px" }}>Request Submitted!</h2>
             <p style={{ color: "#666", lineHeight: "1.5", margin: "0 0 20px 0", fontSize: "15px" }}>Your request for <strong>{service.name}</strong> has been sent.</p>
             <div style={{ backgroundColor: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px', width: '100%', boxSizing: "border-box" }}>
-              <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Your Secure Tracking Link</p>
+              <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Your Secure Tracking Link (This will be sent to your provided email)</p>
               <code style={{ fontSize: '12px', color: '#0f172a', wordBreak: 'break-all', display: 'block' }}>{`${window.location.origin}/view-request/${submittedToken}`}</code>
             </div>
             <button onClick={onClose} style={{ width: "100%", backgroundColor: "#cc0000", color: "white", border: "none", padding: "14px", fontSize: "16px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}>Done</button>

@@ -10,11 +10,9 @@ router.post("/", async (req, res) => {
     const newRequest = new ServiceRequest(req.body);
     const savedRequest = await newRequest.save();
 
-    // ✅ 1. Fetch the related Service template (Keep this awaited, we need this fast)
     const relatedService = await Service.findById(savedRequest.serviceId);
     let serviceInfoText = null;
 
-    // ✅ 2. Search the 'fields' array for the info block
     if (relatedService && relatedService.fields) {
       const infoField = relatedService.fields.find(field => field.type === 'info');
       if (infoField && infoField.content) {
@@ -22,34 +20,34 @@ router.post("/", async (req, res) => {
       }
     }
 
-    // --- BACKGROUND TASKS START HERE ---
+    // --- CONCURRENT EMAIL PROCESSING ---
 
-    // 3. Notify Student/Referrer (Fire & Forget)
     const isReferral = savedRequest.serviceName.toUpperCase() === "REFERRAL";
     const recipientEmail = isReferral ? savedRequest.referrerEmail : savedRequest.studentEmail;
-
-    if (recipientEmail) {
-      // 🚨 REMOVED AWAIT: Let this run in the background
-      sendGuestLink(recipientEmail, savedRequest.serviceName, savedRequest.guestToken, serviceInfoText)
-        .catch(err => console.error("Failed to send guest link email:", err));
-    }
-
-    // 4. Notify Assigned Counselors (Fire & Forget)
     const studentDept = req.body.requestData?.department; 
-    if (studentDept) {
-      // Keep this awaited because we need to query the DB fast
-      const counselors = await User.find({ 
-        assignedDepartments: studentDept, 
-        role: 'counsellor' 
-      });
 
-      // 🚨 REMOVED AWAIT: Process all counselor emails in the background
-      Promise.all(counselors.map(c => 
+    // 1. Prepare the Student Email Promise (Do NOT await yet)
+    const studentEmailPromise = recipientEmail 
+      ? sendGuestLink(recipientEmail, savedRequest.serviceName, savedRequest.guestToken, serviceInfoText)
+      : Promise.resolve(); // Do nothing if no email
+
+    // 2. Prepare the Counselor Email Promise (Do NOT await yet)
+    const counselorEmailPromise = (async () => {
+      if (!studentDept) return;
+      const counselors = await User.find({ assignedDepartments: studentDept, role: 'counsellor' });
+      const notifications = counselors.map(c => 
         sendCounselorNotification(c.email, savedRequest.studentName, studentDept, savedRequest.serviceName)
-      )).catch(err => console.error("Failed to send counselor notifications:", err));
-    }
+      );
+      return Promise.all(notifications);
+    })(); // <-- Added the closing parenthesis here!
 
-    // ✅ 5. Respond immediately! The frontend will now see success in milliseconds.
+    // 3. Await EVERYTHING at the exact same time!
+    // This forces Vercel to stay awake, but does it as fast as possible.
+    // The .catch() ensures that if an email fails, it still sends the 201 Success to the user.
+    await Promise.all([studentEmailPromise, counselorEmailPromise])
+      .catch(err => console.error("An email failed to send, but data was saved:", err));
+
+    // 4. Respond to React
     res.status(201).json(savedRequest);
     
   } catch (error) {

@@ -47,7 +47,7 @@ router.post("/", async (req, res) => {
     await Promise.all([studentEmailPromise, counselorEmailPromise])
       .catch(err => console.error("An email failed to send, but data was saved:", err));
 
-    // 4. Respond to React
+    // 4. Respond to Reac
     res.status(201).json(savedRequest);
     
   } catch (error) {

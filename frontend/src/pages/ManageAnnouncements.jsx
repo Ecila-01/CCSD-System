@@ -247,7 +247,7 @@ const handleBulkRestore = async () => {
         <section className="announcements-view">
           <div className="page-header-row">
             <div>
-              <h2>CCSD Announcements</h2>
+              <h2>CCSD uncements</h2>
               <p>Manage and publish all CCSD Announcements and events</p>
             </div>
             <button className="add-btn-primary" onClick={() => setIsAddModalOpen(true)}>

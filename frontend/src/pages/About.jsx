@@ -123,7 +123,7 @@ export default function About() {
 
           {/* Level 3: Student Assistants */}
           <div className="org-level org-level--label">
-            <span className="org-level__label">UB CCSD Student Assistants</span>
+            <span className="org-level__label">CCSD Student Assistants</span>
           </div>
           <div className="org-level" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '20px' }}>
             {assistants.map(m => <OrgCard key={m._id} name={m.name} role={m.role} imageUrl={m.imageUrl} small />)}

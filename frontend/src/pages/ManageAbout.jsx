@@ -435,8 +435,8 @@ const visualTextArea = { width: '100%', padding: '15px', border: '1px solid #cbd
 
 const floatingDeleteBtn = { position: 'absolute', top: '10px', right: '10px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.7, transition: 'opacity 0.2s' };
 const addBtnStyle = { display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: 'transparent', color: '#2563eb', border: '1px dashed #93c5fd', padding: '10px 15px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', transition: 'background 0.2s' };
-const sectionsaveBtnStyle = { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#c00000', color: 'white', padding: '10px 20px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' };
 const saveBtnStyle = { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#c00000', color: 'white', padding: '10px 20px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' };
+
 // --- ORG CHART VISUAL CARD STYLES ---
 const levelHeaderStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', marginBottom: '20px' };
 const levelTitleStyle = { margin: 0, color: '#0f172a', fontSize: '16px' };
@@ -456,5 +456,22 @@ const modalContent = { backgroundColor: 'white', padding: '30px', width: '100%',
 const modalCloseBtn = { position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' };
 const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#475569', marginBottom: '6px' };
 const inputStyle = { width: '100%', padding: '12px', border: '1px solid #cbd5e1', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box' };
+
+const sectionSaveBtnStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '8px',
+  backgroundColor: '#c00000',
+  color: 'white',
+  padding: '10px 20px',
+  borderRadius: '8px',
+  border: 'none',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+  marginTop: '15px',
+  width: 'fit-content',
+  fontSize: '14px'
+};
 
 export default ManageAbout;

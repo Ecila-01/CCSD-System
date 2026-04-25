@@ -8,7 +8,8 @@ import {
 } from "react-icons/md";
 import Sidebar from '../components/Sidebar'; 
 import '../styles/ServiceModal.css'; 
-import '../styles/Dashboard.css'; 
+import '../styles/Dashboard.css';
+import '../styles/ManagePages.css'; 
 
 const ManageCounselors = () => {
   const [users, setUsers] = useState([]);
@@ -150,8 +151,8 @@ const ManageCounselors = () => {
             </button>
           </div>
 
-          <div style={{ background: 'white',  border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <div className="manage-table-wrapper">
+            <table className="manage-table" style={{ borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
                 <tr>
                   <th style={thStyle}>Name</th>

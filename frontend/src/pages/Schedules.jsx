@@ -5,6 +5,7 @@ import '../styles/Schedules.css';
 import CasesTable from '../components/CasesTable';
 import RequestDetailsModal from '../components/RequestDetailsModal';
 import { MdOutlineDateRange, MdOutlineSchedule, MdOutlineCheckCircle } from "react-icons/md";
+import PageHeader from '../components/PageHeader';
 
 function Schedules() {
   const [user, setUser] = useState(null);

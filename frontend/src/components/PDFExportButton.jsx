@@ -96,7 +96,7 @@ const PDFExportButton = ({ targetRef, filename, reportTitle, generatedBy }) => {
       style={{
         display: 'flex', alignItems: 'center', gap: '8px',
         backgroundColor: isGenerating ? '#94a3b8' : '#c00000',
-        color: 'white', padding: '10px 20px', borderRadius: '8px',
+        color: 'white', padding: '10px 20px',
         border: 'none', fontWeight: 'bold', 
         cursor: isGenerating ? 'not-allowed' : 'pointer',
         transition: 'background-color 0.3s'

@@ -117,6 +117,8 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
         <h3 style={{ fontSize: '18px', color: '#1e293b' }}>{title}</h3>
       </div>
       
+      <div className="cases-table-outer">
+        <div className="cases-table-inner">
       <table className="cases-table">
         <thead>
           <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
@@ -205,6 +207,8 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
           ))}
         </tbody>
       </table>
+        </div>{/* cases-table-inner */}
+      </div>{/* cases-table-outer */}
       
       {filteredRequests.length === 0 && (
         <div className="no-data" style={{ padding: '40px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>

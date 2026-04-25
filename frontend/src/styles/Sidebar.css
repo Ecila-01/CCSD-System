@@ -1,18 +1,85 @@
+/* ── Sidebar base ── */
 .sidebar {
   width: 260px;
   background-color: #e0e0e0;
-  height: 100vh;
+  /* Use both for max browser compatibility; inset: 0 auto 0 0 ensures full height */
   position: fixed;
-  left: 0;
   top: 0;
+  left: 0;
+  right: auto;
+  bottom: 0;
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   padding: 20px 0;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
-  z-index: 100;
-  box-sizing: border-box; /* add this */
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  z-index: 200;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transform: translateX(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ── Hamburger button — hidden on desktop ── */
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 8px;
+  left: 12px;
+  z-index: 400;
+  background-color: #c00000;
+  color: #fff;
+  border: none;
+  
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: background-color 0.2s, transform 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.sidebar-toggle:hover {
+  background-color: #a00000;
+  transform: scale(1.05);
+}
+
+.sidebar-toggle svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* ── Overlay ── */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 199;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── Logo ── */
 .sidebar-logo {
   padding: 0 20px 30px;
   display: flex;
@@ -20,6 +87,7 @@
   justify-content: center;
   gap: 10px;
   width: 100%;
+  flex-shrink: 0;
 }
 
 .sidebar-ub-logo {
@@ -27,49 +95,119 @@
 }
 
 .sidebar-ccsd-logo {
-  width: 80px;  /* smaller than UB logo */
+  width: 80px;
 }
+
+/* ── Sections ── */
 .sidebar-section {
   margin-bottom: 25px;
   padding: 0 15px;
+  flex-shrink: 0;
 }
 
 .section-title {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 800;
-  color: #333;
-  margin-bottom: 10px;
+  color: #555;
+  margin-bottom: 8px;
   padding-left: 10px;
   text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
+/* ── Nav links ── */
 .sidebar-link {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 15px;
+  padding: 11px 15px;
   text-decoration: none;
   color: #555;
   font-size: 14px;
   font-weight: 500;
-  
-  transition: all 0.2s;
+ 
+  transition: background-color 0.2s, color 0.2s;
   background: none;
   border: none;
   width: 100%;
   cursor: pointer;
+  text-align: left;
+  box-sizing: border-box;
 }
 
-.sidebar-link:hover, .sidebar-link.active {
+.sidebar-link:hover,
+.sidebar-link.active {
   background-color: #d1d1d1;
   color: #c00000;
 }
 
 .sidebar-link svg {
   font-size: 18px;
+  flex-shrink: 0;
 }
 
 .logout-btn {
   margin-top: 10px;
   color: #444;
+}
+
+/* ════════════════════════════════
+   MOBILE / TABLET  (≤ 768px)
+════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Show hamburger */
+  .sidebar-toggle {
+    display: flex;
+  }
+
+  /* Sidebar hidden off-screen */
+  .sidebar {
+    transform: translateX(-260px);
+    /* Slightly narrower on small screens */
+    width: 240px;
+    height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Sidebar visible */
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-logo {
+    padding-top: 8px;
+    padding-bottom: 20px;
+  }
+
+  .sidebar-ub-logo {
+    width: 80px;
+  }
+
+  .sidebar-ccsd-logo {
+    width: 65px;
+  }
+
+  .sidebar-link {
+    font-size: 13px;
+    padding: 10px 13px;
+  }
+}
+
+/* ════════════════════════════════
+   SMALL PHONES  (≤ 480px)
+════════════════════════════════ */
+@media (max-width: 480px) {
+  .sidebar {
+    width: 220px;
+    height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    transform: translateX(-220px);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
 }

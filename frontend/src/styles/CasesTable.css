@@ -1,16 +1,40 @@
+/* ================================================
+   CONTAINER
+   ================================================ */
 .cases-table-container {
   background: white;
-  
-  margin: 0 30px 30px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
   padding: 20px;
+  /* Ensure the container itself never overflows its parent */
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
+
 .table-header h3 {
   margin: 0 0 20px 0;
   font-size: 18px;
   color: #3C3736;
 }
 
+/* ================================================
+   SCROLL WRAPPER — always scrollable horizontally
+   ================================================ */
+.cases-table-outer {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Negative margin trick to let scroll shadow bleed to edges if desired */
+}
+
+.cases-table-inner {
+  display: block;
+  min-width: 860px;
+}
+
+/* ================================================
+   TABLE
+   ================================================ */
 .cases-table {
   width: 100%;
   border-collapse: collapse;
@@ -24,6 +48,7 @@
   padding: 12px 10px;
   border-bottom: 2px solid #eee;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .cases-table td {
@@ -32,128 +57,102 @@
   color: #444;
   border-bottom: 1px solid #f5f5f5;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
-/* Service Type Badges */
+/* ================================================
+   BADGES — SERVICE
+   ================================================ */
 .service-badge {
   padding: 4px 12px;
-  
   font-size: 11px;
   font-weight: bold;
 }
 
-
-/* Status Badges */
-/* Update this block in CasesTable.css */
-.case-status-badge {
-  display: inline-block;
-  padding: 4px 12px;
- 
-  font-size: 11px;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-/* Ensure your base badge has these properties if it doesn't already */
+/* ================================================
+   BADGES — STATUS
+   ================================================ */
 .case-status-badge {
   padding: 4px 10px;
-  
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   display: inline-block;
   text-align: center;
-}
-/* --- 1. ENTRY POINT (Ambers/Yellows) --- */
-.case-status-badge.pending-review { 
-  background-color: #fef3c7; 
-  color: #d97706; 
+  white-space: nowrap;
 }
 
-.case-status-badge.action-required { 
-  background-color: #fffbeb; 
-  color: #b45309; 
-  border: 1px solid #fcd34d; /* Extra emphasis as it needs attention */
-}
-
-/* --- 2. WORKFLOW: COUNSELING (Blues) --- */
-.case-status-badge.in-progress { 
-  background-color: #e0f2fe; 
-  color: #0369a1; 
-}
-
-.case-status-badge.reschedule-requested { 
-  background-color: #ffedd5; 
-  color: #ea580c; 
-}
-
-.case-status-badge.follow-up-needed { 
-  background-color: #e1f5fe; 
-  color: #0288d1; 
-}
-
-/* --- 3. WORKFLOW: DOCUMENTS (Indigos/Purples) --- */
-.case-status-badge.processing { 
-  background-color: #e0e7ff; 
-  color: #4338ca; 
-}
-
-.case-status-badge.ready-for-pickup { 
-  background-color: #dcfce7; 
-  color: #15803d; 
-  font-weight: 800; /* Make it pop for the student */
-}
-
-/* --- 4. FINAL STATES (Greens, Reds, and Grays) --- */
+.case-status-badge.pending-review       { background-color: #fef3c7; color: #d97706; }
+.case-status-badge.action-required      { background-color: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
+.case-status-badge.in-progress          { background-color: #e0f2fe; color: #0369a1; }
+.case-status-badge.reschedule-requested { background-color: #ffedd5; color: #ea580c; }
+.case-status-badge.follow-up-needed     { background-color: #e1f5fe; color: #0288d1; }
+.case-status-badge.processing           { background-color: #e0e7ff; color: #4338ca; }
+.case-status-badge.ready-for-pickup     { background-color: #dcfce7; color: #15803d; font-weight: 800; }
 .case-status-badge.resolved,
 .case-status-badge.completed,
-.case-status-badge.issued { 
-  background-color: #dcfce7; 
-  color: #16a34a; 
-}
-
+.case-status-badge.issued               { background-color: #dcfce7; color: #16a34a; }
 .case-status-badge.declined,
-.case-status-badge.closed {
-  background-color: #fee2e2; 
-  color: #c00000; /* Your custom UB Red */
-}
-
+.case-status-badge.closed               { background-color: #fee2e2; color: #c00000; }
 .case-status-badge.no-show,
-.case-status-badge.cancelled {
-  background-color: #f1f5f9;
-  color: #475569;
-}
+.case-status-badge.cancelled            { background-color: #f1f5f9; color: #475569; }
+.case-status-badge.referred-externally  { background-color: #f3e5f5; color: #7b1fa2; }
 
-.case-status-badge.referred-externally {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
-}
+/* Fallback for Pending Review from old code */
+.case-status-badge.pending              { background-color: #fef3c7; color: #d97706; }
+.case-status-badge.active               { background-color: #fce4e4; color: #c00000; }
 
-/* Actions */
+/* ================================================
+   ACTION BUTTON
+   ================================================ */
 .action-btn {
   background: #f0f0f0;
   border: 1px solid #ddd;
   padding: 5px 15px;
-  
   cursor: pointer;
   font-size: 12px;
   transition: all 0.2s;
 }
+.action-btn:hover { background: #e0e0e0; }
 
-.action-btn:hover {
-  background: #e0e0e0;
-}
-
+/* ================================================
+   FOOTER
+   ================================================ */
 .table-footer {
   margin-top: 20px;
   font-size: 13px;
   color: #777;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
 .no-data {
   text-align: center;
   padding: 40px;
   color: #888;
+}
+
+/* ================================================
+   MOBILE  (≤ 768px)
+   ================================================ */
+@media (max-width: 768px) {
+  .cases-table-container {
+    padding: 14px 12px;
+  }
+
+  .table-footer {
+    font-size: 11px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+/* ================================================
+   SMALL MOBILE  (≤ 480px)
+   ================================================ */
+@media (max-width: 480px) {
+  .cases-table-container {
+    padding: 10px 8px;
+  }
 }

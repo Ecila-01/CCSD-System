@@ -1,0 +1,155 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ================================================
+   PAGE SECTION
+   ================================================ */
+.reports-view {
+  padding: 0 30px 40px;
+  min-width: 0;
+}
+
+/* ================================================
+   PAGE TITLE ROW
+   ================================================ */
+.reports-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin: 25px 0 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.reports-title-row h2 {
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 4px;
+}
+.reports-title-row p {
+  color: #64748b;
+  font-size: 15px;
+  margin: 0;
+}
+
+/* ================================================
+   TABS
+   ================================================ */
+.reports-tabs {
+  display: flex;
+  gap: 15px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 10px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+/* ================================================
+   REPORT CONTENT AREA
+   ================================================ */
+.report-content {
+  padding: 20px;
+  background: #fff;
+  min-width: 0;
+}
+
+/* ================================================
+   KPI CARDS
+   ================================================ */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+/* ================================================
+   CHART GRIDS — 2-col on desktop, 1-col on mobile
+   ================================================ */
+.charts-2col {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+  min-width: 0;
+}
+
+.chart-card {
+  background: white;
+  padding: 25px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.chart-card h3 {
+  font-size: 16px;
+  color: #0f172a;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+}
+
+/* ================================================
+   TIMEFRAME SELECT
+   ================================================ */
+.timeframe-select {
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  outline: none;
+  font-size: 13px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+/* ================================================
+   TABLET  (≤ 1024px)
+   ================================================ */
+@media (max-width: 1024px) {
+  .reports-view { padding: 0 20px 30px; }
+  .reports-title-row h2 { font-size: 22px; }
+  .report-content { padding: 16px; }
+
+  .charts-2col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ================================================
+   MOBILE  (≤ 768px)
+   ================================================ */
+@media (max-width: 768px) {
+  .reports-view { padding: 0 14px 24px; }
+
+  .reports-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 14px 0 14px;
+  }
+  .reports-title-row h2 { font-size: 19px; }
+  .reports-title-row p  { font-size: 13px; }
+
+  .reports-tabs { gap: 8px; margin-bottom: 20px; }
+
+  .report-content { padding: 12px; }
+
+  /* Stack charts vertically */
+  .charts-2col {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .chart-card { padding: 16px; }
+  .chart-card h3 { font-size: 14px; margin-bottom: 14px; }
+
+  .kpi-grid { gap: 12px; margin-bottom: 20px; }
+}
+
+/* ================================================
+   SMALL MOBILE  (≤ 480px)
+   ================================================ */
+@media (max-width: 480px) {
+  .reports-view { padding: 0 10px 20px; }
+  .report-content { padding: 8px; }
+  .chart-card { padding: 12px; }
+  .reports-title-row h2 { font-size: 17px; }
+}

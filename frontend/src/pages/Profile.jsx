@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { MdOutlineMail, MdOutlineBadge, MdOutlineLock, MdVerifiedUser, MdHistory, MdDomain } from "react-icons/md";
 import axios from 'axios'; // Make sure to import axios
-import '../styles/Dashboard.css'; 
+import '../styles/Dashboard.css';
+import '../styles/ManagePages.css'; 
 
 function Profile() {
   const [user, setUser] = useState(null);
@@ -129,8 +130,8 @@ function Profile() {
           </div>
         </header>
 
-        <section style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: '100%', maxWidth: '700px' }}>
+        <section className="profile-section">
+          <div className="profile-inner">
             
             {/* --- HEADER SECTION --- */}
             <div style={{ marginBottom: '30px' }}>
@@ -159,7 +160,7 @@ function Profile() {
             )}
 
             {/* --- QUICK STATS BAR --- */}
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '25px' }}>
+            <div className="profile-mini-cards">
               <div style={miniCardStyle}>
                 <MdVerifiedUser style={{ color: '#10b981' }} size={20} />
                 <div>
@@ -194,7 +195,7 @@ function Profile() {
                     {!isAdmin && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold', backgroundColor: '#fee2e2', padding: '2px 8px', borderRadius: '4px' }}>Ask admin to change information</span>}
                   </div>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div className="profile-form-grid">
                     <div>
                       <label style={labelStyle}>Full Name</label>
                       <div style={{ position: 'relative' }}>
@@ -217,7 +218,7 @@ function Profile() {
                 {/* Section 2: Security */}
                 <div style={{ marginBottom: '40px' }}>
                   <h4 style={sectionHeaderStyle}>Security & Password</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div className="profile-form-grid">
                     <div>
                       <label style={labelStyle}>New Password</label>
                       <div style={{ position: 'relative' }}>

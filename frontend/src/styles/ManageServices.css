@@ -54,7 +54,7 @@
   display: flex;
   align-items: center;
   /* Increased padding to make the cards feel more "premium" */
-  padding: 30px 24px; 
+  padding: 12px 75px; 
   
   border: 1px solid #eee;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
@@ -287,4 +287,47 @@
 .status-toggle-btn:active,
 .btn-view:active {
   transform: translateY(0);
+}
+/* ================================================
+   RESPONSIVE ADDITIONS
+   ================================================ */
+@media (max-width: 1024px) {
+  .services-view { padding: 20px !important; }
+  .services-stats-row { gap: 16px; }
+}
+
+@media (max-width: 768px) {
+  .services-view { padding: 14px !important; max-width: 100% !important; }
+  .services-page-header { flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .services-page-header h2 { font-size: 19px; }
+  .new-service-btn { width: 100%; text-align: center; padding: 10px 16px; }
+
+  .services-stats-row {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .service-stat-card {
+    padding: 14px 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .service-stat-card .icon-box { padding: 8px; }
+  .stat-number { font-size: 22px !important; }
+  .stat-label  { font-size: 9px; }
+
+  /* Table horizontal scroll */
+  .services-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .services-table { min-width: 560px; }
+  .services-table th,
+  .services-table td { padding: 14px 16px; font-size: 13px; }
+  .desc-col { width: auto !important; }
+}
+
+@media (max-width: 480px) {
+  .services-view { padding: 10px !important; }
+  .services-stats-row { gap: 6px; }
+  .service-stat-card { padding: 10px 8px; }
+  .stat-number { font-size: 18px !important; }
 }

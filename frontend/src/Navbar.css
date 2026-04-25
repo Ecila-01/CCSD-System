@@ -69,12 +69,12 @@
 
 /* Ensure the Login button text stays white since it's a solid block */
 .loginBtn {
-  padding: 8px 16px;
+  padding: 8px 18px;
   border: none;
   background: #C3151C;
   color: white; /* Added to keep text readable */
   cursor: pointer;
-  border-radius: 4px; /* Optional: makes it look more like your image */
+   /* Optional: makes it look more like your image */
 }
 /* MOBILE */
 @media (max-width: 768px) {

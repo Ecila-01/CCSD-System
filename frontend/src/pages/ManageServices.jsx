@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar'; 
 import ServiceModal from '../components/ServiceModal'; // <-- IMPORT THE NEW MODAL
-import '../styles/ManageServices.css'; 
+import '../styles/ManageServices.css';
+import '../styles/ManagePages.css'; 
 import { MdOutlineShield, MdOutlineCheckCircle, MdOutlineWarning, MdOutlinePeopleAlt } from "react-icons/md";
 import AddServiceModal from '../components/AddServiceModal';
 import StatusModal from '../components/StatusModal';

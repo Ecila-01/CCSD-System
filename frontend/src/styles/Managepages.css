@@ -1,0 +1,303 @@
+/* ================================================
+   SHARED RESPONSIVE STYLES — All Manage Pages
+   Applies to: ManageCounselors, ManageDepartments,
+   ManageServices, ManageAnnouncements, ManageAbout,
+   Profile
+   ================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ── Shared page section wrapper ── */
+.manage-view {
+  padding: 24px 30px 40px;
+  min-width: 0;
+}
+
+/* ── Page title row ── */
+.manage-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.manage-title-row h2 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  color: #3C3736;
+}
+.manage-title-row p {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+.manage-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: #C3151C;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.manage-action-btn:hover { background: #a01018; }
+
+/* ── Stats row — shared across manage pages ── */
+.manage-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.manage-stat-card {
+  background: white;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border-radius: 4px;
+  border: 1px solid #eee;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.manage-stat-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.manage-stat-icon.red    { color: #c00000; }
+.manage-stat-icon.green  { color: #2e7d32; }
+.manage-stat-icon.orange { color: #ef6c00; }
+.manage-stat-label { font-size: 11px; color: #888; font-weight: 700; letter-spacing: 0.5px; display: block; }
+.manage-stat-value { font-size: 24px; font-weight: bold; color: #333; display: block; }
+
+/* ── Table wrapper ── */
+.manage-table-wrapper {
+  background: white;
+  border: 1px solid #e5e7eb;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
+  max-width: 100%;
+}
+.manage-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 560px; /* ensures horizontal scroll kicks in before columns collapse */
+}
+.manage-table thead { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+.manage-table th {
+  padding: 12px 20px;
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.manage-table td {
+  padding: 15px 20px;
+  font-size: 14px;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+
+/* ── Modal responsive fixes ── */
+.manage-modal-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  padding: 16px;
+}
+.manage-modal-card {
+  background: white;
+  padding: 30px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  border-radius: 4px;
+}
+
+/* ── Profile page ── */
+.profile-section {
+  padding: 30px 20px;
+  display: flex;
+  justify-content: center;
+}
+.profile-inner {
+  width: 100%;
+  max-width: 700px;
+}
+.profile-mini-cards {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+.profile-mini-card {
+  flex: 1;
+  min-width: 140px;
+  background: white;
+  padding: 15px 20px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+}
+.profile-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* ── ManageAbout ── */
+.about-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.about-section {
+  padding: 24px 30px 40px;
+}
+
+/* ================================================
+   TABLET  (≤ 1024px)
+   ================================================ */
+@media (max-width: 1024px) {
+  .manage-view    { padding: 20px 20px 30px; }
+  .about-section  { padding: 20px 20px 30px; }
+  .about-header   { padding: 12px 20px; }
+
+  .manage-stats-row { gap: 12px; }
+}
+
+/* ================================================
+   MOBILE  (≤ 768px)
+   ================================================ */
+@media (max-width: 768px) {
+  .manage-view    { padding: 14px 14px 24px; }
+  .about-section  { padding: 14px 14px 24px; }
+  .about-header   { padding: 10px 14px; }
+  .about-header h2 { font-size: 16px; }
+  .about-header p  { display: none; }
+
+  .manage-title-row { margin-bottom: 16px; }
+  .manage-title-row h2 { font-size: 19px; }
+
+  /* Stats: 3 cols on mobile but compact */
+  .manage-stats-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .manage-stat-card { padding: 12px 10px; gap: 8px; flex-direction: column; align-items: flex-start; }
+  .manage-stat-icon { font-size: 22px; }
+  .manage-stat-label { font-size: 9px; }
+  .manage-stat-value { font-size: 20px; }
+
+  /* Table horizontal scroll */
+  .manage-table-wrapper { overflow-x: auto; }
+
+  /* Profile */
+  .profile-section { padding: 20px 14px; }
+  .profile-mini-cards { gap: 10px; }
+  .profile-mini-card { padding: 12px; min-width: 120px; }
+  .profile-form-grid { grid-template-columns: 1fr; gap: 14px; }
+
+  /* Announcements stats row */
+  .stats-row { flex-direction: column; gap: 10px; }
+  .stat-card { padding: 14px 16px; }
+
+  /* Services stats row */
+  .services-stats-row {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+  }
+  .service-stat-card { padding: 14px 10px !important; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .stat-number { font-size: 24px !important; }
+
+  /* Services view padding */
+  .services-view { padding: 16px 14px 24px !important; max-width: 100% !important; }
+  .services-page-header { flex-wrap: wrap; gap: 12px; }
+
+  /* Announcements view */
+  .announcements-view { padding: 14px 14px 24px; }
+  .page-header-row { flex-wrap: wrap; gap: 12px; }
+  .announcement-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .filter-row { flex-wrap: wrap; gap: 10px; }
+
+  /* ManageCounselors / Departments section padding */
+  .dashboard-view { padding: 14px !important; }
+}
+
+/* ================================================
+   SMALL MOBILE  (≤ 480px)
+   ================================================ */
+@media (max-width: 480px) {
+  .manage-view    { padding: 10px 10px 20px; }
+  .about-section  { padding: 10px 10px 20px; }
+
+  .manage-title-row { flex-direction: column; align-items: flex-start; }
+  .manage-action-btn { width: 100%; justify-content: center; }
+
+  .manage-stats-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .manage-stat-card { padding: 10px 8px; gap: 6px; }
+  .manage-stat-value { font-size: 18px; }
+  .manage-stat-label { font-size: 8px; }
+
+  .profile-section { padding: 14px 10px; }
+  .profile-mini-cards { flex-direction: column; gap: 8px; }
+  .profile-mini-card { min-width: unset; }
+  .profile-form-grid { grid-template-columns: 1fr; }
+
+  .services-view { padding: 10px 10px 16px !important; }
+  .services-stats-row { gap: 6px !important; }
+
+  .announcements-view { padding: 10px 10px 16px; }
+  .announcement-grid { grid-template-columns: 1fr; }
+
+  .dashboard-view { padding: 10px !important; }
+}
+
+/* ================================================
+   ANNOUNCEMENTS — additional responsive fixes
+   ================================================ */
+@media (max-width: 768px) {
+  .page-header-row h2 { font-size: 19px; }
+  .add-btn-primary { padding: 10px 16px; font-size: 13px; }
+  .select-toggle-btn { font-size: 13px; padding: 7px 14px; }
+  .bulk-action-bar { width: calc(100% - 28px); padding: 12px 16px; gap: 12px; flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+  .page-header-row { flex-direction: column; align-items: flex-start; }
+  .add-btn-primary { width: 100%; text-align: center; }
+  .filter-row { flex-direction: column; align-items: flex-start; }
+}

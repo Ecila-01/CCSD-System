@@ -6,7 +6,8 @@ import {
   MdSave, MdAdd, MdDeleteOutline, MdOutlineEdit, 
   MdEmail, MdPhone, MdLocationOn, MdClose 
 } from "react-icons/md";
-import '../styles/Dashboard.css'; 
+import '../styles/Dashboard.css';
+import '../styles/ManagePages.css'; 
 
 const ManageAbout = () => {
   const [formData, setFormData] = useState({
@@ -142,7 +143,7 @@ const ManageAbout = () => {
           
           <div style={{ ...cardStyle, borderTop: '5px solid #c00000' }}>
             <h3 style={visualSectionTag}>Hero Banner & Contact Info</h3>
-            <div style={{ display: 'flex', gap: '20px', backgroundColor: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '20px', backgroundColor: '#f8fafc', padding: '15px', marginBottom: '20px' }}>
               <div style={iconInputWrapper}><MdEmail color="#c00000" size={18}/><input type="text" name="email" value={formData.email} onChange={handleTextChange} style={transparentInput} placeholder="Email Address"/></div>
               <div style={iconInputWrapper}><MdPhone color="#c00000" size={18}/><input type="text" name="phone" value={formData.phone} onChange={handleTextChange} style={transparentInput} placeholder="Phone / Local"/></div>
               <div style={iconInputWrapper}><MdLocationOn color="#c00000" size={18}/><input type="text" name="location" value={formData.location} onChange={handleTextChange} style={transparentInput} placeholder="Location"/></div>
@@ -166,7 +167,7 @@ const ManageAbout = () => {
               <h3 style={visualSectionTag}>Our Objectives</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 {formData.objectives.map((obj, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', backgroundColor: '#f8fafc', padding: '10px', borderRadius: '8px' }}>
+                  <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', backgroundColor: '#f8fafc', padding: '10px', }}>
                     <div style={{ backgroundColor: '#e2e8f0', color: '#475569', fontWeight: 'bold', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', flexShrink: 0 }}>{i + 1}</div>
                     <textarea value={obj} onChange={(e) => handleArrayChange(i, 'objectives', e.target.value)} style={{...visualTextArea, padding: 0, backgroundColor: 'transparent', border: 'none', height: '60px'}} />
                     <button onClick={() => removeArrayItem(i, 'objectives')} style={{...floatingDeleteBtn, position: 'static'}}><MdDeleteOutline size={18}/></button>
@@ -378,36 +379,36 @@ const ManageAbout = () => {
 };
 
 // --- VISUAL STYLES ---
-const cardStyle = { backgroundColor: 'white', padding: '30px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' };
+const cardStyle = { backgroundColor: 'white', padding: '30px',  border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' };
 const visualSectionTag = { margin: '0 0 20px 0', color: '#64748b', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '800' };
 
-const iconInputWrapper = { display: 'flex', alignItems: 'center', gap: '8px', flex: 1, backgroundColor: 'white', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' };
+const iconInputWrapper = { display: 'flex', alignItems: 'center', gap: '8px', flex: 1, backgroundColor: 'white', padding: '8px 12px', border: '1px solid #cbd5e1' };
 const transparentInput = { border: 'none', outline: 'none', width: '100%', fontSize: '14px', color: '#334155', fontWeight: '500' };
-const visualTextArea = { width: '100%', padding: '15px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '15px', fontFamily: 'inherit', color: '#1e293b', lineHeight: '1.5', resize: 'vertical', backgroundColor: '#f8fafc', boxSizing: 'border-box' };
+const visualTextArea = { width: '100%', padding: '15px', border: '1px solid #cbd5e1', fontSize: '15px', fontFamily: 'inherit', color: '#1e293b', lineHeight: '1.5', resize: 'vertical', backgroundColor: '#f8fafc', boxSizing: 'border-box' };
 
-const floatingDeleteBtn = { position: 'absolute', top: '10px', right: '10px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.7, transition: 'opacity 0.2s' };
-const addBtnStyle = { display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: 'transparent', color: '#2563eb', border: '1px dashed #93c5fd', padding: '10px 15px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', transition: 'background 0.2s' };
-const saveBtnStyle = { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#c00000', color: 'white', padding: '10px 20px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' };
+const floatingDeleteBtn = { position: 'absolute', top: '10px', right: '10px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.7, transition: 'opacity 0.2s' };
+const addBtnStyle = { display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: 'transparent', color: '#2563eb', border: '1px dashed #93c5fd', padding: '10px 15px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', transition: 'background 0.2s' };
+const saveBtnStyle = { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#c00000', color: 'white', padding: '10px 20px', border: 'none', fontWeight: 'bold', cursor: 'pointer' };
 
 // --- ORG CHART VISUAL CARD STYLES ---
 const levelHeaderStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', marginBottom: '20px' };
 const levelTitleStyle = { margin: 0, color: '#0f172a', fontSize: '16px' };
-const addLevelBtnStyle = { display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#f1f5f9', color: '#0f172a', border: '1px solid #cbd5e1', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' };
+const addLevelBtnStyle = { display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#f1f5f9', color: '#0f172a', border: '1px solid #cbd5e1', padding: '6px 12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' };
 
 // 🚨 FIX: Removed overflow: 'hidden' so the floating avatar doesn't get clipped
 const profileCardStyle = { position: 'relative', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', paddingTop: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center' };
 const profilePhotoWrap = { position: 'absolute', top: '-30px', left: '50%', transform: 'translateX(-50%)', width: '70px', height: '70px', borderRadius: '50%', border: '4px solid white', backgroundColor: '#f1f5f9', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' };
 const profilePhoto = { width: '100%', height: '100%', objectFit: 'cover' };
-const profileTag = { display: 'inline-block', backgroundColor: '#f1f5f9', color: '#475569', fontSize: '10px', fontWeight: 'bold', padding: '3px 8px', borderRadius: '12px', marginBottom: '5px' };
+const profileTag = { display: 'inline-block', backgroundColor: '#f1f5f9', color: '#475569', fontSize: '10px', fontWeight: 'bold', padding: '3px 8px', marginBottom: '5px' };
 const profileActionsOverlay = { display: 'flex', gap: '5px', marginTop: '15px', width: '100%', justifyContent: 'center' };
-const actionBtnEdit = { display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', color: '#0f172a', flex: 1, justifyContent: 'center' };
-const actionBtnDelete = { backgroundColor: '#fee2e2', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#dc2626' };
+const actionBtnEdit = { display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: '#f1f5f9', border: 'none', padding: '6px 12px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', color: '#0f172a', flex: 1, justifyContent: 'center' };
+const actionBtnDelete = { backgroundColor: '#fee2e2', border: 'none', padding: '6px 12px', cursor: 'pointer', color: '#dc2626' };
 
 // --- MODAL STYLES ---
 const modalOverlay = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(2px)' };
-const modalContent = { backgroundColor: 'white', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '500px', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' };
+const modalContent = { backgroundColor: 'white', padding: '30px', width: '100%', maxWidth: '500px', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' };
 const modalCloseBtn = { position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' };
 const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#475569', marginBottom: '6px' };
-const inputStyle = { width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box' };
+const inputStyle = { width: '100%', padding: '12px', border: '1px solid #cbd5e1', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box' };
 
 export default ManageAbout;

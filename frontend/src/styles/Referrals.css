@@ -1,96 +1,174 @@
+*, *::before, *::after { box-sizing: border-box; }
+
 .referrals-view {
-  padding: 0 30px 30px;
+  padding: 0 30px 40px;
 }
 
+/* ── Page header ── */
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin: 25px 0;
+  align-items: flex-start;
+  margin: 25px 0 20px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
-
-.page-header h2 { margin: 0 0 5px; font-size: 24px; color: #222; }
-.page-header p { margin: 0; color: #666; font-size: 14px; }
+.page-header-text h2 { margin: 0 0 4px; font-size: 24px; color: #1e293b; }
+.page-header-text p  { margin: 0; color: #64748b; font-size: 14px; }
 
 .export-btn {
-  background: white;  border:  2px solid #ccc; padding: 8px 16px;  font-weight: 600; cursor: pointer; color: #444;
+  background: #C3151C;
+  border: none;
+  padding: 10px 24px;
+  font-weight: 700;
+  cursor: pointer;
+  color: white;
+  font-size: 13px;
+  
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(195,21,28,0.3);
+  transition: background 0.2s;
 }
-.export-btn:hover { background: #f5f5f5; }
+.export-btn:hover { background: #a01018; }
 
-/* STATS (Reusing similar grid from your other pages) */
+/* ── Stats row — 4 equal columns, same card size as dashboard ── */
 .stats-row {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px;
-}
-.stat-card {
-  background: white; padding: 15px 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-.stat-icon { font-size: 26px; padding: 12px;  }
-.stat-icon.gray { background: #f3f4f6; color: #6b7280; }
-.stat-icon.blue { background: #e0f2fe; color: #3b82f6; }
-.stat-icon.red { background: #fee2e2; color: #ef4444; }
-.stat-icon.green { background: #dcfce7; color: #006b27; }
-.stat-card h3 { margin: 0; font-size: 22px; }
-.stat-card p { margin: 0; font-size: 12px; color: #666; }
-
-/* TABLE WRAPPER */
-.table-wrapper {
-  background: white;  box-shadow: 0 2px 15px rgba(0,0,0,0.1); overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-.table-header-bar {
-  padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;
-}
-.table-header-bar h3 { margin: 0; font-size: 16px; color: #333; }
-
-.filter-group { display: flex; gap: 10px; }
-.filter-select {
-  padding: 6px 12px; border: 1px solid #ddd;  font-size: 13px; color: #555; background: #fafafa; outline: none;
-}
-
-/* DATA TABLE */
-.data-table { width: 100%; border-collapse: collapse; text-align: left; }
-.data-table th {
-  font-size: 11px; color: #888; padding: 15px 20px; background: #fdfdfd; border-bottom: 2px solid #eee; text-transform: uppercase;
-}
-.data-table td {
-  padding: 15px 20px; font-size: 14px; color: #444; border-bottom: 1px solid #f5f5f5; vertical-align: middle;
+/* Identical to StatsGrid .sg-card */
+.ref-stat-card {
+  background: white;
+  padding: 14px 40px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  
+  min-width: 0;
+  box-sizing: border-box;
 }
 
-.date-cell { color: #888; font-size: 13px; white-space: nowrap; }
-.dept-cell { color: #666; font-size: 13px; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.referrer-info { display: flex; flex-direction: column; }
-.referrer-info strong { color: #222; }
-.referrer-info span { font-size: 11px; color: #888; text-transform: uppercase; margin-top: 2px; }
-
-/* REASON TAGS */
-.reason-tag {
-  padding: 4px 10px;  font-size: 12px; font-weight: 600; display: inline-block;
+/* No background box — just the colored icon, same as Dashboard StatsGrid */
+.ref-stat-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  background: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
 }
-.reason-tag.frequent-absences { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
-.reason-tag.behavioral { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-.reason-tag.personal-concerns { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-.reason-tag.failed-grades { background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
 
-/* STATUS PILLS */
-.status-pill { padding: 5px 12px;  font-size: 11px; font-weight: bold; text-transform: uppercase; }
-.status-pill.pending { background: #ffebee; color: #c62828; }
-.status-pill.reviewed { background: #fff8e1; color: #f57f17; }
-.status-pill.contacted { background: #e8f5e9; color: #2e7d32; }
+.ref-stat-text { min-width: 0; text-align: left; }
+.ref-stat-text h3 {
+  margin: 0 0 2px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+  white-space: nowrap;
+}
+.ref-stat-text p {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+}
 
-/* ACTIONS */
-.action-btn {
-  background: #f0f0f0; border: 1px solid #ddd; padding: 6px 15px; cursor: pointer; font-size: 12px; font-weight: 600; color: #444; transition: all 0.2s;
+/* ── Table wrapper ── */
+.referral-table-container {
+  margin-top: 20px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
-.action-btn:hover { background: #e0e0e0; }
 
-/* FOOTER / PAGINATION */
-.table-footer {
-  padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #777; background: #fafafa; border-top: 1px solid #eee;
+/* ── Search box ── */
+.search-box input {
+  background: #f0f2f5;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  width: 280px;
+  font-size: 14px;
+  outline: none;
+  transition: background 0.2s;
 }
-.pagination { display: flex; gap: 5px; }
-.pagination button {
-  border: 1px solid #ddd; background: white; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #555;
+.search-box input:focus { background: #e8eaed; }
+
+/* ================================================
+   TABLET  (≤ 1024px)
+   ================================================ */
+@media (max-width: 1024px) {
+  .referrals-view { padding: 0 20px 30px; }
+
+  .stats-row { gap: 14px; }
+
+  .ref-stat-card { padding: 14px 12px; gap: 10px; }
+  .ref-stat-icon { width: 42px; height: 42px; font-size: 22px; }
+  .ref-stat-text h3 { font-size: 20px; }
+  .ref-stat-text p  { font-size: 11px; }
+
+  .referral-table-container { margin-top: 16px; }
 }
-.pagination button.active { background: #c00000; color: white; border-color: #c00000; }
-.pagination button:hover:not(.active) { background: #f0f0f0; }
+
+/* ================================================
+   MOBILE  (≤ 768px) — 2×2 grid, icon + number only
+   ================================================ */
+@media (max-width: 768px) {
+  .referrals-view { padding: 0 14px 24px; }
+  .page-header { margin: 16px 0 14px; }
+  .page-header-text h2 { font-size: 19px; }
+  .page-header-text p  { font-size: 13px; }
+
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .ref-stat-card {
+    padding: 14px 12px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+  .ref-stat-icon { width: 40px; height: 40px; font-size: 22px;  }
+  .ref-stat-text h3 { font-size: 20px; font-weight: 800; }
+  .ref-stat-text p  { display: none; }
+
+  .search-box input { width: 180px; font-size: 13px; padding: 8px 14px; }
+  .referral-table-container { margin-top: 12px; }
+}
+
+/* ================================================
+   SMALL MOBILE  (≤ 480px)
+   ================================================ */
+@media (max-width: 480px) {
+  .referrals-view { padding: 0 10px 20px; }
+  .page-header { flex-direction: column; align-items: flex-start; margin: 12px 0 12px; }
+  .export-btn  { width: 100%; text-align: center; }
+
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .ref-stat-card { padding: 12px 10px; gap: 10px; }
+  .ref-stat-icon { width: 36px; height: 36px; font-size: 18px;  }
+  .ref-stat-text h3 { font-size: 17px; font-weight: 800; }
+  .ref-stat-text p  { display: none; }
+
+  .search-box { display: none; }
+}

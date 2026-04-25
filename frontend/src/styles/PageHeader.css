@@ -1,0 +1,139 @@
+/* ================================================
+   PAGE HEADER BAR — shared across all pages
+   Replaces .content-header in every page
+   ================================================ */
+
+.page-header-bar {
+  height: 70px;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-sizing: border-box;
+  width: 100%;
+  gap: 16px;
+}
+
+/* ── Left side ── */
+.phb-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.phb-spacer {
+  flex: 1;
+}
+
+.phb-search {
+  flex: 1;
+  max-width: 320px;
+}
+
+.phb-search input {
+  width: 100%;
+  background: #f0f2f5;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  outline: none;
+  transition: background 0.2s;
+  box-sizing: border-box;
+}
+
+.phb-search input:focus {
+  background: #e8eaed;
+}
+
+/* ── Right side ── */
+.phb-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.phb-date {
+  color: #666;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.phb-pill {
+  display: flex;
+  align-items: center;
+}
+
+.phb-role-tag {
+  background: #C3151C;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 12px;
+  font-weight: bold;
+  text-transform: capitalize;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.20);
+  display: inline-block;
+  font-size: 13px;
+}
+
+/* ================================================
+   TABLET  (≤ 1024px)
+   ================================================ */
+@media (max-width: 1024px) {
+  .page-header-bar {
+    padding: 0 20px;
+    height: 64px;
+  }
+
+  .phb-search { max-width: 240px; }
+  .phb-date   { font-size: 12px; }
+}
+
+/* ================================================
+   MOBILE  (≤ 768px)
+   ================================================ */
+@media (max-width: 768px) {
+  .page-header-bar {
+    height: 56px;
+    padding: 0 14px;
+    gap: 10px;
+  }
+
+  .phb-search { max-width: 180px; }
+
+  .phb-search input {
+    font-size: 13px;
+    padding: 8px 14px;
+  }
+
+  .phb-date { font-size: 11px; }
+}
+
+/* ================================================
+   SMALL MOBILE  (≤ 480px)
+   ================================================ */
+@media (max-width: 480px) {
+  .page-header-bar {
+    height: 52px;
+    padding: 0 10px;
+  }
+
+  /* Hide search on very small screens — too cramped */
+  .phb-search { display: none; }
+
+  /* Hide date, show only role pill */
+  .phb-date { display: none; }
+
+  .phb-role-tag {
+    padding: 4px 12px;
+    font-size: 12px;
+  }
+}

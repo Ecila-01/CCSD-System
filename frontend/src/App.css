@@ -103,7 +103,6 @@ body,
   background: var(--nav-btn);
   color: var(--white);
   padding: 8px 20px;
-  border-radius: 6px;
   font-size: 12px;
   cursor: pointer;
 }

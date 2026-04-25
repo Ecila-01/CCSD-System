@@ -6,6 +6,7 @@ import AddAnnouncementModal from '../components/AddAnnouncementModal';
 import StatusModal from '../components/StatusModal';
 import { MdOutlineAnnouncement, MdOutlinePublishedWithChanges, MdOutlineArchive, MdDeleteOutline } from "react-icons/md";
 import '../styles/ManageAnnouncements.css';
+import '../styles/ManagePages.css';
 
 function ManageAnnouncements() {
   const [announcements, setAnnouncements] = useState([]);

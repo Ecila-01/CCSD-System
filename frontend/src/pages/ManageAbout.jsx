@@ -136,6 +136,7 @@ const ManageAbout = () => {
   const directors = membersWithIndex.filter(m => Number(m.hierarchyLevel) === 1);
   const staff = membersWithIndex.filter(m => Number(m.hierarchyLevel) === 2);
   const assistants = membersWithIndex.filter(m => Number(m.hierarchyLevel) >= 3);
+  const saveBtnStyle = { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#c00000', color: 'white', padding: '10px 20px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' };
 
   return (
     <div className="dashboard-container" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f1f5f9' }}>
@@ -435,7 +436,6 @@ const visualTextArea = { width: '100%', padding: '15px', border: '1px solid #cbd
 
 const floatingDeleteBtn = { position: 'absolute', top: '10px', right: '10px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.7, transition: 'opacity 0.2s' };
 const addBtnStyle = { display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: 'transparent', color: '#2563eb', border: '1px dashed #93c5fd', padding: '10px 15px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', transition: 'background 0.2s' };
-const saveBtnStyle = { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#c00000', color: 'white', padding: '10px 20px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' };
 
 // --- ORG CHART VISUAL CARD STYLES ---
 const levelHeaderStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', marginBottom: '20px' };

@@ -170,7 +170,7 @@ const ManageAbout = () => {
             <button onClick={() => addArrayItem('heroDescriptionParagraphs')} style={addBtnStyle}>+ Add Another Paragraph</button>
             
             {/* ✅ NEW: Hero Save Button */}
-            <button onClick={() => saveSectionToServer(formData, 'Hero Section')} style={sectionSaveeBtnStyle}>
+            <button onClick={() => saveSectionToServer(formData, 'Hero Section')} style={sectionSaveBtnStyle}>
               <MdSave size={18} /> Save Hero Section
             </button>
           </div>

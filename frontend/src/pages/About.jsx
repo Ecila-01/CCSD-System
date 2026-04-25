@@ -3,7 +3,7 @@ import axios from "axios";
 import "../styles/About.css";
 import ccsdLogo from "../assets/ccsdLogo.png";
 
-// ── Org Chart Component ──
+// ── Org Chart Components ──
 const OrgCard = ({ name, role, tag, imageUrl, small }) => (
   <div className={`org-card${small ? " org-card--small" : ""}`}>
     <div className="org-card__photo-wrap">

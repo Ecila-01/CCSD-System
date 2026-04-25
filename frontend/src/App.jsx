@@ -1,5 +1,9 @@
 import "./App.css";
-import { Routes, Route, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
+import axios from 'axios';
+
+
 
 // Page & Component Imports
 import Home from "./pages/Home"; // Imported the new separate file
@@ -18,6 +22,66 @@ import ManageDepartments from './pages/ManageDepartments';
 import Reports from "./pages/Reports";
 import ManageAbout from "./pages/ManageAbout";
 
+
+// Global bouncer: If the backend returns 401 (Unauthorized), force logout
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.clear();
+      window.location.href = "/"; // Hard redirect to home
+    }
+    return Promise.reject(error);
+  }
+);
+//for auto logout
+const useAutoLogout = (timeoutInMinutes = 120) => {
+  const navigate = useNavigate();
+
+  const logout = useCallback(() => {
+    localStorage.clear(); // Clear token and user data
+    navigate('/');        // Redirect to login/home
+    alert("Session expired due to inactivity.");
+  }, [navigate]);
+
+  useEffect(() => {
+    const timeoutMs = timeoutInMinutes * 60 * 1000;
+    let timer;
+
+    const resetTimer = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(logout, timeoutMs);
+    };
+
+    // Events that signal the user is still there
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+
+    resetTimer();
+    events.forEach(event => window.addEventListener(event, resetTimer));
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      events.forEach(event => window.removeEventListener(event, resetTimer));
+    };
+  }, [logout, timeoutInMinutes]);
+};
+
+// Helper component for security
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const user = JSON.parse(localStorage.getItem("user")); // Or however you store auth
+  const token = localStorage.getItem("token");
+
+  if (!token || !user) {
+    return <Navigate to="/" replace />; // Send to home/login if not logged in
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" replace />; // Send to dashboard if unauthorized for that page
+  }
+
+  return children;
+};
+
 function Footer() {
   return (
     <footer className="footerBar">
@@ -31,7 +95,7 @@ function Footer() {
 
 export default function App() {
   const location = useLocation();
-
+  useAutoLogout(240)
   // Logic to hide public nav/footer on admin pages
   const appPages = [
     "/dashboard", 
@@ -60,18 +124,19 @@ export default function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/view-request/:token" element={<GuestRequestView />} />
         
-        {/* Admin Routes */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/schedules" element={<Schedules />} /> 
-        <Route path="/referrals" element={<Referrals />} /> 
-        <Route path="/manage-services" element={<ManageServices />} /> 
-        <Route path="/manage-announcements" element={<ManageAnnouncements />} /> 
-        <Route path="/manage-counselors" element={<ManageCounselors />} /> 
-        <Route path="/profile" element={<Profile/>} /> 
-        <Route path="/departments" element={<ManageDepartments />} />
-        <Route path="/reports" element={<Reports/>} />
-        <Route path="/manage-about" element={<ManageAbout/>} />
-        
+        {/* SHARED Routes (Admin & Counselor) */}
+        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Dashboard /></ProtectedRoute>} />
+        <Route path="/schedules" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Schedules /></ProtectedRoute>} /> 
+        <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Reports/></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Profile/></ProtectedRoute>} /> 
+
+        {/* ADMIN ONLY Routes */}
+        <Route path="/referrals" element={<ProtectedRoute allowedRoles={['admin']}><Referrals /></ProtectedRoute>} /> 
+        <Route path="/manage-services" element={<ProtectedRoute allowedRoles={['admin']}><ManageServices /></ProtectedRoute>} /> 
+        <Route path="/manage-announcements" element={<ProtectedRoute allowedRoles={['admin']}><ManageAnnouncements /></ProtectedRoute>} /> 
+        <Route path="/manage-counselors" element={<ProtectedRoute allowedRoles={['admin']}><ManageCounselors /></ProtectedRoute>} /> 
+        <Route path="/departments" element={<ProtectedRoute allowedRoles={['admin']}><ManageDepartments /></ProtectedRoute>} />
+        <Route path="/manage-about" element={<ProtectedRoute allowedRoles={['admin']}><ManageAbout/></ProtectedRoute>} />
       </Routes>
 
       {/* Hide public footer if on ANY admin page */}

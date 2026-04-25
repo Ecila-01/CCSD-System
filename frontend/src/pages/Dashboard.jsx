@@ -54,10 +54,14 @@ function Dashboard() {
     return isToday && req.assignedCounselor === user.name;
   }).length;
 
+  // 3. Department Queue (Awaiting Review)
+  // ✅ Super simple now: authorizedRequests already filters out other departments!
   const displayQueue = authorizedRequests.filter(req => req.status === 'Pending').length;
 
+  // 4. "YOUR" Active Cases
+  // ✅ Also simplified
   const yourActive = authorizedRequests.filter(req => {
-    if (isAdmin) return req.status === 'Active';
+    if (isAdmin) return req.status === 'Active'; 
     return req.status === 'Active' && req.assignedCounselor === user.name;
   }).length;
 
@@ -97,12 +101,13 @@ function Dashboard() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2>Case Dashboard</h2>
           </div>
-
-          <WelcomeCard
-            user={user}
-            sessionsToday={sessionsToday}
-            displayQueue={displayQueue}
-            yourActive={yourActive}
+          
+          {/* Pass the dynamic math into the Welcome Card */}
+          <WelcomeCard 
+            user={user} 
+            sessionsToday={sessionsToday} 
+            displayQueue={displayQueue} 
+            yourActive={yourActive} // 👈 Simplified
             isAdmin={isAdmin}
           />
 

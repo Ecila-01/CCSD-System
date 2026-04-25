@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-// A high-quality academic/service themed placeholder
-const FALLBACK_SERVICE_IMAGE = "https://images.unsplash.com/photo-1434031213662-874396ea9cc1?auto=format&fit=crop&q=80&w=400";
+// ✅ Swapped to a highly reliable placeholder that won't 404
+const FALLBACK_SERVICE_IMAGE = "https://placehold.co/600x400/f1f5f9/64748b/png?text=Service+Image";
 
 const ServiceCard = ({ service, onClick }) => {
     const [bgColor, setBgColor] = useState('#f5f5f5'); 
@@ -11,7 +11,6 @@ const ServiceCard = ({ service, onClick }) => {
     const extractColor = () => {
         try {
             const img = imgRef.current;
-            // Ensure we don't try to process if the image isn't valid
             if (!img || !img.complete || img.naturalWidth === 0) return;
 
             const canvas = document.createElement('canvas');
@@ -21,7 +20,6 @@ const ServiceCard = ({ service, onClick }) => {
             ctx.drawImage(img, 0, 0);
 
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-
             const colorCounts = {};
             let maxCount = 0;
             let dominantR = 245, dominantG = 245, dominantB = 245;
@@ -58,12 +56,12 @@ const ServiceCard = ({ service, onClick }) => {
                 const finalB = Math.floor(dominantB * (1 - mix) + 255 * mix);
 
                 setBgColor(`rgb(${finalR}, ${finalG}, ${finalB})`);
-                setIsReady(true);
             }
         } catch (err) {
             console.log("Canvas extraction skipped.");
-            // Even if extraction fails, show the card with fallback color
-            setIsReady(true); 
+        } finally {
+            // ✅ ALWAYS set to true so the card appears, even if extraction fails
+            setIsReady(true);
         }
     };
 
@@ -74,12 +72,26 @@ const ServiceCard = ({ service, onClick }) => {
     }, []);
 
     const handleImageError = (e) => {
-        // Prevent infinite loops if the fallback itself fails
         if (e.target.src !== FALLBACK_SERVICE_IMAGE) {
+            // If the primary image fails, try the fallback
             e.target.src = FALLBACK_SERVICE_IMAGE;
-            // The onLoad will trigger again for the fallback image 
-            // allowing us to extract the color from the placeholder!
+        } else {
+            // ✅ ULTIMATE FAILSAFE: If even the fallback image fails to load, 
+            // force the card to become visible anyway.
+            setIsReady(true);
         }
+    };
+
+    // ✅ HELPER: Safely construct the image URL without double slashes
+    const getValidImageUrl = () => {
+        if (!service.image) return FALLBACK_SERVICE_IMAGE;
+        if (service.image.startsWith('http')) return service.image;
+        
+        // Remove trailing slash from API url and leading slash from image path
+        const baseUrl = import.meta.env.VITE_API_URL.replace(/\/$/, '');
+        const imagePath = service.image.replace(/^\//, '');
+        
+        return `${baseUrl}/${imagePath}`;
     };
 
     return (
@@ -103,17 +115,7 @@ const ServiceCard = ({ service, onClick }) => {
             <div className="serviceImageWrapper">
                 <img
                     ref={imgRef}
-                    // Logic: 
-                    // 1. If no image string, use Fallback.
-                    // 2. If it's a full URL (http), use it as is.
-                    // 3. If it's a relative path (/uploads), prepend the API URL.
-                    src={
-                        !service.image 
-                            ? FALLBACK_SERVICE_IMAGE 
-                            : service.image.startsWith('http') 
-                                ? service.image 
-                                : `${import.meta.env.VITE_API_URL}${service.image}`
-                    }
+                    src={getValidImageUrl()}
                     alt={service.name}
                     className="serviceImage"
                     crossOrigin="anonymous" 

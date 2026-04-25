@@ -1,3 +1,6 @@
+/* =========================================
+   1. MODAL BASE & LAYOUT
+   ========================================= */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -16,19 +19,19 @@
   background: white;
   width: 100%;
   max-width: 750px; 
-  height: 90vh; /* Fixed height relative to screen */
-  
+  height: 90vh;
   display: flex;
   flex-direction: column; 
   overflow: hidden; 
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  border-radius: 12px;
 }
 
 .modal-header {
   padding: 12px 25px;
   background: #c00000;
   color: white;
-  flex-shrink: 0; /* Header won't shrink */
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -36,7 +39,7 @@
 
 .header-text-group h2 {
   margin: 0;
-  font-size: 1.1rem; /* Slightly smaller */
+  font-size: 1.1rem;
   line-height: 1.2;
 }
 
@@ -46,18 +49,30 @@
   opacity: 0.8;
 }
 
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* =========================================
+   2. FORM AREA & SCROLLING
+   ========================================= */
 .dynamic-form {
   display: flex;
   flex-direction: column;
   flex: 1;
   overflow: hidden;
-  width: 100%; /* Ensure the form itself isn't shifted */
+  width: 100%;
 }
 
 .form-scroll-area {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
-  padding: 25px 35px; /* Added slightly more horizontal padding for breathing room */
+  padding: 25px 35px;
   overflow-y: auto;
   flex: 1;
   background: #fdfdfd;
@@ -66,20 +81,12 @@
   box-sizing: border-box;
 }
 
-/* Custom Scrollbar (Hidden but functional) */
-.form-scroll-area::-webkit-scrollbar {
-  display: none;
-}
-.form-scroll-area::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-.form-scroll-area::-webkit-scrollbar-thumb {
-  background: #c00000;
-  
-}
+.form-scroll-area::-webkit-scrollbar { display: none; }
+.form-scroll-area::-webkit-scrollbar-track { background: #f1f1f1; }
+.form-scroll-area::-webkit-scrollbar-thumb { background: #c00000; }
 
 .form-group {
-  margin-bottom: 30px; /* Increased spacing between questions */
+  margin-bottom: 30px;
   width: 100%;
 }
 
@@ -92,57 +99,9 @@
   color: #202124;
 }
 
-/* Red Google Forms Asterisk */
 .required { 
   color: #d93025; 
   margin-left: 2px;
-}
-
-/* --- RADIO BUTTON STYLES --- */
-.radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.radio-item {
-  display: flex;
-  align-items: flex-start; /* Aligns dot to top if text is long */
-  gap: 10px;
-  cursor: pointer;
-}
-
-.radio-item input[type="radio"] {
-  width: 18px;
-  height: 18px;
-  margin-top: 2px; /* Aligns dot visually with the text */
-  accent-color: #c00000; /* Makes the radio button UB Red */
-  cursor: pointer;
-  flex-shrink: 0; /* Prevents the radio button from squishing */
-}
-
-.radio-text {
-  font-size: 0.95rem;
-  color: #202124;
-  line-height: 1.4;
-}
-
-/* --- TEXT INPUT STYLES --- */
-input[type="text"], input[type="email"], input[type="date"], input[type="time"],input[type="number"], textarea {
-  width: 100%;
-  padding: 10px 0;
-  border: none;
-  border-bottom: 1px solid #dadce0;
-  background: transparent;
-  font-family: inherit;
-  font-size: 14px;
-  box-sizing: border-box;
-  transition: border-color 0.2s;
-}
-
-input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, input[type="time"]:focus,input[type="number"]:focus, textarea:focus {
-  outline: none;
-  border-bottom: 2px solid #c00000;
 }
 
 .info-display-box {
@@ -155,59 +114,36 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, i
   color: #555;
 }
 
-.modal-footer {
-  padding: 15px 25px;
-  background: white;
-  border-top: 1px solid #eee;
-  flex-shrink: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.submit-btn, .next-btn {
-  background: #c00000;
-  color: white;
+/* =========================================
+   3. STANDARD INPUTS
+   ========================================= */
+input[type="text"], input[type="email"], input[type="date"], input[type="time"], input[type="number"], textarea {
+  width: 100%;
+  padding: 10px 0;
   border: none;
-  padding: 10px 25px;
-  
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.back-btn, .cancel-btn {
+  border-bottom: 1px solid #dadce0;
   background: transparent;
-  color: #c00000;
-  border: none;
-  padding: 10px 20px;
- 
-  cursor: pointer;
-  font-weight: bold;
+  font-family: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
 }
 
-.back-btn:hover, .cancel-btn:hover {
-  background: #f8f9fa;
+input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, input[type="time"]:focus, input[type="number"]:focus, textarea:focus {
+  outline: none;
+  border-bottom: 2px solid #c00000;
 }
 
-.close-btn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 2rem;
-  cursor: pointer;
-  line-height: 1;
-}
-/* --- INLINE "OTHER" INPUT STYLES --- */
 .other-input-wrapper {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1; /* Takes up the remaining space on the line */
+  flex: 1;
 }
 
 .google-other-text-line {
   border: none;
-  border-bottom: 1px dotted #dadce0; /* The signature Google Form dotted line */
+  border-bottom: 1px dotted #dadce0;
   background: transparent;
   font-family: inherit;
   font-size: 14px;
@@ -218,10 +154,18 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, i
 }
 
 .google-other-text-line:focus {
-  border-bottom: 2px solid #c00000; /* Turns solid red when typing */
+  border-bottom: 2px solid #c00000;
 }
 
-/* Ensure the radio item container stretches to full width */
+/* =========================================
+   4. RADIO & SERVICE SELECTION
+   ========================================= */
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .radio-item {
   display: flex;
   align-items: flex-start;
@@ -229,7 +173,22 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, i
   cursor: pointer;
   width: 100%; 
 }
-/* Add this to your CSS file */
+
+.radio-item input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #c00000;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.radio-text {
+  font-size: 0.95rem;
+  color: #202124;
+  line-height: 1.4;
+}
+
 .service-selection-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -238,10 +197,235 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, i
 }
 
 .service-option-card {
-  padding: 12px !important; /* Smaller padding */
-  height: 80px; /* Fixed height for consistency */
+  padding: 12px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
+}
+
+/* =========================================
+   5. TIME PILL GRID
+   ========================================= */
+.time-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.time-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 5px;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  user-select: none;
+}
+
+.time-pill .hidden-radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.time-pill:hover {
+  border-color: #8b0000;
+  color: #8b0000;
+  background-color: #fce4e4;
+}
+
+.time-pill.selected {
+  background-color: #c00000;
+  border-color: #c00000;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(192, 0, 0, 0.2);
+}
+
+/* =========================================
+   6. CUSTOM REACT DATEPICKER
+   ========================================= */
+.custom-datepicker-wrapper, 
+.styled-date-wrapper {
+  width: 100%;
+  display: block;
+}
+
+.custom-datepicker-wrapper .react-datepicker-wrapper,
+.custom-datepicker-wrapper .react-datepicker__input-container {
+  width: 100%;
+  display: block;
+}
+
+.react-datepicker-custom-input {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #fff;
+  font-size: 15px;
+  color: #1e293b;
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+  font-family: inherit;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  transition: border-color 0.2s ease;
+}
+
+.react-datepicker-custom-input:focus { border-color: #8b0000; }
+
+.ub-custom-calendar {
+  font-family: inherit !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+  overflow: hidden;
+  background-color: white !important;
+}
+
+.ub-custom-calendar .react-datepicker__header {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding-top: 15px;
+}
+
+.ub-custom-calendar .react-datepicker__current-month {
+  color: #0f172a !important;
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+}
+
+.ub-custom-calendar .react-datepicker__day-name { color: #64748b !important; font-weight: bold; }
+.ub-custom-calendar .react-datepicker__day { border-radius: 50% !important; transition: all 0.2s ease; color: #334155; }
+.ub-custom-calendar .react-datepicker__day:hover { background-color: #fce4e4 !important; color: #c00000 !important; }
+.ub-custom-calendar .react-datepicker__day--selected, .ub-custom-calendar .react-datepicker__day--keyboard-selected { background-color: #c00000 !important; color: white !important; font-weight: bold; }
+.ub-custom-calendar .react-datepicker__day--disabled { color: #cbd5e1 !important; text-decoration: line-through; }
+.ub-custom-calendar .react-datepicker__day--disabled:hover { background-color: transparent !important; }
+
+/* =========================================
+   7. MODAL FOOTER & BUTTONS
+   ========================================= */
+.modal-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+  background-color: #fff;
+  border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.footer-left { flex: 0 1 auto; }
+.footer-right {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.back-btn, .cancel-btn, .next-btn, .submit-btn {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.cancel-btn {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+.cancel-btn:hover { background-color: #e2e8f0; }
+
+.back-btn {
+  background-color: transparent;
+  color: #64748b;
+  border: 1px solid transparent;
+  padding-left: 0; 
+}
+
+.next-btn, .submit-btn {
+  background-color: #c00000;
+  color: white;
+  border: none;
+  box-shadow: 0 2px 4px rgba(192, 0, 0, 0.2);
+}
+.next-btn:hover, .submit-btn:hover { background-color: #a00000; }
+
+/* =========================================
+   8. MOBILE RESPONSIVENESS (All combined here!)
+   ========================================= */
+@media screen and (max-width: 768px) {
+  
+  .modal-container {
+    width: 95%;
+    max-height: 92vh;
+    padding: 0; 
+  }
+
+  .modal-header { padding: 12px 15px; }
+  .modal-header h2 { font-size: 1.1rem; }
+
+  /* Less padding inside the form to maximize screen real estate */
+  .form-scroll-area {
+    padding: 20px 15px;
+    max-height: none; 
+  }
+  
+  .form-group { margin-bottom: 20px; }
+
+  /* Reorganize the footer: Back button on top, Cancel/Next split evenly below it */
+  .modal-footer {
+    flex-direction: column;
+    padding: 15px;
+    gap: 12px;
+  }
+
+  .footer-left { width: 100%; }
+  .footer-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .cancel-btn, .next-btn, .submit-btn {
+    flex: 1; /* Makes them split 50/50 */
+    padding: 14px 10px; 
+    font-size: 15px;
+  }
+
+  .back-btn {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e2e8f0; /* Give back button a subtle border on mobile */
+    background: #f8fafc;
+    border-radius: 8px;
+  }
+
+  /* Shrink calendar slightly on phones */
+  .ub-custom-calendar { font-size: 0.9rem !important; }
+  .ub-custom-calendar .react-datepicker__day,
+  .ub-custom-calendar .react-datepicker__day-name {
+    width: 1.5rem !important;
+    line-height: 1.5rem !important;
+    margin: 0.1rem !important;
+  }
 }

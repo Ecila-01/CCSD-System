@@ -5,7 +5,7 @@ import '../styles/ServiceModal.css';
 
 const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   if (!isOpen) return null;
-
+  const [insertMenuIndex, setInsertMenuIndex] = useState(null);
   // --- STATE ---
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -76,6 +76,44 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   const handleRemoveField = (index) => {
     setFields(fields.filter((_, i) => i !== index));
   };
+
+  // ✅ NEW: Smart Insert Function
+  const insertTemplateAt = (index, templateName) => {
+    let newFields = [];
+
+    if (templateName === 'blank') {
+      newFields = [{ name: '', label: '', type: 'text', required: false, options: [], content: '' }];
+    } else if (templateName === 'basic') {
+      newFields = [
+        { label: "Email Address", type: "email", required: true, options: [] },
+        { label: "Full Name (Last, First, M.I.)", type: "text", required: true, options: [] }
+      ];
+    } else if (templateName === 'academic') {
+      newFields = [
+        { label: "School / Department", type: "select", required: true, options: [], isSystemLinked: "departments" },
+        { label: "Course / Program", type: "select", required: true, options: [], isSystemLinked: "courses", dependsOnLabel: "School / Department" },
+        { label: "Year Level", type: "select", required: true, options: ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year", "Graduate/Alumni", "N/A"], dependsOnLabel: "Course / Program" }
+      ];
+    } else if (templateName === 'contact') {
+      newFields = [
+        { label: "ID Number", type: "text", required: true, options: [] },
+        { label: "Mobile Number", type: "text", required: true, options: [] }
+      ];
+    } else if (templateName === 'appointment') {
+      newFields = [
+        { label: "Preferred Consultation Method", type: "select", required: true, options: ["Face-to-face", "Google Meet", "Zoom", "Phone Call", "Other"] },
+        { label: "Preferred Date", type: "date", required: true, options: [] },
+        { label: "Preferred Time", type: "time", required: true, options: [] }
+      ];
+    }
+
+    const updatedFields = [...fields];
+    // splice() inserts the newFields array exactly at (index + 1)
+    updatedFields.splice(index + 1, 0, ...newFields); 
+    setFields(updatedFields);
+    setInsertMenuIndex(null); // Close the menu
+  };
+
 
   // --- SUBMIT LOGIC ---
   const handleSubmit = async (e) => {
@@ -194,43 +232,21 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   };
 
   const addAcademicProfile = () => {
-    // 1. Build the base arrays and ALWAYS append "Other" to the end
-    const rawDepts = departmentsDb.map(d => d.name).sort();
-    const deptOptions = rawDepts.length > 0 
-      ? [...rawDepts, "Other"] 
-      : ["SBAA", "SCJPS", "SEA", "SIHTM", "SIT", "SNS", "SOD", "SOL", "SON", "STELA", "Other"];
-
-    const rawCourses = [...new Set(departmentsDb.flatMap(d => d.courses || []))].sort();
-    const allCourses = rawCourses.length > 0 
-      ? [...rawCourses, "Other"] 
-      : ["BSCS", "BSIT", "BSBA", "Other"];
-
-    // 2. Create the Map and inject "Other" into every list
-    const deptCourseMap = {};
-    departmentsDb.forEach(d => {
-      // Add "Other" to the bottom of every department's specific course list
-      deptCourseMap[d.name] = [...(d.courses || []), "Other"]; 
-    });
-    
-    // 3. Failsafe: If the student chooses "Other" for their Department, 
-    // the Course map needs to know what to show them (just "Other")
-    deptCourseMap["Other"] = ["Other"];
-    deptCourseMap["Other:"] = ["Other"]; 
-
     const academicFields = [
       {
         label: "School / Department",
         type: "select",
         required: true,
-        options: deptOptions
+        options: [], // ✅ Leave empty!
+        isSystemLinked: "departments" // ✅ New marker
       },
       {
         label: "Course / Program",
         type: "select", 
         required: true,
-        options: allCourses, 
-        dependsOnLabel: "School / Department", 
-        optionsMap: deptCourseMap 
+        options: [], // ✅ Leave empty!
+        isSystemLinked: "courses", // ✅ New marker
+        dependsOnLabel: "School / Department" 
       },
       {
         label: "Year Level",
@@ -264,6 +280,12 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
       { label: "Preferred Time", type: "time", required: true, options: [] }
     ];
     setFields([...fields, ...appointmentFields]);
+  };
+
+
+  const miniBtnStyle = {
+    padding: '4px 8px', background: '#fff', border: '1px solid #cbd5e1', 
+    color: '#475569', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold'
   };
   return (
     <div className="service-modal-overlay">
@@ -497,14 +519,21 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
                         </div>
 
                         {field.type === 'select' && (
-                        <div className="input-group options-input">
-                            <label>DROPDOWN OPTIONS (Separate with commas)</label>
+                          <div className="input-group options-input">
+                            <label>
+                              DROPDOWN OPTIONS 
+                              {field.isSystemLinked && <span style={{color: '#1a73e8', marginLeft: '5px'}}>(Linked to Live Database)</span>}
+                            </label>
                             <input 
-                            type="text" required placeholder="e.g. Morning, Afternoon, Evening"
-                            value={(field.options || []).join(', ')} 
-                            onChange={(e) => handleFieldChange(index, 'options', e.target.value)}
+                              type="text" 
+                              required 
+                              placeholder={field.isSystemLinked ? "Automatically managed by system..." : "e.g. Morning, Afternoon, Evening"}
+                              value={field.isSystemLinked ? "" : (field.options || []).join(', ')} 
+                              onChange={(e) => !field.isSystemLinked && handleFieldChange(index, 'options', e.target.value)}
+                              disabled={!!field.isSystemLinked} // ✅ Gray out the box
+                              style={field.isSystemLinked ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
                             />
-                        </div>
+                          </div>
                         )}
 
                         {field.type === 'info' && (
@@ -518,13 +547,42 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
                         </div>
                         )}
 
-                        <div className="checkbox-group">
-                        <input 
-                            type="checkbox" id={`req-${index}`}
-                            checked={field.required} onChange={(e) => handleFieldChange(index, 'required', e.target.checked)} 
-                        />
-                        <label htmlFor={`req-${index}`}>Make this field required</label>
+                        {/* ✅ UPDATED: Flex row to hold the checkbox AND the insert button */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
+                          <div className="checkbox-group" style={{ margin: 0 }}>
+                            <input 
+                                type="checkbox" id={`req-${index}`}
+                                checked={field.required} onChange={(e) => handleFieldChange(index, 'required', e.target.checked)} 
+                            />
+                            <label htmlFor={`req-${index}`}>Make this field required</label>
+                          </div>
+                          
+                          {/* 🌟 THE NEW INSERT MENU 🌟 */}
+                          {insertMenuIndex === index ? (
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '400px' }}>
+                              <button type="button" onClick={() => insertTemplateAt(index, 'blank')} style={miniBtnStyle}>+ Blank</button>
+                              <button type="button" onClick={() => insertTemplateAt(index, 'basic')} style={{...miniBtnStyle, color: '#1a73e8', borderColor: '#1a73e8'}}>+ Basic</button>
+                              <button type="button" onClick={() => insertTemplateAt(index, 'academic')} style={{...miniBtnStyle, color: '#137333', borderColor: '#137333'}}>+ Academic</button>
+                              <button type="button" onClick={() => insertTemplateAt(index, 'contact')} style={{...miniBtnStyle, color: '#f29900', borderColor: '#f29900'}}>+ Contact</button>
+                              <button type="button" onClick={() => insertTemplateAt(index, 'appointment')} style={{...miniBtnStyle, color: '#8e24aa', borderColor: '#8e24aa'}}>+ Appt</button>
+                              <button type="button" onClick={() => setInsertMenuIndex(null)} style={{...miniBtnStyle, background: '#fee2e2', color: '#dc2626', border: 'none'}}>Cancel</button>
+                            </div>
+                          ) : (
+                            <button 
+                              type="button" 
+                              onClick={() => setInsertMenuIndex(index)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: '4px',
+                                background: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1',
+                                padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold',
+                                cursor: 'pointer', transition: 'background 0.2s'
+                              }}
+                            >
+                              <MdAdd size={16} /> Insert Below
+                            </button>
+                          )}
                         </div>
+
                     </div>
                     </React.Fragment>
                 );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "../styles/About.css";
+import ccsdLogo from "../assets/ccsdLogo.png";
 
 // ── Org Chart Component ──
 const OrgCard = ({ name, role, tag, imageUrl, small }) => (
@@ -94,7 +95,7 @@ export default function About() {
             </p>
           ))}
           <div className="ccsd-hero__logo-wrap">
-            <img src="src/assets/ccsdLogo.png" alt="CCSD Logo" className="ccsd-hero__logo" />
+            <img src={ccsdLogo} alt="CCSD Logo" className="ccsd-hero__logo" />
           </div>
         </div>
       </section>

@@ -48,6 +48,24 @@ const ManageAbout = () => {
   const addArrayItem = (field) => setFormData({ ...formData, [field]: [...formData[field], ""] });
   const removeArrayItem = (index, field) => setFormData({ ...formData, [field]: formData[field].filter((_, i) => i !== index) });
 
+  // --- NEW: Dynamic Save Function ---
+  // Takes the data to save, and the name of the section so the success modal is specific!
+  const saveSectionToServer = async (dataToSave, sectionName) => {
+    setStatusModal({ isOpen: true, type: 'loading', title: 'Saving...', message: `Updating ${sectionName}...` });
+    try {
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/about`, dataToSave);
+      setStatusModal({
+        isOpen: true, type: 'success', title: 'Saved!', message: `${sectionName} has been successfully updated.`,
+        onConfirm: () => setStatusModal({ isOpen: false })
+      });
+    } catch (err) {
+      setStatusModal({
+        isOpen: true, type: 'error', title: 'Error', message: `Failed to save ${sectionName}.`,
+        onConfirm: () => setStatusModal({ isOpen: false })
+      });
+    }
+  };
+
   const openNewMemberModal = (defaultLevel = 2) => {
     setEditingMemberIndex(null);
     setMemberForm({ name: '', role: '', departmentTag: '', hierarchyLevel: defaultLevel, imageUrl: '' });
@@ -60,25 +78,37 @@ const ManageAbout = () => {
     setIsMemberModalOpen(true);
   };
 
-  const saveMemberModal = (e) => {
+  // --- UPDATED: Save Member & Auto-Push to Database ---
+  const saveMemberModal = async (e) => {
     e.preventDefault();
     const updatedMembers = [...formData.teamMembers];
+    
     if (editingMemberIndex !== null) {
       updatedMembers[editingMemberIndex] = memberForm; 
     } else {
       updatedMembers.push(memberForm); 
     }
-    setFormData({ ...formData, teamMembers: updatedMembers });
-    setIsMemberModalOpen(false);
+    
+    // 1. Update local React state
+    const updatedFormData = { ...formData, teamMembers: updatedMembers };
+    setFormData(updatedFormData);
+    setIsMemberModalOpen(false); // Close modal immediately
+    
+    // 2. Automatically save to backend without needing a separate button click
+    await saveSectionToServer(updatedFormData, 'Org Chart & Team');
   };
 
-  const removeTeamMember = (index) => {
+  // --- UPDATED: Remove Member & Auto-Push to Database ---
+  const removeTeamMember = async (index) => {
     if (window.confirm("Are you sure you want to remove this team member?")) {
       const updatedMembers = formData.teamMembers.filter((_, i) => i !== index);
-      setFormData({ ...formData, teamMembers: updatedMembers });
+      const updatedFormData = { ...formData, teamMembers: updatedMembers };
+      
+      setFormData(updatedFormData);
+      await saveSectionToServer(updatedFormData, 'Org Chart (Member Removed)');
     }
   };
-  // --- IMAGE UPLOAD HANDLER ---
+
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -88,32 +118,15 @@ const ManageAbout = () => {
 
     setIsUploading(true);
     try {
-      // Send the file to our new backend route
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/upload`, uploadData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      // Set the returned local URL into the member form
       setMemberForm({ ...memberForm, imageUrl: res.data.imageUrl });
     } catch (err) {
       console.error("Upload failed", err);
       alert("Failed to upload image. Please try again.");
     } finally {
       setIsUploading(false);
-    }
-  };
-  const handleSave = async () => {
-    setStatusModal({ isOpen: true, type: 'loading', title: 'Saving...', message: 'Publishing changes to the live site.' });
-    try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/about`, formData);
-      setStatusModal({
-        isOpen: true, type: 'success', title: 'Published!', message: 'The About page has been successfully updated.',
-        onConfirm: () => setStatusModal({ isOpen: false })
-      });
-    } catch (err) {
-      setStatusModal({
-        isOpen: true, type: 'error', title: 'Error', message: 'Failed to save changes.',
-        onConfirm: () => setStatusModal({ isOpen: false })
-      });
     }
   };
 
@@ -129,19 +142,18 @@ const ManageAbout = () => {
       <Sidebar />
       <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
         
+        {/* ✅ REMOVED the global Publish button from the header */}
         <header className="content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 30px', backgroundColor: 'white', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 10 }}>
           <div>
             <h2 style={{ margin: 0, color: '#0f172a', fontSize: '22px' }}>Visual Editor: About Page</h2>
             <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '13px' }}>Changes made here will reflect directly on the student-facing About page.</p>
           </div>
-          <button onClick={handleSave} style={saveBtnStyle}>
-            <MdSave size={20} /> Publish Changes
-          </button>
         </header>
 
         <section style={{ padding: '30px', maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '30px' }}>
           
-          <div style={{ ...cardStyle, borderTop: '5px solid #c00000' }}>
+          {/* HERO SECTION */}
+          <div style={{ ...cardStyle, borderTop: '5px solid #c00000', display: 'flex', flexDirection: 'column' }}>
             <h3 style={visualSectionTag}>Hero Banner & Contact Info</h3>
             <div style={{ display: 'flex', gap: '20px', backgroundColor: '#f8fafc', padding: '15px', marginBottom: '20px' }}>
               <div style={iconInputWrapper}><MdEmail color="#c00000" size={18}/><input type="text" name="email" value={formData.email} onChange={handleTextChange} style={transparentInput} placeholder="Email Address"/></div>
@@ -156,16 +168,30 @@ const ManageAbout = () => {
               </div>
             ))}
             <button onClick={() => addArrayItem('heroDescriptionParagraphs')} style={addBtnStyle}>+ Add Another Paragraph</button>
+            
+            {/* ✅ NEW: Hero Save Button */}
+            <button onClick={() => saveSectionToServer(formData, 'Hero Section')} style={sectionSaveBtnStyle}>
+              <MdSave size={18} /> Save Hero Section
+            </button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '30px' }}>
-            <div style={{ ...cardStyle, borderTop: '5px solid #0f172a' }}>
+            
+            {/* MISSION SECTION */}
+            <div style={{ ...cardStyle, borderTop: '5px solid #0f172a', display: 'flex', flexDirection: 'column' }}>
               <h3 style={visualSectionTag}>Our Mission</h3>
-              <textarea name="missionStatement" value={formData.missionStatement} onChange={handleTextChange} style={{ ...visualTextArea, height: '100%', minHeight: '200px' }} placeholder="Enter the official mission statement..." />
+              <textarea name="missionStatement" value={formData.missionStatement} onChange={handleTextChange} style={{ ...visualTextArea, height: '100%', minHeight: '200px', marginBottom: '15px' }} placeholder="Enter the official mission statement..." />
+              
+              {/* ✅ NEW: Mission Save Button */}
+              <button onClick={() => saveSectionToServer(formData, 'Mission Statement')} style={sectionSaveBtnStyle}>
+                <MdSave size={18} /> Save Mission
+              </button>
             </div>
-            <div style={{ ...cardStyle, borderTop: '5px solid #0f172a' }}>
+            
+            {/* OBJECTIVES SECTION */}
+            <div style={{ ...cardStyle, borderTop: '5px solid #0f172a', display: 'flex', flexDirection: 'column' }}>
               <h3 style={visualSectionTag}>Our Objectives</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', flex: 1 }}>
                 {formData.objectives.map((obj, i) => (
                   <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', backgroundColor: '#f8fafc', padding: '10px', }}>
                     <div style={{ backgroundColor: '#e2e8f0', color: '#475569', fontWeight: 'bold', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', flexShrink: 0 }}>{i + 1}</div>
@@ -175,11 +201,19 @@ const ManageAbout = () => {
                 ))}
                 <button onClick={() => addArrayItem('objectives')} style={addBtnStyle}>+ Add Objective</button>
               </div>
+
+              {/* ✅ NEW: Objectives Save Button */}
+              <button onClick={() => saveSectionToServer(formData, 'Objectives')} style={{...sectionSaveBtnStyle, marginTop: '20px'}}>
+                <MdSave size={18} /> Save Objectives
+              </button>
             </div>
           </div>
 
           <div style={{ ...cardStyle, borderTop: '5px solid #e2b05f' }}>
-            <h3 style={{...visualSectionTag, marginBottom: '30px', fontSize: '16px'}}>Organizational Chart & Team</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+               <h3 style={{...visualSectionTag, marginBottom: '0', fontSize: '16px'}}>Organizational Chart & Team</h3>
+               <span style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>* Changes to team members are saved automatically.</span>
+            </div>
 
             {/* LEVEL 1: DIRECTOR */}
             <div style={{ marginBottom: '50px' }}>
@@ -326,7 +360,6 @@ const ManageAbout = () => {
                  <div style={{ flex: 1 }}>
                    <label style={labelStyle}>Profile Photo</label>
                    
-                   {/* Changed to type="file" */}
                    <input 
                      type="file" 
                      accept="image/*" 
@@ -365,8 +398,22 @@ const ManageAbout = () => {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-                <button type="button" onClick={() => setIsMemberModalOpen(false)} style={addBtnStyle}>Cancel</button>
-                <button type="submit" style={saveBtnStyle}>Save Member</button>
+                <button type="button" onClick={() => setIsMemberModalOpen(false)} style={addBtnStyle}>
+                  Cancel
+                </button>
+                
+                {/* ✅ UPDATED: Disable button while uploading and change text */}
+                <button 
+                  type="submit" 
+                  style={{
+                    ...saveBtnStyle, 
+                    opacity: isUploading ? 0.6 : 1, // Make it look faded when disabled
+                    cursor: isUploading ? 'not-allowed' : 'pointer'
+                  }} 
+                  disabled={isUploading}
+                >
+                  {isUploading ? 'Uploading...' : 'Save Member'}
+                </button>
               </div>
             </form>
           </div>
@@ -386,16 +433,15 @@ const iconInputWrapper = { display: 'flex', alignItems: 'center', gap: '8px', fl
 const transparentInput = { border: 'none', outline: 'none', width: '100%', fontSize: '14px', color: '#334155', fontWeight: '500' };
 const visualTextArea = { width: '100%', padding: '15px', border: '1px solid #cbd5e1', fontSize: '15px', fontFamily: 'inherit', color: '#1e293b', lineHeight: '1.5', resize: 'vertical', backgroundColor: '#f8fafc', boxSizing: 'border-box' };
 
-const floatingDeleteBtn = { position: 'absolute', top: '10px', right: '10px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.7, transition: 'opacity 0.2s' };
-const addBtnStyle = { display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: 'transparent', color: '#2563eb', border: '1px dashed #93c5fd', padding: '10px 15px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', transition: 'background 0.2s' };
-const saveBtnStyle = { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#c00000', color: 'white', padding: '10px 20px', border: 'none', fontWeight: 'bold', cursor: 'pointer' };
+const floatingDeleteBtn = { position: 'absolute', top: '10px', right: '10px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.7, transition: 'opacity 0.2s' };
+const addBtnStyle = { display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: 'transparent', color: '#2563eb', border: '1px dashed #93c5fd', padding: '10px 15px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', transition: 'background 0.2s' };
+const saveBtnStyle = { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#c00000', color: 'white', padding: '10px 20px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' };
 
 // --- ORG CHART VISUAL CARD STYLES ---
 const levelHeaderStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', marginBottom: '20px' };
 const levelTitleStyle = { margin: 0, color: '#0f172a', fontSize: '16px' };
 const addLevelBtnStyle = { display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#f1f5f9', color: '#0f172a', border: '1px solid #cbd5e1', padding: '6px 12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' };
 
-// 🚨 FIX: Removed overflow: 'hidden' so the floating avatar doesn't get clipped
 const profileCardStyle = { position: 'relative', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', paddingTop: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center' };
 const profilePhotoWrap = { position: 'absolute', top: '-30px', left: '50%', transform: 'translateX(-50%)', width: '70px', height: '70px', borderRadius: '50%', border: '4px solid white', backgroundColor: '#f1f5f9', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' };
 const profilePhoto = { width: '100%', height: '100%', objectFit: 'cover' };

@@ -318,11 +318,17 @@ const handleBulkRestore = async () => {
                 <div className="ann-card-image">
                   <img 
                     src={
-                      ann.image?.startsWith('http') 
-                        ? ann.image 
-                        : `${import.meta.env.VITE_API_URL}${ann.image}`
+                      !ann.image 
+                        ? "https://placehold.co/600x400/8b0000/ffffff?text=University+News"
+                        : ann.image.startsWith('http') 
+                          ? ann.image 
+                          : `${import.meta.env.VITE_API_URL}${ann.image}`
                     } 
                     alt={ann.title} 
+                    onError={(e) => { 
+                      e.target.onerror = null; 
+                      e.target.src = "https://placehold.co/600x400/8b0000/ffffff?text=University+News"; 
+                    }}
                   />
                   <span className={`status-badge ${ann.status.toLowerCase()}`}>
                     {ann.status}
@@ -338,7 +344,13 @@ const handleBulkRestore = async () => {
 
                 <div className="ann-card-content">
                   <h3>{ann.title}</h3>
-                  <p>{ann.content.substring(0, 80)}...</p>
+                  
+                  {/* ✅ UPDATED: Use shortDescription for the admin preview as well */}
+                  <p>
+                    {ann.shortDescription 
+                      ? (ann.shortDescription.length > 80 ? `${ann.shortDescription.substring(0, 80)}...` : ann.shortDescription)
+                      : (ann.content.length > 80 ? `${ann.content.substring(0, 80)}...` : ann.content)}
+                  </p>
                   
                   {/* ONLY SHOW FOOTER BUTTONS IF NOT IN SELECT MODE */}
                   {!isSelectMode ? (

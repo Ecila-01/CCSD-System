@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom"; // ✅ Add Link here
 import "./Navbar.css";
 import ubLogo from "./assets/darkUBlogo.png";
 import LoginModal from "./components/LoginModal";
@@ -14,7 +14,10 @@ function Navbar() {
     <header className="navWrap">
       <div className="navBar">
         <div className="navLeft">
-          <img className="brandLogo" src={ubLogo} alt="UB Logo" />
+          {/* ✅ Wrap the logo in a Link tag */}
+          <Link to="/" onClick={closeMenu}>
+            <img className="brandLogo" src={ubLogo} alt="UB Logo" />
+          </Link>
         </div>
 
         <div className="menuIcon" onClick={() => setMenuOpen(!menuOpen)}>

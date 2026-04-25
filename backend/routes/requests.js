@@ -10,42 +10,46 @@ router.post("/", async (req, res) => {
     const newRequest = new ServiceRequest(req.body);
     const savedRequest = await newRequest.save();
 
-    // ✅ 1. Fetch the related Service template
     const relatedService = await Service.findById(savedRequest.serviceId);
     let serviceInfoText = null;
 
-    // ✅ 2. Search the 'fields' array for the info block
     if (relatedService && relatedService.fields) {
       const infoField = relatedService.fields.find(field => field.type === 'info');
       if (infoField && infoField.content) {
-        serviceInfoText = infoField.content; // Extract the text content
+        serviceInfoText = infoField.content; 
       }
     }
 
-    // 3. Notify Student/Referrer
+    // --- CONCURRENT EMAIL PROCESSING ---
+
     const isReferral = savedRequest.serviceName.toUpperCase() === "REFERRAL";
     const recipientEmail = isReferral ? savedRequest.referrerEmail : savedRequest.studentEmail;
-
-    if (recipientEmail) {
-      // ✅ Pass the extracted serviceInfoText as the 4th parameter
-      await sendGuestLink(recipientEmail, savedRequest.serviceName, savedRequest.guestToken, serviceInfoText);
-    }
-
-    // 4. Notify Assigned Counselors
     const studentDept = req.body.requestData?.department; 
-    if (studentDept) {
-      const counselors = await User.find({ 
-        assignedDepartments: studentDept, 
-        role: 'counsellor' 
-      });
 
+    // 1. Prepare the Student Email Promise (Do NOT await yet)
+    const studentEmailPromise = recipientEmail 
+      ? sendGuestLink(recipientEmail, savedRequest.serviceName, savedRequest.guestToken, serviceInfoText)
+      : Promise.resolve(); // Do nothing if no email
+
+    // 2. Prepare the Counselor Email Promise (Do NOT await yet)
+    const counselorEmailPromise = (async () => {
+      if (!studentDept) return;
+      const counselors = await User.find({ assignedDepartments: studentDept, role: 'counsellor' });
       const notifications = counselors.map(c => 
         sendCounselorNotification(c.email, savedRequest.studentName, studentDept, savedRequest.serviceName)
       );
-      await Promise.all(notifications);
-    }
+      return Promise.all(notifications);
+    })(); // <-- Added the closing parenthesis here!
 
+    // 3. Await EVERYTHING at the exact same time!
+    // This forces Vercel to stay awake, but does it as fast as possible.
+    // The .catch() ensures that if an email fails, it still sends the 201 Success to the user.
+    await Promise.all([studentEmailPromise, counselorEmailPromise])
+      .catch(err => console.error("An email failed to send, but data was saved:", err));
+
+    // 4. Respond to Reac
     res.status(201).json(savedRequest);
+    
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });

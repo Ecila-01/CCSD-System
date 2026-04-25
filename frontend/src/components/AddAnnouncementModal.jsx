@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { MdClose, MdCloudUpload } from "react-icons/md";
-import '../styles/ServiceModal.css'; // Reusing your modal styles for consistency
+import '../styles/ServiceModal.css';
 
 const AddAnnouncementModal = ({ isOpen, onClose, onSuccess, editingAnnouncement }) => {
   if (!isOpen) return null;
 
   const [title, setTitle] = useState('');
+  const [shortDescription, setShortDescription] = useState(''); // ✅ NEW FIELD
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('UPDATE');
   const [eventDate, setEventDate] = useState('');
@@ -18,12 +19,14 @@ const AddAnnouncementModal = ({ isOpen, onClose, onSuccess, editingAnnouncement 
   useEffect(() => {
     if (editingAnnouncement) {
       setTitle(editingAnnouncement.title || '');
+      setShortDescription(editingAnnouncement.shortDescription || ''); // ✅ PRE-FILL
       setContent(editingAnnouncement.content || '');
       setCategory(editingAnnouncement.category || 'UPDATE');
       setEventDate(editingAnnouncement.eventDate || '');
       setPreviewUrl(editingAnnouncement.image || null);
     } else {
       setTitle('');
+      setShortDescription(''); // ✅ RESET
       setContent('');
       setCategory('UPDATE');
       setEventDate('');
@@ -36,7 +39,7 @@ const AddAnnouncementModal = ({ isOpen, onClose, onSuccess, editingAnnouncement 
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file)); // Create temporary preview link
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -46,6 +49,7 @@ const AddAnnouncementModal = ({ isOpen, onClose, onSuccess, editingAnnouncement 
 
     const formData = new FormData();
     formData.append('title', title);
+    formData.append('shortDescription', shortDescription); // ✅ ADD TO SUBMIT
     formData.append('content', content);
     formData.append('category', category);
     formData.append('eventDate', eventDate);
@@ -73,11 +77,8 @@ const AddAnnouncementModal = ({ isOpen, onClose, onSuccess, editingAnnouncement 
     <div className="service-modal-overlay">
       <div className="service-modal-card add-service-card">
         <div className="modal-header bg-red" style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          position: 'relative', // Ensures button positioning context
-          padding: '15px 20px' 
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+          position: 'relative', padding: '15px 20px' 
         }}>
           <h2>{isEditing ? "EDIT ANNOUNCEMENT" : "CREATE ANNOUNCEMENT"}</h2>
           <button 
@@ -85,14 +86,8 @@ const AddAnnouncementModal = ({ isOpen, onClose, onSuccess, editingAnnouncement 
             className="close-btn" 
             onClick={onClose}
             style={{ 
-              background: 'transparent', 
-              border: 'none', 
-              color: 'white', 
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '5px'
+              background: 'transparent', border: 'none', color: 'white', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5px'
             }}
           >
             <MdClose size={28} />
@@ -101,7 +96,6 @@ const AddAnnouncementModal = ({ isOpen, onClose, onSuccess, editingAnnouncement 
         <form onSubmit={handleSubmit} className="modal-form-wrapper">
           <div className="modal-body">
             
-            {/* IMAGE UPLOAD & PREVIEW */}
             <div className="form-section">
               <label className="section-title">COVER IMAGE</label>
               <div className="image-upload-container">
@@ -142,10 +136,34 @@ const AddAnnouncementModal = ({ isOpen, onClose, onSuccess, editingAnnouncement 
                 </div>
               </div>
 
+              {/* ✅ NEW: Short Description Field */}
               <div className="input-group">
-                <label>CONTENT / DESCRIPTION *</label>
-                <textarea rows="5" required value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write the announcement details here..."></textarea>
+                <label>SHORT DESCRIPTION (EXCERPT) *</label>
+                <textarea 
+                  rows="2" 
+                  maxLength="150" 
+                  required 
+                  value={shortDescription} 
+                  onChange={(e) => setShortDescription(e.target.value)} 
+                  placeholder="A brief 1-2 sentence summary for the preview card..."
+                ></textarea>
+                <small style={{ color: '#64748b', fontSize: '11px', textAlign: 'right', display: 'block', marginTop: '4px' }}>
+                  {shortDescription.length}/150 characters
+                </small>
               </div>
+
+              {/* ✅ UPDATED: Full Content Field */}
+              <div className="input-group">
+                <label>FULL ARTICLE CONTENT *</label>
+                <textarea 
+                  rows="6" 
+                  required 
+                  value={content} 
+                  onChange={(e) => setContent(e.target.value)} 
+                  placeholder="Write the full, detailed announcement here. This is what students see when they click 'Read More'."
+                ></textarea>
+              </div>
+
             </div>
           </div>
 

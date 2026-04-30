@@ -11,17 +11,17 @@ import '../styles/Reports.css';
 import PDFExportButton from '../components/PDFExportButton';
 
 function Reports() {
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  
   const [requests, setRequests] = useState([]);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(storedUser);
   const [isLoading, setIsLoading] = useState(true);
-  const [reportType, setReportType] = useState('accomplishment');
   const [timeframe, setTimeframe] = useState('Semestral');
   const reportRef = useRef(null);
 
-  useEffect(() => {
-    const loggedInUser = JSON.parse(localStorage.getItem("user"));
-    if (loggedInUser) setUser(loggedInUser);
+  const [reportType, setReportType] = useState(storedUser?.role === 'Admin' ? 'overall' : 'accomplishment');
 
+  useEffect(() => {
     const fetchRequests = async () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/requests`);
@@ -39,14 +39,25 @@ function Reports() {
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
+  const getClientName = (req) => {
+    const student = req.studentName || 'Unknown Student';
+    if (req.serviceName && req.serviceName.toUpperCase() === 'REFERRAL') {
+      const referrer = req.referrerName || 'Unknown Referrer';
+      return `${student} (Referred by: ${referrer})`;
+    }
+    return student;
+  };
+
   const myAccomplishments = useMemo(() => {
-    if (!user) return { completedCount: 0, weeklyData: [], myServicesData: [] };
+    if (!user) return { completedCount: 0, weeklyData: [], myServicesData: [], myRequestsThisMonth: [] };
     const myRequests = requests.filter(req => req.assignedCounselor === user.name);
 
-    const completedThisMonth = myRequests.filter(req => {
-      const updatedDate = new Date(req.updatedAt);
-      return req.status === 'Completed' && updatedDate.getMonth() === currentMonth && updatedDate.getFullYear() === currentYear;
+    const myRequestsThisMonth = myRequests.filter(req => {
+      const d = new Date(req.createdAt);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     });
+
+    const completedThisMonth = myRequestsThisMonth.filter(req => req.status === 'Completed');
 
     const weeklyData = [
       { name: 'Week 1', completed: 0, pending: 0 },
@@ -55,9 +66,8 @@ function Reports() {
       { name: 'Week 4', completed: 0, pending: 0 },
     ];
 
-    myRequests.forEach(req => {
+    myRequestsThisMonth.forEach(req => {
       const d = new Date(req.createdAt);
-      if (d.getMonth() !== currentMonth || d.getFullYear() !== currentYear) return;
       let weekIndex = Math.floor((d.getDate() - 1) / 7);
       if (weekIndex > 3) weekIndex = 3;
       if (req.status === 'Completed' || req.status === 'Resolved' || req.status === 'Issued') {
@@ -68,7 +78,7 @@ function Reports() {
     });
 
     const myServicesCount = {};
-    myRequests.forEach(req => {
+    myRequestsThisMonth.forEach(req => {
       if (req.serviceName) {
         const serviceName = req.serviceName.toUpperCase();
         myServicesCount[serviceName] = (myServicesCount[serviceName] || 0) + 1;
@@ -79,7 +89,7 @@ function Reports() {
       .map(key => ({ name: key, value: myServicesCount[key] }))
       .sort((a, b) => b.value - a.value);
 
-    return { completedCount: completedThisMonth.length, weeklyData, myServicesData };
+    return { completedCount: completedThisMonth.length, weeklyData, myServicesData, myRequestsThisMonth };
   }, [requests, user, currentMonth, currentYear]);
 
   const overallData = useMemo(() => {
@@ -92,21 +102,24 @@ function Reports() {
       referralsByMonth[monthName] = 0;
     }
 
-    requests.forEach(req => {
+    const filteredRequests = requests.filter(req => {
+      const d = new Date(req.createdAt);
+      const monthDiff = (currentYear - d.getFullYear()) * 12 + (currentMonth - d.getMonth());
+      return monthDiff >= 0 && monthDiff < monthsLimit;
+    });
+
+    filteredRequests.forEach(req => {
       if (req.serviceName && req.serviceName.toUpperCase() === 'REFERRAL') {
         const d = new Date(req.createdAt);
-        const monthDiff = (currentYear - d.getFullYear()) * 12 + (currentMonth - d.getMonth());
-        if (monthDiff >= 0 && monthDiff < monthsLimit) {
-          const monthName = d.toLocaleString('default', { month: 'short' });
-          if (referralsByMonth[monthName] !== undefined) referralsByMonth[monthName] += 1;
-        }
+        const monthName = d.toLocaleString('default', { month: 'short' });
+        if (referralsByMonth[monthName] !== undefined) referralsByMonth[monthName] += 1;
       }
     });
 
     const referralsData = Object.keys(referralsByMonth).map(key => ({ month: key, referrals: referralsByMonth[key] }));
 
     const servicesCount = {};
-    requests.forEach(req => {
+    filteredRequests.forEach(req => {
       if (req.serviceName) {
         const serviceName = req.serviceName.toUpperCase();
         servicesCount[serviceName] = (servicesCount[serviceName] || 0) + 1;
@@ -121,7 +134,7 @@ function Reports() {
     const counselorServiceCount = {};
     const uniqueServices = new Set();
 
-    requests.forEach(req => {
+    filteredRequests.forEach(req => {
       const counselor = req.assignedCounselor;
       const service = req.serviceName ? req.serviceName.toUpperCase() : 'UNKNOWN';
       if (counselor && counselor !== 'Unassigned') {
@@ -135,13 +148,13 @@ function Reports() {
     const workloadData = Object.values(counselorServiceCount).sort((a, b) => b.total - a.total);
     const serviceKeys = Array.from(uniqueServices);
 
-    return { referralsData, servicesAvailedData, workloadData, serviceKeys };
+    return { referralsData, servicesAvailedData, workloadData, serviceKeys, filteredRequests };
   }, [requests, timeframe, currentMonth, currentYear]);
 
   const EXTENDED_COLORS = ['#c00000', '#1e293b', '#e2b05f', '#475569', '#0284c7', '#16a34a', '#d97706'];
 
   const getReportTitle = () => {
-    if (reportType === 'overall') return 'Overall CCSD Services Report';
+    if (reportType === 'overall') return `Overall CCSD Services Report (${timeframe})`;
     if (user && user.name) return `${user.name}'s Accomplishment Report`;
     return 'Individual Accomplishment Report';
   };
@@ -158,60 +171,38 @@ function Reports() {
     <div className="dashboard-container">
       <Sidebar />
 
-      <main className="main-content">
-
-        {/* ── Header ── */}
+      <main className="main-content" style={{ padding: '20px', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
         <header className="content-header">
           <div className="header-right">
             <span>
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
             </span>
             <div className="user-pill">
-              <span className="role-tag">{user?.role}</span>
+              <span className="role-tag">{user.role}</span>
             </div>
           </div>
         </header>
 
-        {/* ── Body ── */}
         <section className="reports-view">
-
-          {/* Title row */}
-          <div className="reports-title-row">
+          <div className="reports-title-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
-              <h2>CCSD Reports</h2>
-              <p>Generate and view accomplishment and overall department reports.</p>
+              <h2 style={{ margin: '0 0 5px 0' }}>{reportType === 'overall' ? 'Overall Department Report' : 'My Accomplishment Report'}</h2>
+              <p style={{ margin: 0, color: '#64748b' }}>Generate and view your official PDF reports below.</p>
             </div>
-            <PDFExportButton
-              targetRef={reportRef}
-              filename={getReportFilename()}
-              reportTitle={getReportTitle()}
-              generatedBy={user?.name || 'Staff'}
-            />
+            <PDFExportButton targetRef={reportRef} filename={getReportFilename()} reportTitle={getReportTitle()} generatedBy={user?.name || 'Staff'} />
           </div>
 
-          {/* Tabs */}
-          <div className="reports-tabs">
-            <button
-              onClick={() => setReportType('accomplishment')}
-              style={reportType === 'accomplishment' ? activeTabStyle : inactiveTabStyle}
-            >
-              My Accomplishment Report
-            </button>
-            <button
-              onClick={() => setReportType('overall')}
-              style={reportType === 'overall' ? activeTabStyle : inactiveTabStyle}
-            >
-              Overall CCSD Report
-            </button>
-          </div>
-
-          <div ref={reportRef} className="report-content">
-
-            {/* ── VIEW 1: ACCOMPLISHMENT ── */}
+          <div ref={reportRef} className="report-content" style={{ padding: '20px', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden' }}>
+            
+            {/* ── ACCOMPLISHMENT VIEW ── */}
             {reportType === 'accomplishment' && (
               <div>
-                {/* KPI cards */}
-                <div className="kpi-grid">
+                <div style={{ marginBottom: '20px' }}>
                   <div style={kpiCardStyle}>
                     <div style={kpiIconWrapper('#ffffff', '#0284c7')}><MdAssignment size={24} /></div>
                     <div>
@@ -221,32 +212,31 @@ function Reports() {
                   </div>
                 </div>
 
-                {/* Charts */}
-                <div className="charts-2col">
-                  <div className="chart-card">
-                    <h3>My Workload Progression (This Month)</h3>
-                    <div style={{ width: '100%', height: '350px' }}>
+                <div style={chartsGridStyle}>
+                  <div style={chartCardStyle}>
+                    <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>My Workload Progression</h3>
+                    <div style={{ width: '100%', height: '300px' }}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={myAccomplishments.weeklyData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                        <BarChart data={myAccomplishments.weeklyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                           <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                           <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} allowDecimals={false} />
                           <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
                           <Legend />
-                          <Bar dataKey="completed" name="Completed Cases" stackId="a" fill="#16a34a" radius={[0, 0, 4, 4]} />
-                          <Bar dataKey="pending" name="Active/Pending Cases" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="completed" name="Completed" stackId="a" fill="#16a34a" radius={[0, 0, 4, 4]} />
+                          <Bar dataKey="pending" name="Pending" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
 
-                  <div className="chart-card">
-                    <h3>Services I Handled</h3>
-                    <div style={{ width: '100%', height: '300px' }}>
+                  <div style={chartCardStyle}>
+                    <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>Services I Handled</h3>
+                    <div style={{ width: '100%', height: '250px' }}>
                       {myAccomplishments.myServicesData.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
-                            <Pie data={myAccomplishments.myServicesData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value">
+                            <Pie data={myAccomplishments.myServicesData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
                               {myAccomplishments.myServicesData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={EXTENDED_COLORS[index % EXTENDED_COLORS.length]} />
                               ))}
@@ -254,58 +244,83 @@ function Reports() {
                             <Tooltip contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
                           </PieChart>
                         </ResponsiveContainer>
-                      ) : (
-                        <p style={{ textAlign: 'center', color: '#94a3b8', marginTop: '100px' }}>No service data available.</p>
-                      )}
+                      ) : <p style={{ textAlign: 'center', color: '#94a3b8', marginTop: '100px' }}>No service data.</p>}
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center', marginTop: '10px' }}>
+                    <div style={legendWrapperStyle}>
                       {myAccomplishments.myServicesData.map((entry, index) => (
-                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#475569' }}>
-                          <div style={{ width: '12px', height: '12px', backgroundColor: EXTENDED_COLORS[index % EXTENDED_COLORS.length] }}></div>
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#475569' }}>
+                          <div style={{ width: '10px', height: '10px', backgroundColor: EXTENDED_COLORS[index % EXTENDED_COLORS.length] }}></div>
                           {entry.name} ({entry.value})
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
+
+                <div style={{ marginTop: '20px' }}>
+                  <h3 style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: '10px', color: '#0f172a' }}>
+                    Case Log ({now.toLocaleString('default', { month: 'long' })})
+                  </h3>
+                  {/* ✅ THE RESPONSIVE TABLE WRAPPER */}
+                  <div style={tableContainerStyle}>
+                    {myAccomplishments.myRequestsThisMonth.length > 0 ? (
+                      <table style={tableStyle}>
+                        <thead>
+                          <tr>
+                            <th style={thStyle}>Date</th>
+                            <th style={thStyle}>Client Name</th>
+                            <th style={thStyle}>Service Requested</th>
+                            <th style={thStyle}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {myAccomplishments.myRequestsThisMonth.map((req, i) => (
+                            <tr key={req._id || i} style={i % 2 === 0 ? trEvenStyle : {}}>
+                              <td style={tdStyle}>{new Date(req.createdAt).toLocaleDateString()}</td>
+                              <td style={tdStyle}>{getClientName(req)}</td> 
+                              <td style={tdStyle}>{req.serviceName || 'N/A'}</td>
+                              <td style={{...tdStyle, fontWeight: 'bold', color: req.status === 'Completed' ? '#16a34a' : '#f59e0b'}}>{req.status}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : <p style={{ color: '#64748b' }}>No cases found for this month.</p>}
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* ── VIEW 2: OVERALL ── */}
+            {/* ── OVERALL VIEW ── */}
             {reportType === 'overall' && (
               <div>
-                <select
-                  className="timeframe-select"
-                  value={timeframe}
-                  onChange={(e) => setTimeframe(e.target.value)}
-                >
+                <select className="timeframe-select" value={timeframe} onChange={(e) => setTimeframe(e.target.value)} style={{ marginBottom: '20px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
                   <option value="Semestral">Bi-Annual - 6 Months</option>
                   <option value="Annual">Annual - 12 Months</option>
                 </select>
 
-                <div className="charts-2col">
-                  <div className="chart-card">
-                    <h3>Total Referrals ({timeframe})</h3>
+                <div style={chartsGridStyle}>
+                  <div style={chartCardStyle}>
+                    <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>Total Referrals ({timeframe})</h3>
                     <div style={{ width: '100%', height: '300px' }}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={overallData.referralsData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                        <LineChart data={overallData.referralsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                           <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                           <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} allowDecimals={false} />
                           <Tooltip contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                          <Line type="monotone" dataKey="referrals" name="Referrals" stroke="#c00000" strokeWidth={3} dot={{ r: 4, fill: '#c00000' }} activeDot={{ r: 6 }} />
+                          <Line type="monotone" dataKey="referrals" name="Referrals" stroke="#c00000" strokeWidth={3} dot={{ r: 4, fill: '#c00000' }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
 
-                  <div className="chart-card">
-                    <h3>Services Availed</h3>
-                    <div style={{ width: '100%', height: '300px' }}>
+                  <div style={chartCardStyle}>
+                    <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>Services Availed</h3>
+                    <div style={{ width: '100%', height: '250px' }}>
                       {overallData.servicesAvailedData.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
-                            <Pie data={overallData.servicesAvailedData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value">
+                            <Pie data={overallData.servicesAvailedData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
                               {overallData.servicesAvailedData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={EXTENDED_COLORS[index % EXTENDED_COLORS.length]} />
                               ))}
@@ -313,14 +328,12 @@ function Reports() {
                             <Tooltip contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
                           </PieChart>
                         </ResponsiveContainer>
-                      ) : (
-                        <p style={{ textAlign: 'center', color: '#94a3b8', marginTop: '100px' }}>No service data available.</p>
-                      )}
+                      ) : <p style={{ textAlign: 'center', color: '#94a3b8', marginTop: '100px' }}>No service data.</p>}
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center', marginTop: '10px' }}>
+                    <div style={legendWrapperStyle}>
                       {overallData.servicesAvailedData.map((entry, index) => (
-                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#475569' }}>
-                          <div style={{ width: '12px', height: '12px', backgroundColor: EXTENDED_COLORS[index % EXTENDED_COLORS.length] }}></div>
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#475569' }}>
+                          <div style={{ width: '10px', height: '10px', backgroundColor: EXTENDED_COLORS[index % EXTENDED_COLORS.length] }}></div>
                           {entry.name} ({entry.value})
                         </div>
                       ))}
@@ -328,16 +341,16 @@ function Reports() {
                   </div>
                 </div>
 
-                <div className="chart-card">
-                  <h3>Workload Distribution by Service Category</h3>
+                <div style={{...chartCardStyle, marginBottom: '40px'}}>
+                  <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>Workload Distribution</h3>
                   <div style={{ width: '100%', height: '350px' }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={overallData.workloadData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }} layout="vertical">
+                      <BarChart data={overallData.workloadData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
                         <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} allowDecimals={false} />
-                        <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} width={120} />
+                        <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} width={80} />
                         <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                        <Legend wrapperStyle={{ paddingTop: '10px' }} />
                         {overallData.serviceKeys.map((service, index) => (
                           <Bar key={service} dataKey={service} name={service} stackId="a" fill={EXTENDED_COLORS[index % EXTENDED_COLORS.length]} />
                         ))}
@@ -345,9 +358,41 @@ function Reports() {
                     </ResponsiveContainer>
                   </div>
                 </div>
+
+                <div style={{ marginTop: '20px' }}>
+                  <h3 style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: '10px', color: '#0f172a' }}>
+                    Department Record ({timeframe})
+                  </h3>
+                  {/* ✅ THE RESPONSIVE TABLE WRAPPER */}
+                  <div style={tableContainerStyle}>
+                    {overallData.filteredRequests.length > 0 ? (
+                      <table style={tableStyle}>
+                        <thead>
+                          <tr>
+                            <th style={thStyle}>Date</th>
+                            <th style={thStyle}>Client Name</th>
+                            <th style={thStyle}>Service Requested</th>
+                            <th style={thStyle}>Assigned To</th>
+                            <th style={thStyle}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {overallData.filteredRequests.slice(0, 50).map((req, i) => (
+                            <tr key={req._id || i} style={i % 2 === 0 ? trEvenStyle : {}}>
+                              <td style={tdStyle}>{new Date(req.createdAt).toLocaleDateString()}</td>
+                              <td style={tdStyle}>{getClientName(req)}</td> 
+                              <td style={tdStyle}>{req.serviceName || 'N/A'}</td>
+                              <td style={tdStyle}>{req.assignedCounselor || 'Unassigned'}</td>
+                              <td style={tdStyle}>{req.status}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : <p style={{ color: '#64748b' }}>No records found for this timeframe.</p>}
+                  </div>
+                </div>
               </div>
             )}
-
           </div>
         </section>
       </main>
@@ -355,31 +400,60 @@ function Reports() {
   );
 }
 
-/* ── Inline styles kept only for elements that can't use CSS classes ── */
-const activeTabStyle = {
-  background: 'transparent', border: 'none', fontSize: '16px', fontWeight: '800',
-  color: '#c00000', cursor: 'pointer', padding: '0 10px 10px 10px',
-  borderBottom: '3px solid #c00000', marginBottom: '-12px',
+// --- RESPONSIVE INLINE STYLES ---
+const chartsGridStyle = {
+  display: 'flex',
+  flexWrap: 'wrap', // Forces stacking on small screens
+  gap: '20px',
+  marginBottom: '20px'
 };
-const inactiveTabStyle = {
-  background: 'transparent', border: 'none', fontSize: '16px', fontWeight: '600',
-  color: '#64748b', cursor: 'pointer', padding: '0 10px 10px 10px',
+
+const chartCardStyle = {
+  flex: '1 1 300px', // Starts at 300px, stretches to fill space
+  minWidth: 0,
+  backgroundColor: 'white', 
+  padding: '15px', 
+  borderRadius: '8px', 
+  border: '1px solid #e2e8f0',
+  boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
 };
+
+const legendWrapperStyle = {
+  display: 'flex', 
+  flexWrap: 'wrap', 
+  gap: '8px', 
+  justifyContent: 'center', 
+  marginTop: '10px'
+};
+
 const kpiCardStyle = {
-  background: 'white', padding: '20px', border: '1px solid #e2e8f0',
-  display: 'flex', alignItems: 'center', gap: '15px',
+  background: 'white', padding: '15px', border: '1px solid #e2e8f0',
+  display: 'flex', alignItems: 'center', gap: '15px', borderRadius: '8px',
   boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
 };
 const kpiIconWrapper = (bg, color) => ({
-  backgroundColor: bg, color, width: '50px', height: '50px',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  backgroundColor: bg, color, width: '40px', height: '40px',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px'
 });
-const kpiLabelStyle = {
-  fontSize: '12px', color: '#64748b', margin: '0 0 5px 0',
-  textTransform: 'uppercase', fontWeight: '700',
+const kpiLabelStyle = { fontSize: '11px', color: '#64748b', margin: '0 0 5px 0', textTransform: 'uppercase', fontWeight: '700' };
+const kpiValueStyle = { fontSize: '20px', color: '#0f172a', margin: 0, fontWeight: '800' };
+
+// --- RESPONSIVE TABLE STYLES ---
+const tableContainerStyle = {
+  width: '100%',
+  overflowX: 'auto', // Adds horizontal scroll bar only on mobile!
+  WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS devices
 };
-const kpiValueStyle = {
-  fontSize: '24px', color: '#0f172a', margin: 0, fontWeight: '800',
+
+const tableStyle = {
+  width: '100%',
+  minWidth: '700px', // This guarantees the table will never squish below 700px!
+  borderCollapse: 'collapse',
+  fontSize: '13px',
+  textAlign: 'left'
 };
+const thStyle = { backgroundColor: '#f8fafc', color: '#475569', padding: '10px', borderBottom: '2px solid #cbd5e1', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '11px', whiteSpace: 'nowrap' };
+const tdStyle = { padding: '10px', borderBottom: '1px solid #e2e8f0', color: '#334155' };
+const trEvenStyle = { backgroundColor: '#f8fafc' };
 
 export default Reports;

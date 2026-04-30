@@ -142,11 +142,19 @@ const ManageAbout = () => {
       <Sidebar />
       <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
         
-        {/* ✅ REMOVED the global Publish button from the header */}
-        <header className="content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 30px', backgroundColor: 'white', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 10 }}>
-          <div>
-            <h2 style={{ margin: 0, color: '#0f172a', fontSize: '22px' }}>Visual Editor: About Page</h2>
-            <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '13px' }}>Changes made here will reflect directly on the student-facing About page.</p>
+        <header className="content-header">
+          <div className="header-right">
+            <span>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </span>
+            <div className="user-pill">
+              <span className="role-tag">Admin</span>
+            </div>
           </div>
         </header>
 

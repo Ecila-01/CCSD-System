@@ -16,7 +16,9 @@ const PDFExportButton = ({ targetRef, filename, reportTitle, generatedBy }) => {
         scale: 2, 
         useCORS: true, 
         logging: false,
-        backgroundColor: '#ffffff' // Pure white background for PDF
+        backgroundColor: '#ffffff', // Pure white background for PDF
+        windowWidth: 1024, 
+        width: 1024       
       });
 
       const imgData = canvas.toDataURL('image/png');

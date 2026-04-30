@@ -14,6 +14,8 @@ import {
   MdAccountBalance,
   MdMenu,
   MdClose,
+  MdOutlineSettings,      
+  MdOutlineAdminPanelSettings,
 } from 'react-icons/md';
 import '../styles/Sidebar.css';
 import ubLogo from '../assets/darkUBlogo.png';
@@ -110,6 +112,9 @@ const Sidebar = () => {
             </NavLink>
             <NavLink to="/manage-about" className="sidebar-link">
               <MdInfoOutline /> About
+            </NavLink>
+            <NavLink to="/settings" className="sidebar-link">
+              <MdOutlineSettings /> Settings
             </NavLink>
           </div>
         )}

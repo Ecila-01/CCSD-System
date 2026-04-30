@@ -88,22 +88,25 @@ function Schedules() {
    
   // 2. Do the math using the FILTERED requests
   const scheduledRequests = authorizedRequests.filter(req => req.requiresSchedule === true);
-  const pendingCount = scheduledRequests.filter(req => req.status === 'Pending').length;
+  const pendingCount = scheduledRequests.filter(req => req.status === 'Pending Review').length;
   const completedCount = scheduledRequests.filter(req => req.status === 'Completed').length;
 
   return (
     <div className="dashboard-container" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f3f4f6' }}>
       <Sidebar />
       
-      <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
+      <main className="main-content">
         <header className="content-header">
-          <div className="search-box">
-             <input type="text" placeholder="Search clients, cases, counselor..." />
-          </div>
           <div className="header-right">
-            <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            <span>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </span>
             <div className="user-pill">
-               <div style={{ margin: '10px' }}></div>
               <span className="role-tag">{user.role}</span>
             </div>
           </div>

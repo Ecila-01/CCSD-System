@@ -39,16 +39,12 @@ function Referrals() {
   const referralRequests = requests.filter(req => req.serviceName === 'REFERRAL');
 
   const totalCount    = referralRequests.length;
-  const pendingReview = referralRequests.filter(r => r.status === 'Pending').length;
-  const highPriority  = referralRequests.filter(
-    r => r.requestData?.referralReason === 'Behavioral' && r.status === 'Pending'
-  ).length;
-  const processedCount = referralRequests.filter(r => r.status !== 'Pending').length;
+  const pendingReview = referralRequests.filter(r => r.status === 'Pending Review').length;
+  const processedCount = referralRequests.filter(r => r.status === 'Completed').length;
 
   const stats = [
     { icon: <MdOutlineAssignment />,  value: totalCount,     label: 'Total Referrals', color: '#6b7280' },
     { icon: <MdOutlinePending />,     value: pendingReview,  label: 'Pending Review',  color: '#0369a1' },
-    { icon: <MdOutlineWarning />,     value: highPriority,   label: 'High Priority',   color: '#c00000' },
     { icon: <MdOutlineCheckCircle />, value: processedCount, label: 'Processed',       color: '#15803d' },
   ];
 
@@ -57,15 +53,14 @@ function Referrals() {
       <Sidebar />
 
       <main className="main-content">
-        {/* ── Header ── */}
         <header className="content-header">
-          <div className="search-box">
-            <input type="text" placeholder="Search referrals by student or faculty..." />
-          </div>
           <div className="header-right">
             <span>
               {new Date().toLocaleDateString('en-US', {
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
               })}
             </span>
             <div className="user-pill">
@@ -83,9 +78,6 @@ function Referrals() {
               <h2>Referrals Management</h2>
               <p>Review and process student referrals submitted by university staff and faculty.</p>
             </div>
-            <button className="export-btn" onClick={() => window.print()}>
-              Export Log
-            </button>
           </div>
 
           {/* Stats row */}

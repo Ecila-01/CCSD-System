@@ -209,7 +209,7 @@ function Settings() {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
                 <div style={iconWrapper('#eff6ff', '#2563eb')}><MdBackup size={24} /></div>
-                <h3 style={{ margin: 0, fontSize: '16px' }}>Selective Backup</h3>
+                <h3 style={{ margin: 0, fontSize: '16px' }}>Backup</h3>
               </div>
               <div style={checklistContainer}>
                 {ALL_MODELS.map(model => (
@@ -246,7 +246,7 @@ function Settings() {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
                 <div style={iconWrapper('#fee2e2', '#dc2626')}><MdDeleteForever size={24} /></div>
-                <h3 style={{ margin: 0, fontSize: '16px', color: '#dc2626' }}>Selective Wipe</h3>
+                <h3 style={{ margin: 0, fontSize: '16px', color: '#dc2626' }}>Wipe</h3>
               </div>
               <div style={checklistContainer}>
                 {ALL_MODELS.map(model => (

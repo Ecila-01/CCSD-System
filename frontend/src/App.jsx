@@ -21,7 +21,7 @@ import GuestRequestView from "./pages/GuestRequestView";
 import ManageDepartments from './pages/ManageDepartments';
 import Reports from "./pages/Reports";
 import ManageAbout from "./pages/ManageAbout";
-
+import Settings from "./pages/Settings";
 
 // Global bouncer: If the backend returns 401 (Unauthorized), force logout
 axios.interceptors.response.use(
@@ -137,6 +137,7 @@ export default function App() {
         <Route path="/manage-counselors" element={<ProtectedRoute allowedRoles={['admin']}><ManageCounselors /></ProtectedRoute>} /> 
         <Route path="/departments" element={<ProtectedRoute allowedRoles={['admin']}><ManageDepartments /></ProtectedRoute>} />
         <Route path="/manage-about" element={<ProtectedRoute allowedRoles={['admin']}><ManageAbout/></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute allowedRoles={['admin']}><Settings/></ProtectedRoute>} />
       </Routes>
 
       {/* Hide public footer if on ANY admin page */}

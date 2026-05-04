@@ -55,14 +55,17 @@ function Dashboard() {
   }).length;
 
   // 3. Department Queue (Awaiting Review)
-  // ✅ Super simple now: authorizedRequests already filters out other departments!
-  const displayQueue = authorizedRequests.filter(req => req.status === 'Pending').length;
+  // ✅ Updated to match the exact 'Pending Review' status
+  const displayQueue = authorizedRequests.filter(req => req.status === 'Pending Review').length;
 
-  // 4. "YOUR" Active Cases
-  // ✅ Also simplified
+  // 4. "YOUR" Cases (All Assigned Cases)
+  // ✅ Removed the 'Active' restriction. Now grabs ALL cases assigned to the user.
   const yourActive = authorizedRequests.filter(req => {
-    if (isAdmin) return req.status === 'Active'; 
-    return req.status === 'Active' && req.assignedCounselor === user.name;
+    // Admins see everything in the authorized department
+    if (isAdmin) return true; 
+    
+    // Counselors see EVERY case assigned to them, regardless of status
+    return req.assignedCounselor === user.name; 
   }).length;
 
   const getClientEmail = (req) => {

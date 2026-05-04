@@ -19,7 +19,8 @@ function ManageAnnouncements() {
   const [selectedIds, setSelectedIds] = useState([]);
   const visibleAnnouncements = announcements.filter(ann => filter === 'All' || ann.status === filter);
   const isAllSelected = visibleAnnouncements.length > 0 && selectedIds.length === visibleAnnouncements.length;
-
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const [user, setUser] = useState(storedUser);
   const toggleSelectAll = () => {
     if (isAllSelected) {
       setSelectedIds([]); // Deselect all if they are already selected
@@ -240,9 +241,19 @@ const handleBulkRestore = async () => {
       <Sidebar />
       <main className="main-content">
         <header className="content-header">
-           <div className="search-box">
-              <input type="text" placeholder="Search announcements..." />
-           </div>
+          <div className="header-right">
+            <span>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </span>
+            <div className="user-pill">
+              <span className="role-tag">{user.role}</span>
+            </div>
+          </div>
         </header>
 
         <section className="announcements-view">

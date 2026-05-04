@@ -158,13 +158,19 @@ const ManageDepartments = () => {
       <Sidebar />
       <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
         
-        {/* HEADER */}
         <header className="content-header">
-          <div className="search-box"><input type="text" placeholder="Search departments..." /></div>
           <div className="header-right">
-            <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-            <div style={{ margin: '5px' }}></div>
-            <div className="user-pill"><span className="role-tag">{user.role}</span></div>
+            <span>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </span>
+            <div className="user-pill">
+              <span className="role-tag">{user.role}</span>
+            </div>
           </div>
         </header>
 

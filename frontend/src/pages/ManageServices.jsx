@@ -126,13 +126,17 @@ function ManageServices() {
       <Sidebar />
       <main className="main-content">
         <header className="content-header">
-          <div className="search-box">
-             <input type="text" placeholder="Search clients, cases, counselor..." />
-          </div>
           <div className="header-right">
-            <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-            <div className="user-pill"> <div style={{ margin: '10px' }}></div>
-              <span className="role-tag">{user.role || 'Admin'}</span>
+            <span>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </span>
+            <div className="user-pill">
+              <span className="role-tag">{user.role}</span>
             </div>
           </div>
         </header>

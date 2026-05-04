@@ -124,9 +124,6 @@ function Schedules() {
 
             {/* 2. STATS ROW */}
             <div className="schedules-stats-row" style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(3, 1fr)', 
-              gap: '20px', 
               width: '100%', 
               marginBottom: '30px' 
             }}>
@@ -171,6 +168,7 @@ function Schedules() {
               </div>
 
               {/* CSS GRID WEEKLY CALENDAR */}
+              <div className="schedules-main-panel">
               <div className="weekly-calendar">
                 <div className="time-col-header"></div>
                 {weekDays.map((dateObj, index) => {
@@ -313,9 +311,8 @@ function Schedules() {
                   </div>
                   );
                 })}
-              </div>
-
-              {/* REUSABLE TABLE INTEGRATION */}
+              </div>{/* end weekly-calendar */}
+              </div>{/* end schedules-main-panel */}
               <div style={{ marginTop: '40px' }}>
                 <CasesTable 
                   requests={scheduledRequests} 

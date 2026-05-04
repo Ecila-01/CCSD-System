@@ -144,10 +144,10 @@ const ManageCounselors = () => {
         </header>
 
         <section className="dashboard-view" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '16px' }}>
             <h2 style={{ color: '#3C3736', margin: 0 }}>Manage Staff Accounts</h2>
-            <button onClick={openModalForCreate} className="next-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#c00000', color: 'white', border: 'none',  cursor: 'pointer', fontWeight: 'bold' }}>
-              <MdAdd size={20} /> New Account
+            <button onClick={openModalForCreate} className="next-btn new-account-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: '#c00000', color: 'white', border: 'none', borderRadius: 0, cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              <MdAdd size={15} /> New Account
             </button>
           </div>
 
@@ -261,5 +261,24 @@ const checklistGridStyle = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr'
 const checkItemStyle = { display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' };
 const cancelBtnStyle = { padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none',  fontWeight: 'bold', cursor: 'pointer' };
 const submitBtnStyle = { padding: '10px 20px', background: '#c00000', color: 'white', border: 'none',  fontWeight: 'bold', cursor: 'pointer' };
+
+// Responsive styles injected via style tag
+const responsiveStyles = `
+  @media (max-width: 480px) {
+    .new-account-btn {
+      padding: 6px 8px !important;
+      font-size: 12px !important;
+      gap: 4px !important;
+    }
+  }
+`;
+
+// Inject styles once
+if (typeof document !== 'undefined' && !document.getElementById('manage-counselors-styles')) {
+  const styleEl = document.createElement('style');
+  styleEl.id = 'manage-counselors-styles';
+  styleEl.textContent = responsiveStyles;
+  document.head.appendChild(styleEl);
+}
 
 export default ManageCounselors;

@@ -20,7 +20,7 @@ const ManageCounselors = () => {
   const [editingUserId, setEditingUserId] = useState(null);
   const navigate = useNavigate();
 
-  // ✅ NEW: Dynamic Departments State
+  // ✅ NEW: Dynamic Departments States
   const [departmentsDb, setDepartmentsDb] = useState([]);
 
   // ✅ CLEANED: Removed 'otherDept' entirely

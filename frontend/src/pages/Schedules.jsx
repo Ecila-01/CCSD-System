@@ -76,17 +76,14 @@ function Schedules() {
 
   if (!user) return null;
 
-  // 1. Identify User Role & Departments
   const isAdmin = user?.role?.toLowerCase() === 'admin';
   const userDepts = user.assignedDepartments || [];
 
-  // 🔥 THE MASTER FILTER: Restrict cases by department
   const authorizedRequests = requests.filter(req => {
-    if (isAdmin) return true; // Admins see everything
+    if (isAdmin) return true; 
     return userDepts.includes(req.requestData?.department);
   });
    
-  // 2. Do the math using the FILTERED requests
   const scheduledRequests = authorizedRequests.filter(req => req.requiresSchedule === true);
   const pendingCount = scheduledRequests.filter(req => req.status === 'Pending Review' || req.status === 'Pending').length;
   const completedCount = scheduledRequests.filter(req => req.status === 'Completed').length;
@@ -96,15 +93,118 @@ function Schedules() {
       <Sidebar />
       
       <main className="main-content" style={{ flex: 1, maxWidth: '100vw', overflowX: 'hidden' }}>
+        
+        {/* ✅ BULLETPROOF MOBILE STYLES */}
+        <style>{`
+          .schedules-stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            width: 100%;
+            margin-bottom: 30px;
+          }
+          .sched-stat-card {
+            background: white; padding: 20px; display: flex; align-items: center; gap: 15px; 
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;
+          }
+          
+          /* Colors applied to wrapper, not SVG */
+          .stat-icon-wrapper {
+            padding: 12px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+          }
+          .red-bg { background-color: #fef2f2; color: #C3151C; }
+          .blue-bg { background-color: #eff6ff; color: #3b82f6; }
+          .green-bg { background-color: #dcfce3; color: #16a34a; }
+
+          .stat-value {
+            margin: 0; font-size: 24px; color: #1e293b; font-weight: bold;
+          }
+          .stat-label {
+            margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: bold;
+          }
+
+          /* MOBILE OVERRIDES */
+          @media (max-width: 768px) {
+            .schedules-page-header {
+              display: flex !important;
+              flex-direction: column !important;
+              align-items: stretch !important;
+              gap: 15px !important;
+              width: 100% !important;
+            }
+            .schedules-page-header > div:first-child {
+              text-align: center;
+            }
+            .calendar-controls {
+              width: 100% !important;
+              margin: 0 !important;
+            }
+            .date-navigator {
+              display: flex !important;
+              width: 100% !important;
+              justify-content: space-between !important; 
+            }
+            .date-navigator span {
+              flex: 1 !important; 
+              text-align: center !important; 
+              font-size: 14px !important;
+            }
+            
+            /* Stats Row Force Row */
+            .schedules-stats-row {
+              display: flex !important;
+              flex-direction: row !important;
+              justify-content: space-between !important;
+              gap: 8px !important;
+              width: 100% !important;
+            }
+            .sched-stat-card {
+              flex: 1 1 0px !important; 
+              flex-direction: row !important; 
+              padding: 12px 5px !important;
+              gap: 8px !important;
+              justify-content: center !important;
+              align-items: center !important;
+              min-width: 0 !important; 
+            }
+            
+            /* Remove padding from wrapper on mobile so SVG can breathe */
+            .stat-icon-wrapper {
+              padding: 0 !important;
+              background: transparent !important; 
+              flex: 0 0 24px !important; 
+              width: 24px !important;
+              height: 24px !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+            }
+            .stat-icon-wrapper svg {
+              width: 24px !important;  
+              height: 24px !important;
+              display: block !important;
+            }
+            .stat-text-container {
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              min-width: 0 !important;
+            }
+            .stat-value {
+              font-size: 20px !important; 
+              line-height: 1 !important;
+              margin: 0 !important;
+            }
+            .stat-label {
+              display: none !important; 
+            }
+          }
+        `}</style>
+
         <header className="content-header">
           <div className="header-right">
             <span>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </span>
             <div className="user-pill">
               <span className="role-tag">{user.role}</span>
@@ -112,72 +212,60 @@ function Schedules() {
           </div>
         </header>
 
-        {/* ✅ WRAPPER SECTION: Centers everything and restricts the max width */}
         <section className="schedules-view" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 20px' }}>
           
           <div style={{ width: '100%', maxWidth: '1500px' }}>
             
-            {/* 1. PAGE HEADER */}
-            <div className="schedules-page-header" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <div className="schedules-page-header">
               <div>
                 <h2 style={{ margin: 0, color: '#1e293b' }}>Schedules</h2>
                 <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '14px' }}>Manage and track all counseling and referral sessions</p>
               </div>
               
-              {/* Calendar Controls moved here for better mobile wrapping */}
               <div className="calendar-controls">
-                <div className="date-navigator" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <button onClick={handlePreviousWeek} style={{ padding: '6px 12px', background: '#fff', border: '1px solid #cbd5e1',  cursor: 'pointer', fontWeight: 'bold', color: '#475569', borderRadius: '4px' }}>
-                    &lt;
-                  </button>
-                  <span style={{ fontWeight: '700', minWidth: '150px', textAlign: 'center', color: '#1e293b' }}>
-                    {formatWeekRange(currentWeekStart)}
-                  </span>
-                  <button onClick={handleNextWeek} style={{ padding: '6px 12px', background: '#fff', border: '1px solid #cbd5e1',  cursor: 'pointer', fontWeight: 'bold', color: '#475569', borderRadius: '4px' }}>
-                    &gt;
-                  </button>
+                <div className="date-navigator">
+                  <button onClick={handlePreviousWeek} style={{ padding: '6px 12px', background: '#fff', border: '1px solid #cbd5e1',  cursor: 'pointer', fontWeight: 'bold', color: '#475569', borderRadius: '4px' }}>&lt;</button>
+                  <span style={{ fontWeight: '700', color: '#1e293b' }}>{formatWeekRange(currentWeekStart)}</span>
+                  <button onClick={handleNextWeek} style={{ padding: '6px 12px', background: '#fff', border: '1px solid #cbd5e1',  cursor: 'pointer', fontWeight: 'bold', color: '#475569', borderRadius: '4px' }}>&gt;</button>
                 </div>
               </div>
             </div>
 
-            {/* 2. STATS ROW (Now Responsive) */}
-            <div className="schedules-stats-row" style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', // 🔥 Fixes mobile squishing
-              gap: '20px', 
-              width: '100%', 
-              marginBottom: '30px' 
-            }}>
-              <div className="sched-stat-card" style={{ background: 'white', padding: '20px',  display: 'flex', alignItems: 'center', gap: '15px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
-                <MdOutlineDateRange className="stat-icon red" size={42} style={{ color: '#C3151C',  padding: '8px', backgroundColor: '#fef2f2', borderRadius: '8px'  }} />
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '24px', color: '#1e293b' }}>{scheduledRequests.length}</h3>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Appointments</p>
+            {/* ✅ FIXED STATS CARDS: Cleaned up SVGs */}
+            <div className="schedules-stats-row">
+              <div className="sched-stat-card">
+                <div className="stat-icon-wrapper red-bg">
+                  <MdOutlineDateRange size={32} />
+                </div>
+                <div className="stat-text-container">
+                  <h3 className="stat-value">{scheduledRequests.length}</h3>
+                  <p className="stat-label">Total Appointments</p>
                 </div>
               </div>
-              <div className="sched-stat-card" style={{ background: 'white', padding: '20px',   display: 'flex', alignItems: 'center', gap: '15px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
-                <MdOutlineSchedule className="stat-icon blue" size={42} style={{ color: '#3b82f6',  padding: '8px', backgroundColor: '#eff6ff', borderRadius: '8px' }} />
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '24px', color: '#1e293b' }}>{pendingCount}</h3>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Pending Requests</p>
+
+              <div className="sched-stat-card">
+                <div className="stat-icon-wrapper blue-bg">
+                  <MdOutlineSchedule size={32} />
+                </div>
+                <div className="stat-text-container">
+                  <h3 className="stat-value">{pendingCount}</h3>
+                  <p className="stat-label">Pending Requests</p>
                 </div>
               </div>
-              <div className="sched-stat-card" style={{ background: 'white', padding: '20px',  display: 'flex', alignItems: 'center', gap: '15px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
-                <MdOutlineCheckCircle className="stat-icon green" size={42} style={{ color: '#16a34a',  padding: '8px', backgroundColor: '#dcfce3', borderRadius: '8px' }} />
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '24px', color: '#1e293b' }}>{completedCount}</h3>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Completed</p>
+
+              <div className="sched-stat-card">
+                <div className="stat-icon-wrapper green-bg">
+                  <MdOutlineCheckCircle size={32} />
+                </div>
+                <div className="stat-text-container">
+                  <h3 className="stat-value">{completedCount}</h3>
+                  <p className="stat-label">Completed</p>
                 </div>
               </div>
             </div>
 
-            {/* 3. CALENDAR & TABLE PANEL */}
             <div className="schedules-main-panel" style={{ width: '100%' }}>
-              
-              {/* ✅ RESPONSIVE HORIZONTAL SCROLL WRAPPER FOR CALENDAR */}
               <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '10px' }}>
-                
-                {/* CSS GRID WEEKLY CALENDAR (Forced minWidth to prevent cell collapse) */}
                 <div className="weekly-calendar" style={{ minWidth: '900px' }}>
                   <div className="time-col-header"></div>
                   {weekDays.map((dateObj, index) => {
@@ -216,11 +304,10 @@ function Schedules() {
                   <div className="lunch-break" style={{gridRow: 6, gridColumn: '2 / 9'}}>
                     LUNCH BREAK
                   </div>
-                  {/* --- GROUPED EVENTS RENDERING --- */}
+
                   {(() => {
                     const groupedEvents = {};
 
-                    // 1. Group the events
                     scheduledRequests.forEach((req) => {
                       if (!req.appointmentDate || !req.timeSlot) return;
 
@@ -245,7 +332,6 @@ function Schedules() {
                       groupedEvents[cellKey].push(req);
                     });
 
-                    // 2. Helper function to draw a single card
                     const renderEventCard = (req) => {
                       let colorClass = ""; 
                       if (req.status === "Pending Review" || req.status === "Pending") colorClass = "blue-event"; 
@@ -290,7 +376,6 @@ function Schedules() {
                       );
                     };
 
-                    // 3. Render the grid cells
                     return Object.entries(groupedEvents).map(([cellKey, events]) => {
                       const [rowStr, colStr] = cellKey.split('-');
                       const gridRow = parseInt(rowStr, 10);
@@ -303,14 +388,13 @@ function Schedules() {
                             gridRow: `${gridRow} / span 1`,
                             gridColumn: gridCol,
                             padding: '2px',           
-                            position: 'relative', // CRITICAL: Allows popover to float above
+                            position: 'relative',
                           }}
                           onMouseEnter={() => setHoveredCell(cellKey)}
                           onMouseLeave={() => setHoveredCell(null)}
                         >
                           {events.length > 1 ? (
                             <>
-                              {/* THE BADGE (Shows when there are multiple events) */}
                               <div style={{
                                 width: '100%', height: '100%',
                                 backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1',
@@ -323,15 +407,14 @@ function Schedules() {
                                 <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>Sessions</span>
                               </div>
 
-                              {/* THE POPOVER (Shows only on hover) */}
                               {hoveredCell === cellKey && (
                                 <div style={{
                                   position: 'absolute', top: 0, left: 0,
-                                  width: '180px', // Wider to show full details without crunching
+                                  width: '180px',
                                   backgroundColor: 'white',
                                   borderRadius: '8px', 
                                   boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-                                  zIndex: 100, // Floats above other calendar boxes
+                                  zIndex: 100, 
                                   padding: '8px', 
                                   display: 'flex', flexDirection: 'column', gap: '8px',
                                   border: '1px solid #e2e8f0'
@@ -344,7 +427,6 @@ function Schedules() {
                               )}
                             </>
                           ) : (
-                            // THE NORMAL CARD (Shows when there is only 1 event)
                             renderEventCard(events[0])
                           )}
                         </div>
@@ -352,9 +434,8 @@ function Schedules() {
                     });
                   })()}
                 </div>
-              </div> {/* END HORIZONTAL SCROLL WRAPPER */}
+              </div> 
 
-              {/* REUSABLE TABLE INTEGRATION */}
               <div style={{ marginTop: '40px' }}>
                 <CasesTable 
                   requests={scheduledRequests} 
@@ -368,7 +449,6 @@ function Schedules() {
         </section>
       </main>
 
-      {/* RENDER THE MODAL IF A REQUEST IS CLICKED */}
       {viewingRequest && (
         <RequestDetailsModal 
           request={viewingRequest} 

@@ -219,3 +219,80 @@
 }
 .status-pill.active { background: #dcfce7; color: #166534; }
 .status-pill.pending { background: #e0f2fe; color: #0369a1; }
+
+/* ================================================
+   RESPONSIVE
+   ================================================ */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .schedules-view { padding: 20px 16px !important; }
+
+  .schedules-stats-row {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .weekly-calendar {
+    grid-template-columns: 50px repeat(7, 1fr);
+    grid-template-rows: 50px repeat(10, 60px);
+  }
+  .time-label, .grid-cell, .lunch-break { min-height: 60px; }
+  .cal-event { font-size: 10px; padding: 4px 6px; }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .schedules-view { padding: 12px 10px !important; }
+
+  /* Page header stacks */
+  .schedules-page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .schedules-page-header h2 { font-size: 19px; }
+
+  /* Stats: 1 column */
+  .schedules-stats-row {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+  .sched-stat-card { padding: 14px 16px; }
+
+  /* Calendar controls: center navigator */
+  .calendar-controls {
+    justify-content: center !important;
+    padding: 8px !important;
+  }
+  .date-navigator span { min-width: 120px; font-size: 13px; }
+
+  /* Weekly calendar: horizontal scroll */
+  .schedules-main-panel {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .weekly-calendar {
+    min-width: 560px;
+    grid-template-columns: 44px repeat(7, 1fr);
+    grid-template-rows: 44px repeat(10, 56px);
+  }
+  .time-label, .grid-cell, .lunch-break { min-height: 56px; }
+  .day-header { font-size: 10px; padding: 8px 4px; }
+  .time-label { font-size: 9px; }
+  .cal-event { font-size: 9px; padding: 3px 4px; }
+  .lunch-break { font-size: 10px; letter-spacing: 3px; }
+
+  /* Sessions table: horizontal scroll */
+  .sessions-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 12px; }
+  .sessions-table { min-width: 500px; }
+  .sessions-table th, .sessions-table td { padding: 10px; font-size: 12px; }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .schedules-stats-row { gap: 8px !important; }
+  .sched-stat-card h3 { font-size: 20px !important; }
+  .sched-stat-card p { font-size: 11px; }
+}

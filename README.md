@@ -1,3 +1,0 @@
-# CCSD-System
-
-Installation 

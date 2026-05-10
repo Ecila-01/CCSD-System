@@ -113,7 +113,7 @@ function Settings() {
       title: 'Confirm System Restore',
       message: `You are about to restore data from "${restoreFile.name}". This will overwrite current database records for the collections listed below.`,
       customUI: (
-        <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '6px' }}>
+        <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1' }}>
           <strong style={{ display: 'block', marginBottom: '5px', fontSize: '13px' }}>Collections to be overwritten:</strong>
           <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '14px', color: '#334155' }}>
             {restorableModels.length > 0 
@@ -123,7 +123,7 @@ function Settings() {
           </ul>
           
           {includesUsers && (
-            <div style={{ marginTop: '10px', padding: '8px', backgroundColor: '#dcfce3', color: '#166534', border: '1px solid #bbf7d0', borderRadius: '4px', fontSize: '12px' }}>
+            <div style={{ marginTop: '10px', padding: '8px', backgroundColor: '#dcfce3', color: '#166534', border: '1px solid #bbf7d0', fontSize: '12px' }}>
               <strong>🛡️ Security Lock:</strong> User data was found in this backup but will be safely ignored to prevent you from being locked out of your admin account.
             </div>
           )}
@@ -234,7 +234,7 @@ function Settings() {
                 <h3 style={{ margin: 0, fontSize: '16px' }}>System Restore</h3>
               </div>
               <p style={{ fontSize: '13px', color: '#475569', marginBottom: '15px' }}>Upload a .json backup to overwrite existing records.</p>
-              <input type="file" accept=".json" onChange={handleFileUpload} style={{ width: '100%', padding: '8px', marginBottom: '15px', border: '1px solid #cbd5e1', borderRadius: '6px' }} />
+              <input type="file" accept=".json" onChange={handleFileUpload} style={{ width: '100%', padding: '8px', marginBottom: '15px', border: '1px solid #cbd5e1' }} />
             </div>
             <button onClick={triggerRestore} disabled={isLoading || !restoreFile} style={{ ...primaryBtnStyle, backgroundColor: '#ca8a04' }}>
               <MdUpload size={18} /> Review & Restore
@@ -276,8 +276,8 @@ function Settings() {
             <p style={{ color: '#475569', fontSize: '14px', lineHeight: '1.5' }}>{confirmModal.message}</p>
             {confirmModal.customUI}
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
-              <button onClick={() => setConfirmModal({ isOpen: false })} style={{ padding: '10px 15px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={confirmModal.onProceed} style={{ padding: '10px 15px', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Yes, Proceed</button>
+              <button onClick={() => setConfirmModal({ isOpen: false })} style={{ padding: '10px 15px', border: 'none', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={confirmModal.onProceed} style={{ padding: '10px 15px', backgroundColor: '#dc2626', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Yes, Proceed</button>
             </div>
           </div>
         </div>
@@ -289,12 +289,12 @@ function Settings() {
 }
 
 // --- STYLES ---
-const cardStyle = { backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', height: '100%' };
-const checklistContainer = { display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px', padding: '15px', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', flex: 1 };
+const cardStyle = { backgroundColor: 'white', padding: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', height: '100%' };
+const checklistContainer = { display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px', padding: '15px', backgroundColor: '#f8fafc',  border: '1px solid #e2e8f0', flex: 1 };
 const checkboxLabel = { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', cursor: 'pointer', color: '#334155' };
 const iconWrapper = (bg, color) => ({ backgroundColor: bg, color: color, width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' });
-const primaryBtnStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' };
+const primaryBtnStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'white', padding: '12px 20px', border: 'none', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' };
 const modalOverlayStyle = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' };
-const modalContentStyle = { backgroundColor: 'white', padding: '25px', width: '100%', position: 'relative', borderRadius: '12px' };
+const modalContentStyle = { backgroundColor: 'white', padding: '25px', width: '100%', position: 'relative',  };
 
 export default Settings;

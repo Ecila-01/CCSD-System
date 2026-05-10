@@ -298,7 +298,7 @@
 
 @media (max-width: 768px) {
   .services-view { padding: 14px !important; max-width: 100% !important; }
-  .services-page-header { flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .services-page-header { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
   .services-page-header h2 { font-size: 19px; }
   .new-service-btn { width: 100%; text-align: center; padding: 10px 16px; }
 

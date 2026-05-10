@@ -11,21 +11,21 @@ const StatsGrid = ({ requests }) => {
       icon: <MdOutlineAccessTime />,
       value: totalCases,
       label: 'Total Cases',
-      bg: '#fee2e2',
+      
       color: '#c00000',
     },
     {
       icon: <MdOutlineCheckCircleOutline />,
       value: resolvedCases,
       label: 'Resolved Cases',
-      bg: '#dcfce7',
+      
       color: '#15803d',
     },
     {
       icon: <MdOutlinePendingActions />,
       value: pendingCases,
       label: 'Pending Cases',
-      bg: '#fff3e0',
+      
       color: '#f57f17',
     },
   ];
@@ -50,8 +50,8 @@ const StatsGrid = ({ requests }) => {
           flex-direction: row;
           align-items: center;
           gap: 14px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-          border-radius: 6px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+         
           min-width: 0;
           box-sizing: border-box;
         }
@@ -60,7 +60,7 @@ const StatsGrid = ({ requests }) => {
           flex-shrink: 0;
           width: 48px;
           height: 48px;
-          border-radius: 12px;
+          
           display: flex;
           align-items: center;
           justify-content: center;
@@ -108,7 +108,7 @@ const StatsGrid = ({ requests }) => {
             gap: 6px;
             text-align: center;
           }
-          .stats-grid .sg-icon { width: 40px; height: 40px; font-size: 22px; border-radius: 10px; }
+          .stats-grid .sg-icon { width: 40px; height: 40px; font-size: 22px;  }
           .stats-grid .sg-text h3   { font-size: 20px; font-weight: 800; }
           .stats-grid .sg-text span { display: none; }
         }
@@ -120,7 +120,7 @@ const StatsGrid = ({ requests }) => {
             gap: 6px;
           }
           .stats-grid .sg-card { padding: 10px 4px; gap: 4px; }
-          .stats-grid .sg-icon { width: 34px; height: 34px; font-size: 18px; border-radius: 8px; }
+          .stats-grid .sg-icon { width: 34px; height: 34px; font-size: 18px;  }
           .stats-grid .sg-text h3 { font-size: 17px; font-weight: 800; }
         }
       `}</style>

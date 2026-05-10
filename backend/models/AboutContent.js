@@ -23,7 +23,7 @@ const AboutContentSchema = new mongoose.Schema({
   teamMembers: [OrgMemberSchema],
 
   // Metadata
-  lastUpdatedBy: { type: String, default: 'Admin' }
+  lastUpdatedBy: { type: String, default: 'admin' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('AboutContent', AboutContentSchema);

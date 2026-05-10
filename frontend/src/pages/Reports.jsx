@@ -19,7 +19,7 @@ function Reports() {
   const [timeframe, setTimeframe] = useState('Semestral');
   const reportRef = useRef(null);
 
-  const [reportType, setReportType] = useState(storedUser?.role === 'Admin' ? 'overall' : 'accomplishment');
+  const [reportType, setReportType] = useState(storedUser?.role === 'admin' ? 'overall' : 'accomplishment');
 
   useEffect(() => {
     const fetchRequests = async () => {

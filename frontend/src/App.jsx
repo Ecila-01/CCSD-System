@@ -22,6 +22,8 @@ import ManageDepartments from './pages/ManageDepartments';
 import Reports from "./pages/Reports";
 import ManageAbout from "./pages/ManageAbout";
 import Settings from "./pages/Settings";
+import ManageCareers from "./pages/ManageCareers";
+import Careers from "./pages/Careers";
 
 // Global bouncer: If the backend returns 401 (Unauthorized), force logout
 axios.interceptors.response.use(
@@ -108,7 +110,8 @@ export default function App() {
     "/profile",           // Added missing route
     "/settings",           // Added missing route
     "/departments",
-    "/manage-about"
+    "/manage-about",
+    "/manage-careers"
   ];
   const isAppView = appPages.includes(location.pathname);
 
@@ -123,6 +126,7 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/services" element={<Services />} />
         <Route path="/view-request/:token" element={<GuestRequestView />} />
+        <Route path="/careers" element={<Careers />} />
         
         {/* SHARED Routes (Admin & Counselor) */}
         <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Dashboard /></ProtectedRoute>} />
@@ -138,6 +142,7 @@ export default function App() {
         <Route path="/departments" element={<ProtectedRoute allowedRoles={['admin']}><ManageDepartments /></ProtectedRoute>} />
         <Route path="/manage-about" element={<ProtectedRoute allowedRoles={['admin']}><ManageAbout/></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute allowedRoles={['admin']}><Settings/></ProtectedRoute>} />
+        <Route path="/manage-careers" element={<ProtectedRoute allowedRoles={['admin']}><ManageCareers/></ProtectedRoute>} />
       </Routes>
 
       {/* Hide public footer if on ANY admin page */}

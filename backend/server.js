@@ -11,7 +11,7 @@ const userRoutes = require('./routes/userRoutes');
 const departmentRoutes = require('./routes/departments');
 const aboutRoutes = require('./routes/aboutRoutes');
 const systemRoutes = require('./routes/system');
-
+const careerRoutes = require('./routes/career');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -49,7 +49,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/about', aboutRoutes);
 app.use('/api/system', systemRoutes);
-
+app.use('/api/careers', careerRoutes);
 // Note: I removed the app.use('/uploads', express.static(...)) block.
 // You no longer need it because Cloudinary hosts your images now!
 

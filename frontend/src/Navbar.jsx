@@ -26,9 +26,9 @@ function Navbar() {
 
         <nav className={`navCenter ${menuOpen ? "active" : ""}`}>
           <NavLink to="/" className="navLink" onClick={closeMenu}>Home</NavLink>
+          <NavLink to="/careers" className="navLink" onClick={closeMenu}>Careers</NavLink>
           <NavLink to="/about" className="navLink" onClick={closeMenu}>About</NavLink>
           <NavLink to="/services" className="navLink" onClick={closeMenu}>Services</NavLink>
-          
           {/* Added 'mobile-login' class here */}
           <button className="loginBtn mobile-login" onClick={() => { setModalOpen(true); closeMenu(); }}>
             Login

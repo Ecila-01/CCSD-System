@@ -104,6 +104,9 @@ const Sidebar = () => {
             <NavLink to="/manage-announcements" className="sidebar-link">
               <MdOutlineCampaign /> Announcements
             </NavLink>
+            <NavLink to="/manage-careers" className="sidebar-link">
+              <MdOutlineCampaign /> Careers
+            </NavLink>
             <NavLink to="/manage-services" className="sidebar-link">
               <MdOutlineCategory /> Services
             </NavLink>

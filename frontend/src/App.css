@@ -43,6 +43,8 @@ body,
   width: 100%;
   min-height: 100vh;
   background: var(--bg);
+  display: flex;
+  flex-direction: column;
 }
 
 /* NAVBAR */
@@ -242,6 +244,7 @@ body,
   gap: 28px;
   padding: 14px 24px;
   font-size: 14px;
+  margin-top: auto;
 }
 
 .footerItem {

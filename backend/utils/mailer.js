@@ -1,33 +1,66 @@
 // backend/utils/mailer.js
-const nodemailer = require('nodemailer');
-
-// Set up the dynamic frontend URL. 
-// It will look for the Render variable first, and fall back to localhost for your own testing.
+const { google } = require('googleapis');
+const MailComposer = require('nodemailer/lib/mail-composer');
+console.log('OAUTH CHECK:', {
+  user: process.env.GMAIL_USER,
+  clientId: process.env.OAUTH_CLIENT_ID ? 'SET' : 'MISSING',
+  secret: process.env.OAUTH_CLIENT_SECRET ? 'SET' : 'MISSING',
+  refresh: process.env.OAUTH_REFRESH_TOKEN ? 'SET' : 'MISSING',
+});
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const GMAIL_USER = process.env.GMAIL_USER; // e.g. ecila070102@gmail.com
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail', 
-  auth: {
-    user: 'ecila070102@gmail.com',
-    pass: 'qomm klqn jzdy hfym' 
-  }
+// --- OAuth2 Client Setup ---
+const oauth2Client = new google.auth.OAuth2(
+  process.env.OAUTH_CLIENT_ID,
+  process.env.OAUTH_CLIENT_SECRET,
+  'https://developers.google.com/oauthplayground' // Must match your authorized redirect URI
+);
+
+oauth2Client.setCredentials({
+  refresh_token: process.env.OAUTH_REFRESH_TOKEN,
 });
 
+const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+// --- Core send function ---
+const sendMail = async ({ to, subject, html, fromLabel = 'UB CCSD Team' }) => {
+  const mail = new MailComposer({
+    from: `"${fromLabel}" <${GMAIL_USER}>`,
+    to,
+    subject,
+    html,
+    textEncoding: 'base64',
+  });
+
+  const message = await mail.compile().build();
+  const raw = Buffer.from(message)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+  return gmail.users.messages.send({
+    userId: 'me',
+    requestBody: { raw },
+  });
+};
+
+// --- Public mail functions ---
+
 const sendGuestLink = async (toEmail, serviceName, token, serviceInfo) => {
-  // ✅ Dynamically injects the frontend URL
   const viewLink = `${FRONTEND_URL}/view-request/${token}`;
 
-  const infoHtmlBlock = serviceInfo 
+  const infoHtmlBlock = serviceInfo
     ? `
       <div style="background-color: #f8fafc; border-left: 4px solid #c00000; padding: 15px; margin: 20px 0;">
         <h4 style="margin: 0 0 8px 0; color: #1e293b;">Important Information regarding this service:</h4>
         <p style="margin: 0; color: #475569; font-size: 14px; white-space: pre-wrap;">${serviceInfo}</p>
       </div>
-    ` 
+    `
     : '';
 
-  const mailOptions = {
-    from: '"UB CCSD Team" <ecila070102@gmail.com>', 
+  return sendMail({
     to: toEmail,
     subject: `Request Received: ${serviceName}`,
     html: `
@@ -35,8 +68,8 @@ const sendGuestLink = async (toEmail, serviceName, token, serviceInfo) => {
         <h2 style="color: #c00000;">University of Baguio - CCSD</h2>
         <p>Hello,</p>
         <p>We have received your request for <strong>${serviceName}</strong>.</p>
-        
-        ${infoHtmlBlock} <p>You can track the status of your request via your secure guest link below:</p>
+        ${infoHtmlBlock}
+        <p>You can track the status of your request via your secure guest link below:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${viewLink}" style="background-color: #c00000; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
             View My Request
@@ -44,17 +77,15 @@ const sendGuestLink = async (toEmail, serviceName, token, serviceInfo) => {
         </div>
         <p style="font-size: 11px; color: #999;">This is an automated message. Please do not reply.</p>
       </div>
-    `
-  };
-
-  return transporter.sendMail(mailOptions);
+    `,
+  });
 };
 
 const sendCounselorNotification = async (counselorEmail, studentName, department, serviceName) => {
-  const mailOptions = {
-    from: '"UB CCSD System" <ecila070102@gmail.com>',
+  return sendMail({
     to: counselorEmail,
     subject: `New Request: ${department} - ${studentName}`,
+    fromLabel: 'UB CCSD System',
     html: `
       <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px;">
         <h2 style="color: #c00000;">New Service Request</h2>
@@ -65,17 +96,14 @@ const sendCounselorNotification = async (counselorEmail, studentName, department
         <br/>
         <p>Please log in to the Admin Dashboard to review the details.</p>
       </div>
-    `
-  };
-  return transporter.sendMail(mailOptions);
+    `,
+  });
 };
 
 const sendStatusUpdateToStudent = async (toEmail, serviceName, newStatus, token) => {
-  // ✅ Dynamically injects the frontend URL
-  const viewLink = `${FRONTEND_URL}/view-request/${token}`; 
+  const viewLink = `${FRONTEND_URL}/view-request/${token}`;
 
-  const mailOptions = {
-    from: '"UB CCSD Team" <wiporamirez.01@gmail.com>',
+  return sendMail({
     to: toEmail,
     subject: `Update on your ${serviceName} Request`,
     html: `
@@ -91,17 +119,14 @@ const sendStatusUpdateToStudent = async (toEmail, serviceName, newStatus, token)
         </div>
         <p style="font-size: 11px; color: #999;">If the button above doesn't work, copy and paste this link: <br/> ${viewLink}</p>
       </div>
-    `
-  };
-  return transporter.sendMail(mailOptions);
+    `,
+  });
 };
 
 const sendStatusUpdateToReferrer = async (toEmail, studentName, newStatus, token) => {
-  // ✅ Dynamically injects the frontend URL
   const viewLink = `${FRONTEND_URL}/view-request/${token}`;
 
-  const mailOptions = {
-    from: '"UB CCSD Team" <wiporamirez.01@gmail.com>',
+  return sendMail({
     to: toEmail,
     subject: `Update: Referral for ${studentName}`,
     html: `
@@ -118,14 +143,12 @@ const sendStatusUpdateToReferrer = async (toEmail, studentName, newStatus, token
           Note: For confidentiality reasons, the student has NOT been notified of this specific status change via email.
         </p>
       </div>
-    `
-  };
-  return transporter.sendMail(mailOptions);
+    `,
+  });
 };
 
 const sendPasswordResetOtp = async (toEmail, otp) => {
-  const mailOptions = {
-    from: '"UB CCSD Team" <ecila070102@gmail.com>', 
+  return sendMail({
     to: toEmail,
     subject: `UB CCSD - Password Reset OTP`,
     html: `
@@ -144,15 +167,14 @@ const sendPasswordResetOtp = async (toEmail, otp) => {
           If you did not request a password reset, please ignore this email. Your account remains secure.
         </div>
       </div>
-    `
-  };
-  return transporter.sendMail(mailOptions);
+    `,
+  });
 };
 
-module.exports = { 
-  sendGuestLink, 
-  sendCounselorNotification, 
-  sendStatusUpdateToStudent, 
+module.exports = {
+  sendGuestLink,
+  sendCounselorNotification,
+  sendStatusUpdateToStudent,
   sendStatusUpdateToReferrer,
   sendPasswordResetOtp,
 };

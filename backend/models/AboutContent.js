@@ -13,7 +13,8 @@ const AboutContentSchema = new mongoose.Schema({
   email: { type: String, default: 'ccsd@ubaguio.edu' },
   phone: { type: String, default: 'loc.225' },
   location: { type: String, default: 'Building F, 2nd Floor · F006' },
-  heroDescriptionParagraphs: [{ type: String }], 
+  heroImage: { type: String, default: '' },
+  heroDescriptionParagraphs: [{ type: String }],
   
   // Mission & Objectives
   missionStatement: { type: String, default: '' },

@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const ServiceRequest = require('../models/ServiceRequest');
-const User = require('../models/User'); // Import your User model
-const {sendGuestLink, sendCounselorNotification, sendStatusUpdateToStudent, sendStatusUpdateToReferrer } = require('../utils/mailer');
+const User = require('../models/User');
+const { sendGuestLink, sendCounselorNotification, sendStatusUpdateToStudent, sendStatusUpdateToReferrer, sendCancellationNotification } = require('../utils/mailer');
 const Service = require('../models/Service');
 
 router.post("/", async (req, res) => {
@@ -109,6 +109,48 @@ router.patch('/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error updating status" });
+  }
+});
+
+// Student cancelling their own appointment via Guest Token
+router.patch('/guest/cancel/:token', async (req, res) => {
+  try {
+    const { reason } = req.body;
+
+    const historyEntry = {
+      status: 'Cancelled',
+      note: reason ? `Client cancelled: ${reason}` : 'Client cancelled the appointment.',
+      updatedAt: new Date()
+    };
+
+    const updatedRequest = await ServiceRequest.findOneAndUpdate(
+      { guestToken: req.params.token },
+      {
+        $set: { status: 'Cancelled' },
+        $push: { statusUpdates: historyEntry }
+      },
+      { new: true }
+    );
+
+    if (!updatedRequest) return res.status(404).json({ message: "Request not found" });
+
+    // Notify the assigned counselor if there is one
+    if (updatedRequest.assignedCounselor && updatedRequest.assignedCounselor !== 'Unassigned') {
+      const counselor = await User.findOne({ name: updatedRequest.assignedCounselor });
+      if (counselor?.email) {
+        sendCancellationNotification(
+          counselor.email,
+          updatedRequest.studentName,
+          updatedRequest.serviceName,
+          reason
+        ).catch(err => console.error("Cancellation email failed:", err));
+      }
+    }
+
+    res.json(updatedRequest);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error cancelling appointment" });
   }
 });
 

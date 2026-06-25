@@ -1,171 +1,206 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, Legend
+  PieChart, Pie, Cell, Legend,
 } from 'recharts';
-import { MdAssignment } from "react-icons/md";
 import '../styles/Dashboard.css';
 import '../styles/Reports.css';
 import PDFExportButton from '../components/PDFExportButton';
+import { SkKpiRow, SkChart, Sk } from '../components/Skeleton';
 
+// ── helpers ──────────────────────────────────────────────────────────────────
+const toMonthValue = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+const parseMonthValue = (val) => {
+  const [y, m] = val.split('-').map(Number);
+  return { year: y, month: m - 1 }; // month is 0-indexed
+};
+
+const COLORS = ['#c00000', '#1e293b', '#e2b05f', '#475569', '#0284c7', '#16a34a', '#d97706'];
+
+const statusType = (status) => {
+  if (['Completed', 'Resolved', 'Issued'].includes(status)) return 'completed';
+  if (['Declined', 'Cancelled', 'No-Show'].includes(status)) return 'declined';
+  return 'pending';
+};
+
+const statusColor = (status) => {
+  const t = statusType(status);
+  if (t === 'completed') return '#16a34a';
+  if (t === 'declined')  return '#dc2626';
+  return '#f59e0b';
+};
+
+// ── component ─────────────────────────────────────────────────────────────────
 function Reports() {
-  const storedUser = JSON.parse(localStorage.getItem("user"));
-  
-  const [requests, setRequests] = useState([]);
-  const [user, setUser] = useState(storedUser);
+  const storedUser = JSON.parse(localStorage.getItem('user'));
+  const [requests, setRequests]   = useState([]);
+  const [user]                    = useState(storedUser);
   const [isLoading, setIsLoading] = useState(true);
-  const [timeframe, setTimeframe] = useState('Semestral');
-  const reportRef = useRef(null);
-
-  const [reportType, setReportType] = useState(storedUser?.role === 'admin' ? 'overall' : 'accomplishment');
-
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/requests`);
-        setRequests(res.data);
-      } catch (err) {
-        console.error("Error fetching report data:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchRequests();
-  }, []);
 
   const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
 
-  const getClientName = (req) => {
-    const student = req.studentName || 'Unknown Student';
-    if (req.serviceName && req.serviceName.toUpperCase() === 'REFERRAL') {
-      const referrer = req.referrerName || 'Unknown Referrer';
-      return `${student} (Referred by: ${referrer})`;
+  // Month range state — default: last 6 months → current month
+  const defaultEnd   = toMonthValue(now);
+  const defaultStart = toMonthValue(new Date(now.getFullYear(), now.getMonth() - 5, 1));
+  const [startMonth, setStartMonth] = useState(defaultStart);
+  const [endMonth,   setEndMonth]   = useState(defaultEnd);
+
+  const [reportType, setReportType] = useState(
+    storedUser?.role === 'admin' ? 'overall' : 'accomplishment'
+  );
+
+  // pdfRef captures ONLY the stats section (no case log)
+  const pdfRef = useRef(null);
+
+  useEffect(() => {
+    axios.get(`${import.meta.env.VITE_API_URL}/api/requests`)
+      .then(res => setRequests(res.data))
+      .catch(err => console.error('Error fetching report data:', err))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  // ── filtered requests within the selected month range ──────────────────────
+  const filtered = useMemo(() => {
+    const { year: sy, month: sm } = parseMonthValue(startMonth);
+    const { year: ey, month: em } = parseMonthValue(endMonth);
+    const start = new Date(sy, sm, 1);
+    const end   = new Date(ey, em + 1, 0, 23, 59, 59); // last day of end month
+    return requests.filter(r => {
+      const d = new Date(r.createdAt);
+      return d >= start && d <= end;
+    });
+  }, [requests, startMonth, endMonth]);
+
+  // Requests belonging to the current counselor within the range
+  const myFiltered = useMemo(() =>
+    filtered.filter(r => r.assignedCounselor === user?.name),
+    [filtered, user]
+  );
+
+  // ── build month labels between start and end ───────────────────────────────
+  const monthLabels = useMemo(() => {
+    const { year: sy, month: sm } = parseMonthValue(startMonth);
+    const { year: ey, month: em } = parseMonthValue(endMonth);
+    const labels = [];
+    let y = sy, m = sm;
+    while (y < ey || (y === ey && m <= em)) {
+      labels.push(new Date(y, m, 1).toLocaleString('default', { month: 'short', year: '2-digit' }));
+      m++;
+      if (m > 11) { m = 0; y++; }
     }
-    return student;
+    return labels;
+  }, [startMonth, endMonth]);
+
+  // ── stats builder (works for any array of requests) ───────────────────────
+  const buildStats = (reqs) => {
+    const completed = reqs.filter(r => statusType(r.status) === 'completed');
+    const declined  = reqs.filter(r => statusType(r.status) === 'declined');
+    const pending   = reqs.filter(r => statusType(r.status) === 'pending');
+    const rate      = reqs.length > 0 ? Math.round((completed.length / reqs.length) * 100) : 0;
+
+    // Monthly trend
+    const monthMap = {};
+    monthLabels.forEach(l => { monthMap[l] = { month: l, completed: 0, pending: 0, declined: 0 }; });
+    reqs.forEach(r => {
+      const l = new Date(r.createdAt).toLocaleString('default', { month: 'short', year: '2-digit' });
+      if (!monthMap[l]) return;
+      monthMap[l][statusType(r.status)]++;
+    });
+    const monthlyTrend = monthLabels.map(l => monthMap[l]);
+
+    // Services table
+    const svcMap = {};
+    reqs.forEach(r => {
+      const s = (r.serviceName || 'UNKNOWN').toUpperCase();
+      if (!svcMap[s]) svcMap[s] = { service: s, total: 0, completed: 0, pending: 0, declined: 0 };
+      svcMap[s].total++;
+      svcMap[s][statusType(r.status)]++;
+    });
+    const servicesTable = Object.values(svcMap).sort((a, b) => b.total - a.total);
+    const servicesPie   = servicesTable.map(s => ({ name: s.service, value: s.total }));
+
+    return { completed, declined, pending, rate, monthlyTrend, servicesTable, servicesPie };
   };
 
-  const myAccomplishments = useMemo(() => {
-    if (!user) return { completedCount: 0, weeklyData: [], myServicesData: [], myRequestsThisMonth: [] };
-    const myRequests = requests.filter(req => req.assignedCounselor === user.name);
+  const overallStats = useMemo(() => {
+    const s = buildStats(filtered);
+    const referralCount = filtered.filter(r => r.serviceName?.toUpperCase() === 'REFERRAL').length;
 
-    const myRequestsThisMonth = myRequests.filter(req => {
-      const d = new Date(req.createdAt);
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    // Counselor table
+    const cMap = {};
+    filtered.forEach(r => {
+      const c = r.assignedCounselor && r.assignedCounselor !== 'Unassigned' ? r.assignedCounselor : null;
+      if (!c) return;
+      if (!cMap[c]) cMap[c] = { name: c, total: 0, completed: 0, pending: 0, declined: 0 };
+      cMap[c].total++;
+      cMap[c][statusType(r.status)]++;
+    });
+    const counselorTable = Object.values(cMap).sort((a, b) => b.total - a.total);
+
+    return { ...s, referralCount, counselorTable };
+  }, [filtered, monthLabels]);
+
+  const myStats = useMemo(() => {
+    const s = buildStats(myFiltered);
+
+    // Weekly breakdown within the range
+    const weeks = Array.from({ length: 5 }, (_, i) => ({ name: `Week ${i+1}`, completed: 0, pending: 0, declined: 0 }));
+    myFiltered.forEach(r => {
+      const wi = Math.min(Math.floor((new Date(r.createdAt).getDate() - 1) / 7), 4);
+      weeks[wi][statusType(r.status)]++;
     });
 
-    const completedThisMonth = myRequestsThisMonth.filter(req => req.status === 'Completed');
+    return { ...s, weeks };
+  }, [myFiltered, monthLabels]);
 
-    const weeklyData = [
-      { name: 'Week 1', completed: 0, pending: 0 },
-      { name: 'Week 2', completed: 0, pending: 0 },
-      { name: 'Week 3', completed: 0, pending: 0 },
-      { name: 'Week 4', completed: 0, pending: 0 },
-    ];
+  const getReportTitle = () =>
+    reportType === 'overall'
+      ? `CCSD Narrative Report — ${startMonth} to ${endMonth}`
+      : `${user?.name ?? 'Staff'} — Accomplishment Report`;
 
-    myRequestsThisMonth.forEach(req => {
-      const d = new Date(req.createdAt);
-      let weekIndex = Math.floor((d.getDate() - 1) / 7);
-      if (weekIndex > 3) weekIndex = 3;
-      if (req.status === 'Completed' || req.status === 'Resolved' || req.status === 'Issued') {
-        weeklyData[weekIndex].completed += 1;
-      } else if (req.status !== 'Declined' && req.status !== 'Cancelled') {
-        weeklyData[weekIndex].pending += 1;
-      }
-    });
+  const getFilename = () =>
+    reportType === 'overall'
+      ? `CCSD_Report_${startMonth}_${endMonth}`
+      : `${(user?.name ?? 'Staff').replace(/\s+/g,'_')}_Accomplishment_${startMonth}_${endMonth}`;
 
-    const myServicesCount = {};
-    myRequestsThisMonth.forEach(req => {
-      if (req.serviceName) {
-        const serviceName = req.serviceName.toUpperCase();
-        myServicesCount[serviceName] = (myServicesCount[serviceName] || 0) + 1;
-      }
-    });
+  const rangeLabel = `${new Date(...parseMonthValue(startMonth).month !== undefined
+    ? [parseMonthValue(startMonth).year, parseMonthValue(startMonth).month]
+    : []).toLocaleString?.('default', { month:'long', year:'numeric' }) ?? startMonth}`;
 
-    const myServicesData = Object.keys(myServicesCount)
-      .map(key => ({ name: key, value: myServicesCount[key] }))
-      .sort((a, b) => b.value - a.value);
+  const prettyRange = (() => {
+    const { year: sy, month: sm } = parseMonthValue(startMonth);
+    const { year: ey, month: em } = parseMonthValue(endMonth);
+    const s = new Date(sy, sm, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+    const e = new Date(ey, em, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+    return s === e ? s : `${s} – ${e}`;
+  })();
 
-    return { completedCount: completedThisMonth.length, weeklyData, myServicesData, myRequestsThisMonth };
-  }, [requests, user, currentMonth, currentYear]);
+  if (isLoading) return (
+    <div className="dashboard-container">
+      <Sidebar />
+      <div className="main-content" style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <Sk h="32px" w="220px" />
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <Sk h="36px" w="180px" />
+          <Sk h="36px" w="180px" />
+          <Sk h="36px" w="120px" />
+        </div>
+        <SkKpiRow count={4} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <SkChart height="240px" />
+          <SkChart height="240px" />
+        </div>
+        <SkChart height="200px" />
+      </div>
+    </div>
+  );
 
-  const overallData = useMemo(() => {
-    const monthsLimit = timeframe === 'Semestral' ? 6 : 12;
-    const referralsByMonth = {};
-
-    for (let i = monthsLimit - 1; i >= 0; i--) {
-      const d = new Date(currentYear, currentMonth - i, 1);
-      const monthName = d.toLocaleString('default', { month: 'short' });
-      referralsByMonth[monthName] = 0;
-    }
-
-    const filteredRequests = requests.filter(req => {
-      const d = new Date(req.createdAt);
-      const monthDiff = (currentYear - d.getFullYear()) * 12 + (currentMonth - d.getMonth());
-      return monthDiff >= 0 && monthDiff < monthsLimit;
-    });
-
-    filteredRequests.forEach(req => {
-      if (req.serviceName && req.serviceName.toUpperCase() === 'REFERRAL') {
-        const d = new Date(req.createdAt);
-        const monthName = d.toLocaleString('default', { month: 'short' });
-        if (referralsByMonth[monthName] !== undefined) referralsByMonth[monthName] += 1;
-      }
-    });
-
-    const referralsData = Object.keys(referralsByMonth).map(key => ({ month: key, referrals: referralsByMonth[key] }));
-
-    const servicesCount = {};
-    filteredRequests.forEach(req => {
-      if (req.serviceName) {
-        const serviceName = req.serviceName.toUpperCase();
-        servicesCount[serviceName] = (servicesCount[serviceName] || 0) + 1;
-      }
-    });
-
-    const servicesAvailedData = Object.keys(servicesCount)
-      .map(key => ({ name: key, value: servicesCount[key] }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-
-    const counselorServiceCount = {};
-    const uniqueServices = new Set();
-
-    filteredRequests.forEach(req => {
-      const counselor = req.assignedCounselor;
-      const service = req.serviceName ? req.serviceName.toUpperCase() : 'UNKNOWN';
-      if (counselor && counselor !== 'Unassigned') {
-        if (!counselorServiceCount[counselor]) counselorServiceCount[counselor] = { name: counselor, total: 0 };
-        counselorServiceCount[counselor][service] = (counselorServiceCount[counselor][service] || 0) + 1;
-        counselorServiceCount[counselor].total += 1;
-        uniqueServices.add(service);
-      }
-    });
-
-    const workloadData = Object.values(counselorServiceCount).sort((a, b) => b.total - a.total);
-    const serviceKeys = Array.from(uniqueServices);
-
-    return { referralsData, servicesAvailedData, workloadData, serviceKeys, filteredRequests };
-  }, [requests, timeframe, currentMonth, currentYear]);
-
-  const EXTENDED_COLORS = ['#c00000', '#1e293b', '#e2b05f', '#475569', '#0284c7', '#16a34a', '#d97706'];
-
-  const getReportTitle = () => {
-    if (reportType === 'overall') return `Overall CCSD Services Report (${timeframe})`;
-    if (user && user.name) return `${user.name}'s Accomplishment Report`;
-    return 'Individual Accomplishment Report';
-  };
-
-  const getReportFilename = () => {
-    if (reportType === 'overall') return `CCSD_Overall_Report_${currentYear}`;
-    const safeName = user && user.name ? user.name.replace(/\s+/g, '_') : 'My';
-    return `${safeName}_Accomplishments_${currentMonth + 1}_${currentYear}`;
-  };
-
-  if (isLoading) return <div style={{ padding: '50px', textAlign: 'center' }}>Loading Report Data...</div>;
+  const activeReqs = reportType === 'overall' ? filtered   : myFiltered;
+  const activeStats = reportType === 'overall' ? overallStats : myStats;
 
   return (
     <div className="dashboard-container">
@@ -174,286 +209,293 @@ function Reports() {
       <main className="main-content" style={{ padding: '20px', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
         <header className="content-header">
           <div className="header-right">
-            <span>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </span>
-            <div className="user-pill">
-              <span className="role-tag">{user.role}</span>
-            </div>
+            <span>{now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            <div className="user-pill"><span className="role-tag">{user?.role}</span></div>
           </div>
         </header>
 
         <section className="reports-view">
-          <div className="reports-title-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+
+          {/* ── Controls ── */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '20px' }}>
             <div>
-              <h2 style={{ margin: '0 0 5px 0' }}>{reportType === 'overall' ? 'Overall Department Report' : 'My Accomplishment Report'}</h2>
-              <p style={{ margin: 0, color: '#64748b' }}>Generate and view your official PDF reports below.</p>
+              <h2 style={{ margin: '0 0 4px 0' }}>
+                {reportType === 'overall' ? 'Narrative Report' : 'Accomplishment Report'}
+              </h2>
+              <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>{prettyRange}</p>
             </div>
-            <PDFExportButton targetRef={reportRef} filename={getReportFilename()} reportTitle={getReportTitle()} generatedBy={user?.name || 'Staff'} />
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+              {/* Report type toggle (admin only) */}
+              {user?.role === 'admin' && (
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => setReportType('overall')}      style={reportType === 'overall'        ? btnActive : btnInactive}>Narrative</button>
+                  <button onClick={() => setReportType('accomplishment')} style={reportType === 'accomplishment' ? btnActive : btnInactive}>Accomplishment</button>
+                </div>
+              )}
+
+              {/* Month range */}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <label style={labelStyle}>
+                  From
+                  <input type="month" value={startMonth} max={endMonth}
+                    onChange={e => setStartMonth(e.target.value)} style={monthInput} />
+                </label>
+                <label style={labelStyle}>
+                  To
+                  <input type="month" value={endMonth} min={startMonth} max={toMonthValue(now)}
+                    onChange={e => setEndMonth(e.target.value)} style={monthInput} />
+                </label>
+              </div>
+
+              <PDFExportButton
+                targetRef={pdfRef}
+                filename={getFilename()}
+                reportTitle={getReportTitle()}
+                generatedBy={user?.name ?? 'Staff'}
+              />
+            </div>
           </div>
 
-          <div ref={reportRef} className="report-content" style={{ padding: '20px', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden' }}>
-            
-            {/* ── ACCOMPLISHMENT VIEW ── */}
-            {reportType === 'accomplishment' && (
-              <div>
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={kpiCardStyle}>
-                    <div style={kpiIconWrapper('#ffffff', '#0284c7')}><MdAssignment size={24} /></div>
-                    <div>
-                      <p style={kpiLabelStyle}>My Cases Completed ({now.toLocaleString('default', { month: 'long' })})</p>
-                      <h3 style={kpiValueStyle}>{myAccomplishments.completedCount}</h3>
-                    </div>
-                  </div>
-                </div>
+          {/* ══════════════════════════════════════════════════════════════════
+              PDF-CAPTURED SECTION — stats only, no case log
+          ══════════════════════════════════════════════════════════════════ */}
+          <div ref={pdfRef} style={{ backgroundColor: 'white', borderRadius: '8px', padding: '24px' }}>
 
-                <div style={chartsGridStyle}>
-                  <div style={chartCardStyle}>
-                    <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>My Workload Progression</h3>
-                    <div style={{ width: '100%', height: '300px' }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={myAccomplishments.weeklyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} allowDecimals={false} />
-                          <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                          <Legend />
-                          <Bar dataKey="completed" name="Completed" stackId="a" fill="#16a34a" radius={[0, 0, 4, 4]} />
-                          <Bar dataKey="pending" name="Pending" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
+            <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#94a3b8' }}>
+              Period: {prettyRange} · {activeReqs.length} total request{activeReqs.length !== 1 ? 's' : ''}
+            </p>
 
-                  <div style={chartCardStyle}>
-                    <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>Services I Handled</h3>
-                    <div style={{ width: '100%', height: '250px' }}>
-                      {myAccomplishments.myServicesData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie data={myAccomplishments.myServicesData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
-                              {myAccomplishments.myServicesData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={EXTENDED_COLORS[index % EXTENDED_COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      ) : <p style={{ textAlign: 'center', color: '#94a3b8', marginTop: '100px' }}>No service data.</p>}
-                    </div>
-                    <div style={legendWrapperStyle}>
-                      {myAccomplishments.myServicesData.map((entry, index) => (
-                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#475569' }}>
-                          <div style={{ width: '10px', height: '10px', backgroundColor: EXTENDED_COLORS[index % EXTENDED_COLORS.length] }}></div>
-                          {entry.name} ({entry.value})
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+            {/* KPI row */}
+            <div style={kpiRow}>
+              <KPI label="Total Requests"        value={activeReqs.length}                  color="#0284c7" />
+              <KPI label="Completed"             value={activeStats.completed.length}        color="#16a34a" />
+              <KPI label="Pending / In-Progress" value={activeStats.pending.length}          color="#f59e0b" />
+              <KPI label="Declined / Cancelled"  value={activeStats.declined.length}         color="#dc2626" />
+              <KPI label="Completion Rate"       value={`${activeStats.rate}%`}              color="#7c3aed" />
+              {reportType === 'overall' && (
+                <KPI label="Total Referrals"     value={overallStats.referralCount}          color="#c00000" />
+              )}
+            </div>
 
-                <div style={{ marginTop: '20px' }}>
-                  <h3 style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: '10px', color: '#0f172a' }}>
-                    Case Log ({now.toLocaleString('default', { month: 'long' })})
-                  </h3>
-                  {/* ✅ THE RESPONSIVE TABLE WRAPPER */}
-                  <div style={tableContainerStyle}>
-                    {myAccomplishments.myRequestsThisMonth.length > 0 ? (
-                      <table style={tableStyle}>
-                        <thead>
-                          <tr>
-                            <th style={thStyle}>Date</th>
-                            <th style={thStyle}>Client Name</th>
-                            <th style={thStyle}>Service Requested</th>
-                            <th style={thStyle}>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {myAccomplishments.myRequestsThisMonth.map((req, i) => (
-                            <tr key={req._id || i} style={i % 2 === 0 ? trEvenStyle : {}}>
-                              <td style={tdStyle}>{new Date(req.createdAt).toLocaleDateString()}</td>
-                              <td style={tdStyle}>{getClientName(req)}</td> 
-                              <td style={tdStyle}>{req.serviceName || 'N/A'}</td>
-                              <td style={{...tdStyle, fontWeight: 'bold', color: req.status === 'Completed' ? '#16a34a' : '#f59e0b'}}>{req.status}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : <p style={{ color: '#64748b' }}>No cases found for this month.</p>}
-                  </div>
-                </div>
+            {/* Charts */}
+            <div style={chartsRow}>
+              <div style={chartCard}>
+                <h4 style={subTitle}>Monthly Volume</h4>
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={activeStats.monthlyTrend} margin={{ top: 5, right: 20, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} allowDecimals={false} />
+                    <Tooltip contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,.1)' }} />
+                    <Legend />
+                    <Bar dataKey="completed" name="Completed" stackId="a" fill="#16a34a" radius={[0,0,4,4]} />
+                    <Bar dataKey="pending"   name="Pending"   stackId="a" fill="#f59e0b" />
+                    <Bar dataKey="declined"  name="Declined"  stackId="a" fill="#dc2626" radius={[4,4,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-            )}
 
-            {/* ── OVERALL VIEW ── */}
-            {reportType === 'overall' && (
-              <div>
-                <select className="timeframe-select" value={timeframe} onChange={(e) => setTimeframe(e.target.value)} style={{ marginBottom: '20px', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
-                  <option value="Semestral">Bi-Annual - 6 Months</option>
-                  <option value="Annual">Annual - 12 Months</option>
-                </select>
-
-                <div style={chartsGridStyle}>
-                  <div style={chartCardStyle}>
-                    <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>Total Referrals ({timeframe})</h3>
-                    <div style={{ width: '100%', height: '300px' }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={overallData.referralsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                          <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} allowDecimals={false} />
-                          <Tooltip contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                          <Line type="monotone" dataKey="referrals" name="Referrals" stroke="#c00000" strokeWidth={3} dot={{ r: 4, fill: '#c00000' }} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-
-                  <div style={chartCardStyle}>
-                    <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>Services Availed</h3>
-                    <div style={{ width: '100%', height: '250px' }}>
-                      {overallData.servicesAvailedData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie data={overallData.servicesAvailedData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
-                              {overallData.servicesAvailedData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={EXTENDED_COLORS[index % EXTENDED_COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      ) : <p style={{ textAlign: 'center', color: '#94a3b8', marginTop: '100px' }}>No service data.</p>}
-                    </div>
-                    <div style={legendWrapperStyle}>
-                      {overallData.servicesAvailedData.map((entry, index) => (
-                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#475569' }}>
-                          <div style={{ width: '10px', height: '10px', backgroundColor: EXTENDED_COLORS[index % EXTENDED_COLORS.length] }}></div>
-                          {entry.name} ({entry.value})
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{...chartCardStyle, marginBottom: '40px'}}>
-                  <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>Workload Distribution</h3>
-                  <div style={{ width: '100%', height: '350px' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={overallData.workloadData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                        <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} allowDecimals={false} />
-                        <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} width={80} />
-                        <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                        <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                        {overallData.serviceKeys.map((service, index) => (
-                          <Bar key={service} dataKey={service} name={service} stackId="a" fill={EXTENDED_COLORS[index % EXTENDED_COLORS.length]} />
-                        ))}
-                      </BarChart>
+              <div style={chartCard}>
+                <h4 style={subTitle}>Services Distribution</h4>
+                {activeStats.servicesPie.length > 0 ? (
+                  <>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie data={activeStats.servicesPie} cx="50%" cy="50%" innerRadius={48} outerRadius={78} paddingAngle={2} dataKey="value">
+                          {activeStats.servicesPie.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,.1)' }} />
+                      </PieChart>
                     </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '20px' }}>
-                  <h3 style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: '10px', color: '#0f172a' }}>
-                    Department Record ({timeframe})
-                  </h3>
-                  {/* ✅ THE RESPONSIVE TABLE WRAPPER */}
-                  <div style={tableContainerStyle}>
-                    {overallData.filteredRequests.length > 0 ? (
-                      <table style={tableStyle}>
-                        <thead>
-                          <tr>
-                            <th style={thStyle}>Date</th>
-                            <th style={thStyle}>Client Name</th>
-                            <th style={thStyle}>Service Requested</th>
-                            <th style={thStyle}>Assigned To</th>
-                            <th style={thStyle}>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {overallData.filteredRequests.slice(0, 50).map((req, i) => (
-                            <tr key={req._id || i} style={i % 2 === 0 ? trEvenStyle : {}}>
-                              <td style={tdStyle}>{new Date(req.createdAt).toLocaleDateString()}</td>
-                              <td style={tdStyle}>{getClientName(req)}</td> 
-                              <td style={tdStyle}>{req.serviceName || 'N/A'}</td>
-                              <td style={tdStyle}>{req.assignedCounselor || 'Unassigned'}</td>
-                              <td style={tdStyle}>{req.status}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : <p style={{ color: '#64748b' }}>No records found for this timeframe.</p>}
-                  </div>
-                </div>
+                    <div style={legendWrap}>
+                      {activeStats.servicesPie.map((e, i) => (
+                        <span key={i} style={legendItem}>
+                          <span style={{ ...dot, backgroundColor: COLORS[i % COLORS.length] }} />
+                          {e.name} ({e.value})
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                ) : <p style={{ textAlign: 'center', color: '#94a3b8', paddingTop: '60px' }}>No data.</p>}
               </div>
+            </div>
+
+            {/* Services summary table */}
+            <h4 style={subTitle}>Services Summary</h4>
+            <SummaryTable
+              rows={activeStats.servicesTable}
+              colHeader="Service"
+              nameKey="service"
+              emptyMsg="No service data for this period."
+            />
+
+            {/* Counselor table — overall only */}
+            {reportType === 'overall' && (
+              <>
+                <h4 style={subTitle}>Counselor Performance</h4>
+                <SummaryTable
+                  rows={overallStats.counselorTable}
+                  colHeader="Counselor"
+                  nameKey="name"
+                  emptyMsg="No counselor data for this period."
+                />
+              </>
             )}
+
+            {/* Weekly breakdown — accomplishment only */}
+            {reportType === 'accomplishment' && (
+              <>
+                <h4 style={subTitle}>Weekly Breakdown (latest month in range)</h4>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={myStats.weeks} margin={{ top: 5, right: 20, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} allowDecimals={false} />
+                    <Tooltip contentStyle={{ border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,.1)' }} />
+                    <Legend />
+                    <Bar dataKey="completed" name="Completed" stackId="a" fill="#16a34a" radius={[0,0,4,4]} />
+                    <Bar dataKey="pending"   name="Pending"   stackId="a" fill="#f59e0b" />
+                    <Bar dataKey="declined"  name="Declined"  stackId="a" fill="#dc2626" radius={[4,4,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </>
+            )}
+
           </div>
+          {/* ══ end PDF section ══ */}
+
+          {/* Case log — visible on screen only, not in PDF */}
+          <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '24px', marginTop: '16px' }}>
+            <h4 style={{ ...subTitle, marginTop: 0 }}>
+              {reportType === 'overall' ? 'Full Case Log' : 'My Case Log'}
+              <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: '12px', marginLeft: '8px' }}>
+                (screen only — not included in PDF)
+              </span>
+            </h4>
+            <div style={tableWrap}>
+              {activeReqs.length > 0 ? (
+                <table style={tbl}>
+                  <thead>
+                    <tr>
+                      <th style={th}>Date</th>
+                      <th style={th}>Client Name</th>
+                      <th style={th}>Service</th>
+                      {reportType === 'overall' && <th style={th}>Assigned To</th>}
+                      <th style={th}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeReqs.map((r, i) => (
+                      <tr key={r._id || i} style={i % 2 === 0 ? trEven : {}}>
+                        <td style={td}>{new Date(r.createdAt).toLocaleDateString()}</td>
+                        <td style={td}>{getClientName(r)}</td>
+                        <td style={td}>{r.serviceName || 'N/A'}</td>
+                        {reportType === 'overall' && <td style={td}>{r.assignedCounselor || 'Unassigned'}</td>}
+                        <td style={{ ...td, fontWeight: 600, color: statusColor(r.status) }}>{r.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : <p style={{ color: '#64748b', margin: 0 }}>No cases in this period.</p>}
+            </div>
+          </div>
+
         </section>
       </main>
     </div>
   );
 }
 
-// --- RESPONSIVE INLINE STYLES ---
-const chartsGridStyle = {
-  display: 'flex',
-  flexWrap: 'wrap', // Forces stacking on small screens
-  gap: '20px',
-  marginBottom: '20px'
-};
+// ── getClientName ─────────────────────────────────────────────────────────────
+function getClientName(req) {
+  const student = req.studentName || 'Unknown Student';
+  if (req.serviceName?.toUpperCase() === 'REFERRAL') {
+    return `${student} (via ${req.referrerName || 'Unknown Referrer'})`;
+  }
+  return student;
+}
 
-const chartCardStyle = {
-  flex: '1 1 300px', // Starts at 300px, stretches to fill space
-  minWidth: 0,
-  backgroundColor: 'white', 
-  padding: '15px', 
-  borderRadius: '8px', 
-  border: '1px solid #e2e8f0',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-};
+// ── SummaryTable ──────────────────────────────────────────────────────────────
+function SummaryTable({ rows, colHeader, nameKey, emptyMsg }) {
+  const totals = rows.reduce(
+    (acc, r) => ({ total: acc.total + r.total, completed: acc.completed + r.completed, pending: acc.pending + r.pending, declined: acc.declined + r.declined }),
+    { total: 0, completed: 0, pending: 0, declined: 0 }
+  );
 
-const legendWrapperStyle = {
-  display: 'flex', 
-  flexWrap: 'wrap', 
-  gap: '8px', 
-  justifyContent: 'center', 
-  marginTop: '10px'
-};
+  return (
+    <div style={tableWrap}>
+      <table style={tbl}>
+        <thead>
+          <tr>
+            {[colHeader, 'Total', 'Completed', 'Pending', 'Declined', 'Completion Rate'].map(h => (
+              <th key={h} style={th}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length > 0 ? rows.map((r, i) => (
+            <tr key={i} style={i % 2 === 0 ? trEven : {}}>
+              <td style={{ ...td, fontWeight: 600 }}>{r[nameKey]}</td>
+              <td style={{ ...td, textAlign: 'center', fontWeight: 700 }}>{r.total}</td>
+              <td style={{ ...td, textAlign: 'center', color: '#16a34a', fontWeight: 600 }}>{r.completed}</td>
+              <td style={{ ...td, textAlign: 'center', color: '#f59e0b' }}>{r.pending}</td>
+              <td style={{ ...td, textAlign: 'center', color: '#dc2626' }}>{r.declined}</td>
+              <td style={{ ...td, textAlign: 'center' }}>
+                {r.total > 0 ? `${Math.round((r.completed / r.total) * 100)}%` : '—'}
+              </td>
+            </tr>
+          )) : (
+            <tr><td colSpan={6} style={{ ...td, textAlign: 'center', color: '#94a3b8' }}>{emptyMsg}</td></tr>
+          )}
+          {rows.length > 1 && (
+            <tr style={{ backgroundColor: '#f1f5f9', fontWeight: 700 }}>
+              <td style={td}>TOTAL</td>
+              <td style={{ ...td, textAlign: 'center' }}>{totals.total}</td>
+              <td style={{ ...td, textAlign: 'center', color: '#16a34a' }}>{totals.completed}</td>
+              <td style={{ ...td, textAlign: 'center', color: '#f59e0b' }}>{totals.pending}</td>
+              <td style={{ ...td, textAlign: 'center', color: '#dc2626' }}>{totals.declined}</td>
+              <td style={{ ...td, textAlign: 'center' }}>
+                {totals.total > 0 ? `${Math.round((totals.completed / totals.total) * 100)}%` : '—'}
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
-const kpiCardStyle = {
-  background: 'white', padding: '15px', border: '1px solid #e2e8f0',
-  display: 'flex', alignItems: 'center', gap: '15px', borderRadius: '8px',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-};
-const kpiIconWrapper = (bg, color) => ({
-  backgroundColor: bg, color, width: '40px', height: '40px',
-  display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px'
-});
-const kpiLabelStyle = { fontSize: '11px', color: '#64748b', margin: '0 0 5px 0', textTransform: 'uppercase', fontWeight: '700' };
-const kpiValueStyle = { fontSize: '20px', color: '#0f172a', margin: 0, fontWeight: '800' };
+// ── KPI card ──────────────────────────────────────────────────────────────────
+function KPI({ label, value, color }) {
+  return (
+    <div style={{
+      flex: '1 1 120px', minWidth: '110px', background: 'white',
+      border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px 16px',
+      boxShadow: '0 2px 4px rgba(0,0,0,.03)', borderTop: `4px solid ${color}`,
+    }}>
+      <p style={{ margin: '0 0 6px', fontSize: '10px', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.4px' }}>{label}</p>
+      <p style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a' }}>{value}</p>
+    </div>
+  );
+}
 
-// --- RESPONSIVE TABLE STYLES ---
-const tableContainerStyle = {
-  width: '100%',
-  overflowX: 'auto', // Adds horizontal scroll bar only on mobile!
-  WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS devices
-};
-
-const tableStyle = {
-  width: '100%',
-  minWidth: '700px', // This guarantees the table will never squish below 700px!
-  borderCollapse: 'collapse',
-  fontSize: '13px',
-  textAlign: 'left'
-};
-const thStyle = { backgroundColor: '#f8fafc', color: '#475569', padding: '10px', borderBottom: '2px solid #cbd5e1', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '11px', whiteSpace: 'nowrap' };
-const tdStyle = { padding: '10px', borderBottom: '1px solid #e2e8f0', color: '#334155' };
-const trEvenStyle = { backgroundColor: '#f8fafc' };
+// ── Styles ────────────────────────────────────────────────────────────────────
+const subTitle   = { fontSize: '13px', fontWeight: 700, color: '#1e293b', margin: '20px 0 10px', borderBottom: '2px solid #e2e8f0', paddingBottom: '6px' };
+const kpiRow     = { display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '6px' };
+const chartsRow  = { display: 'flex', flexWrap: 'wrap', gap: '14px', margin: '4px 0' };
+const chartCard  = { flex: '1 1 260px', minWidth: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px' };
+const legendWrap = { display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginTop: '8px' };
+const legendItem = { display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#475569' };
+const dot        = { width: '10px', height: '10px', borderRadius: '2px', display: 'inline-block' };
+const tableWrap  = { width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' };
+const tbl        = { width: '100%', minWidth: '560px', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' };
+const th         = { background: '#f8fafc', color: '#475569', padding: '8px 10px', borderBottom: '2px solid #cbd5e1', fontWeight: 700, textTransform: 'uppercase', fontSize: '10px', whiteSpace: 'nowrap' };
+const td         = { padding: '8px 10px', borderBottom: '1px solid #e2e8f0', color: '#334155' };
+const trEven     = { backgroundColor: '#f8fafc' };
+const btnActive  = { padding: '8px 14px', borderRadius: '6px', border: 'none', background: '#c00000', color: 'white', fontWeight: 600, cursor: 'pointer', fontSize: '13px' };
+const btnInactive= { padding: '8px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white', color: '#475569', fontWeight: 600, cursor: 'pointer', fontSize: '13px' };
+const labelStyle = { display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px' };
+const monthInput = { padding: '7px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', color: '#334155', marginTop: '2px' };
 
 export default Reports;

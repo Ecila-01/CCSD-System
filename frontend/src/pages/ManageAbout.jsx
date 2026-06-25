@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
 import StatusModal from '../components/StatusModal';
-import { 
-  MdSave, MdAdd, MdDeleteOutline, MdOutlineEdit, 
-  MdEmail, MdPhone, MdLocationOn, MdClose 
+import {
+  MdSave, MdAdd, MdDeleteOutline, MdOutlineEdit,
+  MdEmail, MdPhone, MdLocationOn, MdClose, MdImage
 } from "react-icons/md";
 import '../styles/Dashboard.css';
-import '../styles/ManagePages.css'; 
+import '../styles/ManagePages.css';
+import { Sk } from '../components/Skeleton';
 
 const ManageAbout = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +18,7 @@ const ManageAbout = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [statusModal, setStatusModal] = useState({ isOpen: false, type: '', title: '', message: '' });
   const [isUploading, setIsUploading] = useState(false);
+  const [isHeroUploading, setIsHeroUploading] = useState(false);
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [editingMemberIndex, setEditingMemberIndex] = useState(null); 
   const [memberForm, setMemberForm] = useState({ name: '', role: '', departmentTag: '', hierarchyLevel: 2, imageUrl: '' });
@@ -130,7 +132,46 @@ const ManageAbout = () => {
     }
   };
 
-  if (isLoading) return <div style={{ padding: '50px', textAlign: 'center' }}>Loading Visual Editor...</div>;
+  const handleHeroImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const uploadData = new FormData();
+    uploadData.append('image', file);
+    setIsHeroUploading(true);
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/upload`, uploadData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const updatedFormData = { ...formData, heroImage: res.data.imageUrl };
+      setFormData(updatedFormData);
+      await saveSectionToServer(updatedFormData, 'Hero Image');
+    } catch (err) {
+      console.error("Hero image upload failed", err);
+      alert("Failed to upload hero image.");
+    } finally {
+      setIsHeroUploading(false);
+    }
+  };
+
+  if (isLoading) return (
+    <div className="dashboard-container">
+      <Sidebar />
+      <div className="main-content" style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <Sk h="28px" w="200px" />
+        {[1, 2, 3].map(i => (
+          <div key={i} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <Sk h="18px" w="180px" />
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <Sk h="40px" style={{ flex: 1 }} />
+              <Sk h="40px" style={{ flex: 1 }} />
+            </div>
+            <Sk h="40px" w="100%" />
+            <Sk h="80px" w="100%" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   const membersWithIndex = formData.teamMembers.map((m, i) => ({ ...m, originalIndex: i }));
   const directors = membersWithIndex.filter(m => Number(m.hierarchyLevel) === 1);
@@ -167,6 +208,34 @@ const ManageAbout = () => {
               <div style={iconInputWrapper}><MdEmail color="#c00000" size={18}/><input type="text" name="email" value={formData.email} onChange={handleTextChange} style={transparentInput} placeholder="Email Address"/></div>
               <div style={iconInputWrapper}><MdPhone color="#c00000" size={18}/><input type="text" name="phone" value={formData.phone} onChange={handleTextChange} style={transparentInput} placeholder="Phone / Local"/></div>
               <div style={iconInputWrapper}><MdLocationOn color="#c00000" size={18}/><input type="text" name="location" value={formData.location} onChange={handleTextChange} style={transparentInput} placeholder="Location"/></div>
+            </div>
+
+            {/* Hero Image Upload */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>
+                <MdImage size={16} /> Hero Background Image
+              </label>
+              {formData.heroImage && (
+                <div style={{ marginBottom: '10px', position: 'relative', borderRadius: '6px', overflow: 'hidden', maxHeight: '120px' }}>
+                  <img
+                    src={formData.heroImage}
+                    alt="Hero background"
+                    style={{ width: '100%', height: '120px', objectFit: 'cover', display: 'block' }}
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { const u = { ...formData, heroImage: '' }; setFormData(u); saveSectionToServer(u, 'Hero Image'); }}
+                    style={{ position: 'absolute', top: '6px', right: '6px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', cursor: 'pointer' }}
+                  >Remove</button>
+                </div>
+              )}
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px dashed #93c5fd', borderRadius: '6px', cursor: isHeroUploading ? 'not-allowed' : 'pointer', backgroundColor: '#f8fafc', color: '#2563eb', fontSize: '13px', fontWeight: '600' }}>
+                <MdImage size={18} />
+                {isHeroUploading ? 'Uploading…' : (formData.heroImage ? 'Replace Image' : 'Upload Hero Image')}
+                <input type="file" accept="image/*" onChange={handleHeroImageUpload} disabled={isHeroUploading} hidden />
+              </label>
+              <p style={{ margin: '6px 0 0 0', fontSize: '11px', color: '#94a3b8' }}>Recommended: wide banner image (1200×400+). Saved automatically on upload.</p>
             </div>
 
             {formData.heroDescriptionParagraphs.map((para, i) => (

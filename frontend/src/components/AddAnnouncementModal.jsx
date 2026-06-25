@@ -4,10 +4,9 @@ import { MdClose, MdCloudUpload } from "react-icons/md";
 import '../styles/ServiceModal.css';
 
 const AddAnnouncementModal = ({ isOpen, onClose, onSuccess, editingAnnouncement }) => {
-  if (!isOpen) return null;
-
+  // ⚠️ All hooks MUST come before any conditional return (Rules of Hooks)
   const [title, setTitle] = useState('');
-  const [shortDescription, setShortDescription] = useState(''); // ✅ NEW FIELD
+  const [shortDescription, setShortDescription] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('UPDATE');
   const [eventDate, setEventDate] = useState('');
@@ -65,13 +64,16 @@ const AddAnnouncementModal = ({ isOpen, onClose, onSuccess, editingAnnouncement 
       onClose();
     } catch (error) {
       console.error("Submission error:", error);
-      alert("Error saving announcement.");
+      const msg = error.response?.data?.message || error.message || "Unknown error";
+      alert("Error saving announcement: " + msg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const isEditing = !!editingAnnouncement;
+
+  if (!isOpen) return null;
 
   return (
     <div className="service-modal-overlay">

@@ -7,9 +7,10 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false); 
+  const [isSuccess, setIsSuccess] = useState(false);
   const [submittedToken, setSubmittedToken] = useState("");
   const [liveDepts, setLiveDepts] = useState([]);
+  const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30 });
   
   // ✅ UPGRADED: Find the max form sections, then add 1 for the Summary Page
   const maxFormSection = service?.fields ? Math.max(...service.fields.map(f => f.section || 1)) : 1;
@@ -30,28 +31,36 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   };
 
   const generateTimeSlots = () => {
+    const { businessHoursStart: startH, businessHoursEnd: endH, slotIntervalMinutes: interval } = bizHours;
     const slots = [];
-    for (let hour = 8; hour <= 16; hour++) {
-      for (let mins of ['00', '30']) {
-        if (hour === 16 && mins === '30') continue; 
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const displayHour = hour > 12 ? hour - 12 : hour;
-        const timeLabel = `${displayHour}:${mins} ${ampm}`;
-        const timeValue = `${hour.toString().padStart(2, '0')}:${mins}`; 
-        slots.push({ label: timeLabel, value: timeValue });
-      }
+    let totalMins = startH * 60;
+    const endMins = endH * 60;
+    while (totalMins < endMins) {
+      const hour = Math.floor(totalMins / 60);
+      const mins = totalMins % 60;
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+      const timeLabel = `${displayHour}:${String(mins).padStart(2, '0')} ${ampm}`;
+      const timeValue = `${String(hour).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+      slots.push({ label: timeLabel, value: timeValue });
+      totalMins += interval;
     }
     return slots;
   };
   const timeSlots = generateTimeSlots();
 
   useEffect(() => {
-  if (isOpen) {
-    fetch(`${import.meta.env.VITE_API_URL}/api/departments`)
-      .then(res => res.json())
-      .then(data => setLiveDepts(data))
-      .catch(err => console.error("Error fetching live departments:", err));
-  }
+    if (isOpen) {
+      fetch(`${import.meta.env.VITE_API_URL}/api/departments`)
+        .then(res => res.json())
+        .then(data => setLiveDepts(data))
+        .catch(err => console.error("Error fetching live departments:", err));
+
+      fetch(`${import.meta.env.VITE_API_URL}/api/system/settings`)
+        .then(res => res.json())
+        .then(data => setBizHours(data))
+        .catch(err => console.error("Error fetching business hours:", err));
+    }
   }, [isOpen]);
 
   useEffect(() => {

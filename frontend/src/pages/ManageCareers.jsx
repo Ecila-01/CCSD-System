@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
+import { SkCards } from '../components/Skeleton';
 import CareerModal from '../components/CareerModal';
 import AddCareerModal from '../components/AddCareerModal';
 import StatusModal from '../components/StatusModal';
@@ -301,7 +302,7 @@ function ManageCareers() {
           </div>
 
           <div className="announcement-grid">
-            {isLoading ? <p>Loading...</p> : careers
+            {isLoading ? <SkCards count={6} height="200px" /> : careers
               .filter(c => filter === 'All' || c.status === filter)
               .map(career => (
               <div key={career._id} className={`ann-card ${selectedIds.includes(career._id) ? 'selected' : ''}`}>

@@ -14,8 +14,8 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'ccsd_uploads', // This will create a specific folder in your Cloudinary account
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif'], // Restrict file types for security
+    folder: 'ccsd_uploads',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'],
   },
 });
 

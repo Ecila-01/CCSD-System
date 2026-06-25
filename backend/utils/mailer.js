@@ -147,6 +147,46 @@ const sendStatusUpdateToReferrer = async (toEmail, studentName, newStatus, token
   });
 };
 
+const sendCancellationNotification = async (counselorEmail, studentName, serviceName, reason) => {
+  return sendMail({
+    to: counselorEmail,
+    subject: `Appointment Cancelled: ${studentName} — ${serviceName}`,
+    fromLabel: 'UB CCSD System',
+    html: `
+      <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px; max-width: 600px;">
+        <h2 style="color: #c00000;">Appointment Cancelled</h2>
+        <p>The following appointment has been cancelled by the client:</p>
+        <hr/>
+        <p><strong>Student:</strong> ${studentName}</p>
+        <p><strong>Service:</strong> ${serviceName}</p>
+        ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+        <br/>
+        <p>Please log in to the dashboard to review and take action.</p>
+      </div>
+    `,
+  });
+};
+
+const sendAppointmentReminder = async (toEmail, studentName, serviceName, appointmentDate, timeSlot) => {
+  return sendMail({
+    to: toEmail,
+    subject: `Reminder: Your ${serviceName} appointment is in 1 hour`,
+    html: `
+      <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px; max-width: 600px;">
+        <h2 style="color: #c00000;">Appointment Reminder</h2>
+        <p>Hello${studentName ? ' ' + studentName : ''},</p>
+        <p>This is a reminder that your <strong>${serviceName}</strong> appointment is scheduled <strong>in about 1 hour</strong>.</p>
+        <div style="background-color: #f8fafc; border-left: 4px solid #c00000; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0;"><strong>Date:</strong> ${appointmentDate}</p>
+          <p style="margin: 6px 0 0 0;"><strong>Time:</strong> ${timeSlot}</p>
+        </div>
+        <p>Please make sure you are ready or contact CCSD if you need to reschedule.</p>
+        <p style="font-size: 11px; color: #999;">This is an automated reminder. Please do not reply.</p>
+      </div>
+    `,
+  });
+};
+
 const sendPasswordResetOtp = async (toEmail, otp) => {
   return sendMail({
     to: toEmail,
@@ -177,4 +217,6 @@ module.exports = {
   sendStatusUpdateToStudent,
   sendStatusUpdateToReferrer,
   sendPasswordResetOtp,
+  sendCancellationNotification,
+  sendAppointmentReminder,
 };

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { MdEvent, MdAccessTime, MdHistory, MdInfoOutline, MdClose, MdEditCalendar, MdChatBubbleOutline, MdCheckCircleOutline } from "react-icons/md";
+import { SkGuestCard } from '../components/Skeleton';
 
 const GuestRequestView = () => {
   const { token } = useParams();
@@ -13,6 +14,11 @@ const GuestRequestView = () => {
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // States for Cancellation
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     const fetchRequest = async () => {
@@ -53,9 +59,31 @@ const GuestRequestView = () => {
     }
   };
 
+  const handleCancelSubmit = async () => {
+    setIsCancelling(true);
+    try {
+      const res = await axios.patch(`${import.meta.env.VITE_API_URL}/api/requests/guest/cancel/${token}`, {
+        reason: cancelReason
+      });
+      setRequest(res.data);
+      setIsCancelModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to cancel appointment.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#f8fafc' }}>
-      <p style={{ color: '#64748b', fontWeight: '500' }}>Verifying secure link...</p>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', padding: '60px 20px' }}>
+      <div style={{ maxWidth: '650px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+          <div style={{ height: '36px', width: '120px', background: '#e2e8f0', borderRadius: '6px', animation: 'sk-shimmer 1.5s ease-in-out infinite', backgroundSize: '800px 100%', backgroundImage: 'linear-gradient(90deg,#e8e8e8 25%,#f5f5f5 50%,#e8e8e8 75%)' }} />
+          <div style={{ height: '14px', width: '200px', background: '#e2e8f0', borderRadius: '6px', animation: 'sk-shimmer 1.5s ease-in-out infinite', backgroundSize: '800px 100%', backgroundImage: 'linear-gradient(90deg,#e8e8e8 25%,#f5f5f5 50%,#e8e8e8 75%)' }} />
+        </div>
+        <SkGuestCard />
+      </div>
     </div>
   );
 
@@ -192,14 +220,54 @@ const GuestRequestView = () => {
             )}
           </div>
 
+          {/* Cancel button — only for cancellable statuses */}
+          {['Pending Review', 'In-Progress', 'Reschedule Requested'].includes(request.status) && (
+            <div style={{ padding: '20px 30px', borderTop: '1px solid #f1f5f9' }}>
+              <button
+                onClick={() => setIsCancelModalOpen(true)}
+                style={{ ...dangerBtnStyle, width: '100%', backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}
+              >
+                Cancel My Appointment
+              </button>
+            </div>
+          )}
+
           <div style={{ backgroundColor: '#f8fafc', padding: '20px', textAlign: 'center', borderTop: '1px solid #f1f5f9' }}>
             <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8' }}>
-              This is a secure guest view. No login required. 
+              This is a secure guest view. No login required.
               <br/>For inquiries, contact ccsd@e.ubaguio.edu
             </p>
           </div>
         </div>
       </div>
+
+      {/* ── CANCEL CONFIRMATION MODAL ── */}
+      {isCancelModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '30px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}>
+            <h3 style={{ margin: '0 0 8px 0', color: '#1e293b' }}>Cancel Appointment</h3>
+            <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '14px' }}>
+              Are you sure you want to cancel your <strong>{request.serviceName}</strong> appointment? This will notify your counselor.
+            </p>
+            <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+              Reason (optional)
+            </label>
+            <textarea
+              value={cancelReason}
+              onChange={e => setCancelReason(e.target.value)}
+              rows="3"
+              placeholder="e.g. Schedule conflict, no longer needed..."
+              style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', resize: 'none', outline: 'none', boxSizing: 'border-box', marginBottom: '20px' }}
+            />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => setIsCancelModalOpen(false)} style={{ ...secondaryBtnStyle, flex: 1 }}>Go Back</button>
+              <button onClick={handleCancelSubmit} disabled={isCancelling} style={{ flex: 2, padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#dc2626', color: 'white', fontWeight: '700', cursor: 'pointer' }}>
+                {isCancelling ? 'Cancelling…' : 'Confirm Cancellation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SkTableRows } from '../components/Skeleton';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -195,7 +196,7 @@ const ManageDepartments = () => {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr><td colSpan="4" style={{ padding: '20px', textAlign: 'center' }}>Loading departments...</td></tr>
+                  <SkTableRows rows={5} cols={4} />
                 ) : (
                   departments.map(dept => (
                     <tr key={dept._id} style={{ borderBottom: '1px solid #e5e7eb' }}>

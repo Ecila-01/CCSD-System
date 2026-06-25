@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const multer = require('multer');
+const SystemSettings = require('../models/SystemSettings');
 
 // Store uploaded backup file in memory
 const upload = multer({ storage: multer.memoryStorage() });
@@ -96,6 +97,33 @@ router.post('/wipe', async (req, res) => {
   } catch (error) {
     console.error("Wipe failed:", error);
     res.status(500).json({ message: "Failed to wipe database." });
+  }
+});
+
+// GET system settings (returns singleton, creates default if none exists)
+router.get('/settings', async (req, res) => {
+  try {
+    let settings = await SystemSettings.findOne();
+    if (!settings) settings = await new SystemSettings().save();
+    res.json(settings);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT update system settings
+router.put('/settings', async (req, res) => {
+  try {
+    const { businessHoursStart, businessHoursEnd, slotIntervalMinutes } = req.body;
+    let settings = await SystemSettings.findOne();
+    if (!settings) settings = new SystemSettings();
+    if (businessHoursStart !== undefined) settings.businessHoursStart = Number(businessHoursStart);
+    if (businessHoursEnd   !== undefined) settings.businessHoursEnd   = Number(businessHoursEnd);
+    if (slotIntervalMinutes !== undefined) settings.slotIntervalMinutes = Number(slotIntervalMinutes);
+    await settings.save();
+    res.json(settings);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 });
 

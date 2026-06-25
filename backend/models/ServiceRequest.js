@@ -48,11 +48,12 @@ statusUpdates: [{
   // --- THE FULL DYNAMIC FORM DATA ---
   requestData: { type: mongoose.Schema.Types.Mixed, required: true },
 
-  guestToken: { 
-    type: String, 
-    default: () => crypto.randomUUID(), // ✅ This generates a standard UUID v4
-    unique: true 
-  }
+  guestToken: {
+    type: String,
+    default: () => crypto.randomUUID(),
+    unique: true
+  },
+  reminderSent: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('ServiceRequest', serviceRequestSchema);

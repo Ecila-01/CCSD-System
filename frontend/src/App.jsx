@@ -1,4 +1,5 @@
 import "./App.css";
+import "./styles/Skeleton.css";
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import axios from 'axios';

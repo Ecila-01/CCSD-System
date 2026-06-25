@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
+import { SkCards } from '../components/Skeleton';
 import AnnouncementModal from '../components/AnnouncementModal';
 import AddAnnouncementModal from '../components/AddAnnouncementModal';
 import StatusModal from '../components/StatusModal';
@@ -310,7 +311,7 @@ const handleBulkRestore = async () => {
             </div>
           </div>
           <div className="announcement-grid">
-            {isLoading ? <p>Loading...</p> : announcements
+            {isLoading ? <SkCards count={6} height="240px" /> : announcements
               .filter(ann => filter === 'All' || ann.status === filter)
               .map(ann => (
               <div key={ann._id} className={`ann-card ${selectedIds.includes(ann._id) ? 'selected' : ''}`}>

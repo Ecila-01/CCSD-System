@@ -15,13 +15,27 @@ router.get('/', async (req, res) => {
 });
 
 // POST a new announcement
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', (req, res, next) => {
+  upload.single('image')(req, res, (uploadErr) => {
+    if (uploadErr) {
+      console.error('Upload middleware error:', uploadErr);
+      return res.status(500).json({ message: 'Image upload failed: ' + uploadErr.message });
+    }
+    next();
+  });
+}, async (req, res, next) => {
   try {
-    // ✅ CLOUDINARY FIX: Just use req.file.path, which is the secure Cloudinary URL
     const imageUrl = req.file ? req.file.path : null;
+
+    if (!imageUrl) {
+      return res.status(400).json({ message: 'An image is required.' });
+    }
+
+    console.log('Creating announcement with image:', imageUrl, 'body:', req.body);
 
     const news = new Announcement({
       title: req.body.title,
+      shortDescription: req.body.shortDescription,
       content: req.body.content,
       category: req.body.category,
       eventDate: req.body.eventDate,
@@ -31,6 +45,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     const savedNews = await news.save();
     res.status(201).json(savedNews);
   } catch (err) {
+    console.error('Announcement POST error:', err.message, err.stack);
     res.status(400).json({ message: err.message });
   }
 });

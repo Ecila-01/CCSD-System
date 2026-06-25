@@ -9,6 +9,11 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
   const [serviceFields, setServiceFields] = useState([]);
   const [isLoadingFields, setIsLoadingFields] = useState(true);
 
+  // --- REASSIGN STATES ---
+  const [allCounselors, setAllCounselors] = useState([]);
+  const [reassignValue, setReassignValue] = useState('');
+  const [isReassigning, setIsReassigning] = useState(false);
+
   // --- STATES FOR THE NOTE MODAL ---
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
@@ -24,6 +29,12 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
 
   useEffect(() => {
     if (!request) return;
+    setReassignValue(request.assignedCounselor || '');
+
+    // Fetch all staff for reassignment dropdown
+    axios.get(`${import.meta.env.VITE_API_URL}/api/users`)
+      .then(res => setAllCounselors(res.data))
+      .catch(err => console.error("Error fetching counselors:", err));
 
     const fetchServiceTemplate = async () => {
       try {
@@ -55,7 +66,25 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
   };
 
   if (!request) return null;
-  
+
+  // --- REASSIGN HANDLER ---
+  const handleReassign = async () => {
+    if (!reassignValue || reassignValue === request.assignedCounselor) return;
+    setIsReassigning(true);
+    try {
+      await axios.patch(`${import.meta.env.VITE_API_URL}/api/requests/${request._id}`, {
+        status: request.status,
+        assignedCounselor: reassignValue,
+        statusNote: `Case reassigned to ${reassignValue}.`
+      });
+      setStatusPopup({ isOpen: true, type: 'success', title: 'Reassigned', message: `Case has been reassigned to ${reassignValue}.` });
+    } catch (err) {
+      setStatusPopup({ isOpen: true, type: 'error', title: 'Error', message: 'Failed to reassign case.' });
+    } finally {
+      setIsReassigning(false);
+    }
+  };
+
   // --- OPEN NOTE MODAL ---
   const initiateStatusUpdate = (status) => {
     setPendingStatus(status);
@@ -194,6 +223,36 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                      </div>
                    </div>
                 )}
+              </div>
+            </div>
+
+            {/* ── REASSIGN COUNSELOR ── */}
+            <div style={{ margin: '20px 0', padding: '14px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <label style={{ fontSize: '11px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>
+                Assigned Counselor
+              </label>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <select
+                  value={reassignValue}
+                  onChange={e => setReassignValue(e.target.value)}
+                  style={{ flex: 1, minWidth: '180px', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', color: '#334155' }}
+                >
+                  <option value="Unassigned">Unassigned</option>
+                  {allCounselors.map(c => (
+                    <option key={c._id} value={c.name}>{c.name} ({c.role})</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleReassign}
+                  disabled={isReassigning || reassignValue === request.assignedCounselor}
+                  style={{
+                    padding: '8px 14px', backgroundColor: reassignValue !== request.assignedCounselor ? '#1976d2' : '#e2e8f0',
+                    color: reassignValue !== request.assignedCounselor ? 'white' : '#94a3b8',
+                    border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: isReassigning ? 'wait' : 'pointer', fontSize: '13px'
+                  }}
+                >
+                  {isReassigning ? 'Reassigning…' : 'Reassign'}
+                </button>
               </div>
             </div>
 

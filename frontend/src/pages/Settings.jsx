@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
 import StatusModal from '../components/StatusModal';
-import { MdBackup, MdRestore, MdWarning, MdDownload, MdUpload, MdDeleteForever, MdClose } from "react-icons/md";
+import { MdBackup, MdRestore, MdWarning, MdDownload, MdUpload, MdDeleteForever, MdClose, MdSchedule } from "react-icons/md";
 import '../styles/Dashboard.css';
 
 // The exact model names for the backend
 const ALL_MODELS = ['AboutContent', 'Department', 'Announcement', 'Service', 'ServiceRequest'];
+
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 function Settings() {
   const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -19,6 +21,35 @@ function Settings() {
   // Restore States
   const [restoreFile, setRestoreFile] = useState(null);
   const [modelsInRestoreFile, setModelsInRestoreFile] = useState([]);
+
+  // Business Hours States
+  const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30 });
+  const [isSavingHours, setIsSavingHours] = useState(false);
+
+  useEffect(() => {
+    axios.get(`${import.meta.env.VITE_API_URL}/api/system/settings`)
+      .then(res => setBizHours(res.data))
+      .catch(err => console.error("Error fetching settings:", err));
+  }, []);
+
+  const handleSaveHours = async () => {
+    setIsSavingHours(true);
+    try {
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/system/settings`, bizHours);
+      setStatusModal({ isOpen: true, type: 'success', title: 'Saved', message: 'Business hours updated successfully.', onConfirm: () => setStatusModal({ isOpen: false }) });
+    } catch (err) {
+      setStatusModal({ isOpen: true, type: 'error', title: 'Error', message: 'Failed to save business hours.', onConfirm: () => setStatusModal({ isOpen: false }) });
+    } finally {
+      setIsSavingHours(false);
+    }
+  };
+
+  const fmtHour = (h) => {
+    if (h === 0) return '12:00 AM';
+    if (h < 12) return `${h}:00 AM`;
+    if (h === 12) return '12:00 PM';
+    return `${h - 12}:00 PM`;
+  };
 
   // Modal States
   const [statusModal, setStatusModal] = useState({ isOpen: false, type: '', title: '', message: '' });
@@ -201,6 +232,42 @@ function Settings() {
           <h2 style={{ fontSize: '24px', color: '#0f172a', margin: 0 }}>System Vault</h2>
         </div>
 
+        {/* ── BUSINESS HOURS ── */}
+        <div style={{ ...cardStyle, marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+            <div style={iconWrapper('#f0fdf4', '#16a34a')}><MdSchedule size={24} /></div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '16px' }}>Appointment Business Hours</h3>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#64748b' }}>Controls the available time slots clients see when booking an appointment.</p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'flex-end' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', fontWeight: '700', color: '#475569' }}>
+              START TIME
+              <select value={bizHours.businessHoursStart} onChange={e => setBizHours(p => ({ ...p, businessHoursStart: Number(e.target.value) }))} style={selectSt}>
+                {HOURS.map(h => <option key={h} value={h}>{fmtHour(h)}</option>)}
+              </select>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', fontWeight: '700', color: '#475569' }}>
+              END TIME
+              <select value={bizHours.businessHoursEnd} onChange={e => setBizHours(p => ({ ...p, businessHoursEnd: Number(e.target.value) }))} style={selectSt}>
+                {HOURS.map(h => <option key={h} value={h}>{fmtHour(h)}</option>)}
+              </select>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', fontWeight: '700', color: '#475569' }}>
+              SLOT INTERVAL
+              <select value={bizHours.slotIntervalMinutes} onChange={e => setBizHours(p => ({ ...p, slotIntervalMinutes: Number(e.target.value) }))} style={selectSt}>
+                <option value={15}>15 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={60}>1 hour</option>
+              </select>
+            </label>
+            <button onClick={handleSaveHours} disabled={isSavingHours} style={{ ...primaryBtnStyle, backgroundColor: '#16a34a' }}>
+              {isSavingHours ? 'Saving…' : 'Save Hours'}
+            </button>
+          </div>
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
           
           {/* BACKUP CARD */}
@@ -289,6 +356,7 @@ function Settings() {
 }
 
 // --- STYLES ---
+const selectSt = { padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', color: '#334155', minWidth: '130px' };
 const cardStyle = { backgroundColor: 'white', padding: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', height: '100%' };
 const checklistContainer = { display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px', padding: '15px', backgroundColor: '#f8fafc',  border: '1px solid #e2e8f0', flex: 1 };
 const checkboxLabel = { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', cursor: 'pointer', color: '#334155' };

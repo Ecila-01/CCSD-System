@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Sidebar from '../components/Sidebar'; 
+import Sidebar from '../components/Sidebar';
+import { SkTableRows } from '../components/Skeleton'; 
 import ServiceModal from '../components/ServiceModal'; // <-- IMPORT THE NEW MODAL
 import '../styles/ManageServices.css';
 import '../styles/ManagePages.css'; 
@@ -186,7 +187,10 @@ function ManageServices() {
             </div>
 
             {isLoading ? (
-               <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>Loading services from database...</div>
+              <table className="services-table">
+                <thead><tr><th>#</th><th>SERVICE NAME</th><th>DESCRIPTION</th><th>STATUS</th><th>ACTION</th></tr></thead>
+                <tbody><SkTableRows rows={5} cols={5} /></tbody>
+              </table>
             ) : (
               <table className="services-table">
                 <thead>

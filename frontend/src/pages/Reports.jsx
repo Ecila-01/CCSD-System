@@ -39,6 +39,8 @@ function Reports() {
   const [requests, setRequests]   = useState([]);
   const [user]                    = useState(storedUser);
   const [isLoading, setIsLoading] = useState(true);
+  const [casePage, setCasePage]   = useState(1);
+  const CASE_PAGE_SIZE = 20;
 
   const now = new Date();
 
@@ -237,8 +239,8 @@ function Reports() {
               {/* Report type toggle (admin only) */}
               {user?.role === 'admin' && (
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={() => setReportType('overall')}      style={reportType === 'overall'        ? btnActive : btnInactive}>Narrative</button>
-                  <button onClick={() => setReportType('accomplishment')} style={reportType === 'accomplishment' ? btnActive : btnInactive}>Accomplishment</button>
+                  <button onClick={() => { setReportType('overall');         setCasePage(1); }} style={reportType === 'overall'        ? btnActive : btnInactive}>Narrative</button>
+                  <button onClick={() => { setReportType('accomplishment'); setCasePage(1); }} style={reportType === 'accomplishment' ? btnActive : btnInactive}>Accomplishment</button>
                 </div>
               )}
 
@@ -247,12 +249,12 @@ function Reports() {
                 <label style={labelStyle}>
                   From
                   <input type="month" value={startMonth} max={endMonth}
-                    onChange={e => setStartMonth(e.target.value)} style={monthInput} />
+                    onChange={e => { setStartMonth(e.target.value); setCasePage(1); }} style={monthInput} />
                 </label>
                 <label style={labelStyle}>
                   To
                   <input type="month" value={endMonth} min={startMonth} max={toMonthValue(now)}
-                    onChange={e => setEndMonth(e.target.value)} style={monthInput} />
+                    onChange={e => { setEndMonth(e.target.value); setCasePage(1); }} style={monthInput} />
                 </label>
               </div>
 
@@ -373,41 +375,70 @@ function Reports() {
           </div>
           {/* ══ end PDF section ══ */}
 
-          {/* Case log — visible on screen only, not in PDF */}
-          <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '24px', marginTop: '16px' }}>
-            <h4 style={{ ...subTitle, marginTop: 0 }}>
-              {reportType === 'overall' ? 'Full Case Log' : 'My Case Log'}
-              <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: '12px', marginLeft: '8px' }}>
-                (screen only — not included in PDF)
-              </span>
-            </h4>
-            <div style={tableWrap}>
-              {activeReqs.length > 0 ? (
-                <table style={tbl}>
-                  <thead>
-                    <tr>
-                      <th style={th}>Date</th>
-                      <th style={th}>Client Name</th>
-                      <th style={th}>Service</th>
-                      {reportType === 'overall' && <th style={th}>Assigned To</th>}
-                      <th style={th}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeReqs.map((r, i) => (
-                      <tr key={r._id || i} style={i % 2 === 0 ? trEven : {}}>
-                        <td style={td}>{new Date(r.createdAt).toLocaleDateString()}</td>
-                        <td style={td}>{getClientName(r)}</td>
-                        <td style={td}>{r.serviceName || 'N/A'}</td>
-                        {reportType === 'overall' && <td style={td}>{r.assignedCounselor || 'Unassigned'}</td>}
-                        <td style={{ ...td, fontWeight: 600, color: statusColor(r.status) }}>{r.status}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : <p style={{ color: '#64748b', margin: 0 }}>No cases in this period.</p>}
-            </div>
-          </div>
+          {/* Case log */}
+          {(() => {
+            const totalPages = Math.max(1, Math.ceil(activeReqs.length / CASE_PAGE_SIZE));
+            const pageReqs   = activeReqs.slice((casePage - 1) * CASE_PAGE_SIZE, casePage * CASE_PAGE_SIZE);
+            return (
+              <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '24px', marginTop: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                  <h4 style={{ ...subTitle, margin: 0 }}>
+                    {reportType === 'overall' ? 'Full Case Log' : 'My Case Log'}
+                  </h4>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>
+                    {activeReqs.length} record{activeReqs.length !== 1 ? 's' : ''}
+                    {totalPages > 1 && ` · Page ${casePage} of ${totalPages}`}
+                  </span>
+                </div>
+                <div style={tableWrap}>
+                  {activeReqs.length > 0 ? (
+                    <table style={tbl}>
+                      <thead>
+                        <tr>
+                          <th style={th}>Date</th>
+                          <th style={th}>Client Name</th>
+                          <th style={th}>Service</th>
+                          {reportType === 'overall' && <th style={th}>Assigned To</th>}
+                          <th style={th}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pageReqs.map((r, i) => (
+                          <tr key={r._id || i} style={i % 2 === 0 ? trEven : {}}>
+                            <td style={td}>{new Date(r.createdAt).toLocaleDateString()}</td>
+                            <td style={td}>{getClientName(r)}</td>
+                            <td style={td}>{r.serviceName || 'N/A'}</td>
+                            {reportType === 'overall' && <td style={td}>{r.assignedCounselor || 'Unassigned'}</td>}
+                            <td style={{ ...td, fontWeight: 600, color: statusColor(r.status) }}>{r.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : <p style={{ color: '#64748b', margin: 0 }}>No cases in this period.</p>}
+                </div>
+                {totalPages > 1 && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '16px' }}>
+                    <button onClick={() => setCasePage(1)}            disabled={casePage === 1}          style={pgBtn(casePage === 1)}>«</button>
+                    <button onClick={() => setCasePage(p => p - 1)}  disabled={casePage === 1}          style={pgBtn(casePage === 1)}>‹</button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(p => p === 1 || p === totalPages || Math.abs(p - casePage) <= 2)
+                      .reduce((acc, p, idx, arr) => {
+                        if (idx > 0 && p - arr[idx - 1] > 1) acc.push('…');
+                        acc.push(p);
+                        return acc;
+                      }, [])
+                      .map((p, i) => p === '…'
+                        ? <span key={`e${i}`} style={{ padding: '0 4px', color: '#94a3b8' }}>…</span>
+                        : <button key={p} onClick={() => setCasePage(p)} style={pgBtn(false, p === casePage)}>{p}</button>
+                      )
+                    }
+                    <button onClick={() => setCasePage(p => p + 1)}  disabled={casePage === totalPages} style={pgBtn(casePage === totalPages)}>›</button>
+                    <button onClick={() => setCasePage(totalPages)}   disabled={casePage === totalPages} style={pgBtn(casePage === totalPages)}>»</button>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
         </section>
       </main>
@@ -501,6 +532,12 @@ const tbl        = { width: '100%', minWidth: '560px', borderCollapse: 'collapse
 const th         = { background: '#f8fafc', color: '#475569', padding: '8px 10px', borderBottom: '2px solid #cbd5e1', fontWeight: 700, textTransform: 'uppercase', fontSize: '10px', whiteSpace: 'nowrap' };
 const td         = { padding: '8px 10px', borderBottom: '1px solid #e2e8f0', color: '#334155' };
 const trEven     = { backgroundColor: '#f8fafc' };
+const pgBtn = (disabled, active = false) => ({
+  padding: '4px 10px', borderRadius: '4px', border: '1px solid #e2e8f0', cursor: disabled ? 'not-allowed' : 'pointer',
+  background: active ? '#c00000' : disabled ? '#f8fafc' : 'white',
+  color: active ? 'white' : disabled ? '#cbd5e1' : '#334155',
+  fontWeight: active ? 700 : 400, fontSize: '13px',
+});
 const btnActive  = { padding: '8px 14px', borderRadius: '6px', border: 'none', background: '#c00000', color: 'white', fontWeight: 600, cursor: 'pointer', fontSize: '13px' };
 const btnInactive= { padding: '8px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white', color: '#475569', fontWeight: 600, cursor: 'pointer', fontSize: '13px' };
 const labelStyle = { display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px' };

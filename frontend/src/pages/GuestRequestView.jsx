@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { MdEvent, MdAccessTime, MdHistory, MdInfoOutline, MdClose, MdEditCalendar, MdChatBubbleOutline, MdCheckCircleOutline } from "react-icons/md";
-import { SkGuestCard } from '../components/Skeleton';
 
 const GuestRequestView = () => {
   const { token } = useParams();
@@ -75,17 +74,7 @@ const GuestRequestView = () => {
     }
   };
 
-  if (loading) return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', padding: '60px 20px' }}>
-      <div style={{ maxWidth: '650px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-          <div style={{ height: '36px', width: '120px', background: '#e2e8f0', borderRadius: '6px', animation: 'sk-shimmer 1.5s ease-in-out infinite', backgroundSize: '800px 100%', backgroundImage: 'linear-gradient(90deg,#e8e8e8 25%,#f5f5f5 50%,#e8e8e8 75%)' }} />
-          <div style={{ height: '14px', width: '200px', background: '#e2e8f0', borderRadius: '6px', animation: 'sk-shimmer 1.5s ease-in-out infinite', backgroundSize: '800px 100%', backgroundImage: 'linear-gradient(90deg,#e8e8e8 25%,#f5f5f5 50%,#e8e8e8 75%)' }} />
-        </div>
-        <SkGuestCard />
-      </div>
-    </div>
-  );
+  if (loading) return null;
 
   if (!request) return (
     <div style={{ textAlign: 'center', padding: '100px 20px' }}>

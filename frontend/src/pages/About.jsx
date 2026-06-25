@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "../styles/About.css";
 import ccsdLogo from "../assets/ccsdLogo.png";
-import { Sk } from '../components/Skeleton';
 
 // ── Org Chart Components ──
 const OrgCard = ({ name, role, tag, imageUrl, small }) => (
@@ -68,29 +67,7 @@ export default function About() {
     if (el && !fadeRefs.current.includes(el)) fadeRefs.current.push(el);
   };
 
-  if (isLoading) return (
-    <div className="ccsd-about">
-      <div style={{ height: '380px', background: '#1e293b' }} />
-      <div style={{ padding: '60px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px' }}>
-        <Sk h="22px" w="180px" />
-        <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          {[1,2,3].map(i => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-              <Sk h="90px" w="90px" circle />
-              <Sk h="13px" w="90px" />
-              <Sk h="11px" w="70px" />
-            </div>
-          ))}
-        </div>
-      </div>
-      <div style={{ padding: '0 40px 60px', display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '700px', margin: '0 auto' }}>
-        <Sk h="20px" w="160px" />
-        <Sk h="13px" w="100%" />
-        <Sk h="13px" w="95%" />
-        <Sk h="13px" w="75%" />
-      </div>
-    </div>
-  );
+  if (isLoading) return null;
 
   const { teamMembers } = aboutData;
   const director = teamMembers.filter(m => m.hierarchyLevel === 1);

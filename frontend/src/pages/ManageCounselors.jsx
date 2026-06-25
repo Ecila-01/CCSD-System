@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { SkTableRows } from '../components/Skeleton';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -171,7 +170,7 @@ const ManageCounselors = () => {
                 </tr>
               </thead>
               <tbody>
-                {isLoading ? <SkTableRows rows={5} cols={4} /> : users.map(u => (
+                {users.map(u => (
                   <tr key={u._id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                     <td style={tdStyle}><b>{u.name}</b><br/><small style={{color: '#64748b'}}>{u.role.toUpperCase()}</small></td>
                     <td style={tdStyle}>{u.email}</td>

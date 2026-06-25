@@ -70,35 +70,24 @@ export default function About() {
 
   if (isLoading) return (
     <div className="ccsd-about">
-      {/* Hero skeleton */}
-      <div style={{ height: '380px', background: '#1e293b', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
-        <Sk h="80px" w="80px" circle style={{ background: 'rgba(255,255,255,0.15)' }} />
-        <Sk h="32px" w="260px" style={{ background: 'rgba(255,255,255,0.15)' }} />
-        <Sk h="16px" w="360px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-        <Sk h="16px" w="300px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-        <div style={{ display: 'flex', gap: '30px', marginTop: '10px' }}>
-          {[1,2,3].map(i => <Sk key={i} h="16px" w="120px" style={{ background: 'rgba(255,255,255,0.12)' }} />)}
-        </div>
-      </div>
-      {/* Org chart skeleton */}
-      <div style={{ padding: '60px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
-        <Sk h="24px" w="200px" />
-        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
+      <div style={{ height: '380px', background: '#1e293b' }} />
+      <div style={{ padding: '60px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px' }}>
+        <Sk h="22px" w="180px" />
+        <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', flexWrap: 'wrap' }}>
           {[1,2,3].map(i => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', width: '120px' }}>
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
               <Sk h="90px" w="90px" circle />
-              <Sk h="14px" w="100px" />
-              <Sk h="11px" w="80px" />
+              <Sk h="13px" w="90px" />
+              <Sk h="11px" w="70px" />
             </div>
           ))}
         </div>
       </div>
-      {/* Mission skeleton */}
-      <div style={{ padding: '0 40px 60px', display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '700px', margin: '0 auto' }}>
-        <Sk h="22px" w="180px" />
-        <Sk h="14px" w="100%" />
-        <Sk h="14px" w="95%" />
-        <Sk h="14px" w="80%" />
+      <div style={{ padding: '0 40px 60px', display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '700px', margin: '0 auto' }}>
+        <Sk h="20px" w="160px" />
+        <Sk h="13px" w="100%" />
+        <Sk h="13px" w="95%" />
+        <Sk h="13px" w="75%" />
       </div>
     </div>
   );

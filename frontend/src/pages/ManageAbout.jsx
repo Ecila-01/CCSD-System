@@ -8,7 +8,6 @@ import {
 } from "react-icons/md";
 import '../styles/Dashboard.css';
 import '../styles/ManagePages.css';
-import { Sk } from '../components/Skeleton';
 
 const ManageAbout = () => {
   const [formData, setFormData] = useState({
@@ -153,25 +152,7 @@ const ManageAbout = () => {
     }
   };
 
-  if (isLoading) return (
-    <div className="dashboard-container">
-      <Sidebar />
-      <div className="main-content" style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        <Sk h="28px" w="200px" />
-        {[1, 2, 3].map(i => (
-          <div key={i} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <Sk h="18px" w="180px" />
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <Sk h="40px" style={{ flex: 1 }} />
-              <Sk h="40px" style={{ flex: 1 }} />
-            </div>
-            <Sk h="40px" w="100%" />
-            <Sk h="80px" w="100%" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  if (isLoading) return <div style={{ padding: '50px', textAlign: 'center' }}>Loading Visual Editor...</div>;
 
   const membersWithIndex = formData.teamMembers.map((m, i) => ({ ...m, originalIndex: i }));
   const directors = membersWithIndex.filter(m => Number(m.hierarchyLevel) === 1);

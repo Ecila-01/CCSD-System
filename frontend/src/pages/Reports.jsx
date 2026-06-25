@@ -8,7 +8,6 @@ import {
 import '../styles/Dashboard.css';
 import '../styles/Reports.css';
 import PDFExportButton from '../components/PDFExportButton';
-import { SkKpiRow, SkChart, Sk } from '../components/Skeleton';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const toMonthValue = (date) =>
@@ -157,6 +156,33 @@ function Reports() {
     return { ...s, weeks };
   }, [myFiltered, monthLabels]);
 
+  // ── data passed directly to PDF generator ─────────────────────────────────
+  const pdfStatsData = useMemo(() => {
+    const stats  = reportType === 'overall' ? overallStats : myStats;
+    const reqs   = reportType === 'overall' ? filtered    : myFiltered;
+
+    const kpis = [
+      { label: 'TOTAL REQUESTS',       value: reqs.length },
+      { label: 'COMPLETED',             value: stats.completed.length },
+      { label: 'PENDING / IN-PROGRESS', value: stats.pending.length },
+      { label: 'DECLINED / CANCELLED',  value: stats.declined.length },
+      { label: 'COMPLETION RATE',       value: `${stats.rate}%` },
+      ...(reportType === 'overall'
+        ? [{ label: 'TOTAL REFERRALS', value: overallStats.referralCount }]
+        : []),
+    ];
+
+    return {
+      reportType,
+      kpis,
+      servicesTable:  stats.servicesTable,
+      monthlyTrend:   stats.monthlyTrend,
+      ...(reportType === 'overall'
+        ? { counselorTable: overallStats.counselorTable }
+        : { weeks: myStats.weeks }),
+    };
+  }, [reportType, overallStats, myStats, filtered, myFiltered]);
+
   const getReportTitle = () =>
     reportType === 'overall'
       ? `CCSD Narrative Report — ${startMonth} to ${endMonth}`
@@ -179,25 +205,7 @@ function Reports() {
     return s === e ? s : `${s} – ${e}`;
   })();
 
-  if (isLoading) return (
-    <div className="dashboard-container">
-      <Sidebar />
-      <div className="main-content" style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        <Sk h="32px" w="220px" />
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <Sk h="36px" w="180px" />
-          <Sk h="36px" w="180px" />
-          <Sk h="36px" w="120px" />
-        </div>
-        <SkKpiRow count={4} />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-          <SkChart height="240px" />
-          <SkChart height="240px" />
-        </div>
-        <SkChart height="200px" />
-      </div>
-    </div>
-  );
+  if (isLoading) return <div style={{ padding: '50px', textAlign: 'center' }}>Loading Report Data…</div>;
 
   const activeReqs = reportType === 'overall' ? filtered   : myFiltered;
   const activeStats = reportType === 'overall' ? overallStats : myStats;
@@ -249,7 +257,7 @@ function Reports() {
               </div>
 
               <PDFExportButton
-                targetRef={pdfRef}
+                statsData={pdfStatsData}
                 filename={getFilename()}
                 reportTitle={getReportTitle()}
                 generatedBy={user?.name ?? 'Staff'}

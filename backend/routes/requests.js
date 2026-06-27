@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ServiceRequest = require('../models/ServiceRequest');
 const User = require('../models/User');
-const { sendGuestLink, sendCounselorNotification, sendStatusUpdateToStudent, sendStatusUpdateToReferrer, sendCancellationNotification } = require('../utils/mailer');
+const { sendGuestLink, sendCounselorNotification, sendStatusUpdateToStudent, sendStatusUpdateToReferrer, sendCancellationNotification, sendRescheduleNotificationToCounselor, sendRescheduleRequestToStudent } = require('../utils/mailer');
 const Service = require('../models/Service');
 
 router.post("/", async (req, res) => {
@@ -81,13 +81,8 @@ router.patch('/:id', async (req, res) => {
   try {
     const { status, assignedCounselor, statusNote } = req.body;
 
-    // Build the update object
-    const update = {
-      status,
-      assignedCounselor
-    };
+    const update = { status, assignedCounselor };
 
-    // Prepare the history entry
     const historyEntry = {
       status,
       note: statusNote || `Status updated to ${status}`,
@@ -96,15 +91,28 @@ router.patch('/:id', async (req, res) => {
 
     const updatedRequest = await ServiceRequest.findByIdAndUpdate(
       req.params.id,
-      { 
-        $set: update, 
-        $push: { statusUpdates: historyEntry } // ✅ Push the new note to history
-      },
+      { $set: update, $push: { statusUpdates: historyEntry } },
       { new: true }
     );
 
     if (!updatedRequest) return res.status(404).json({ message: "Request not found" });
-    
+
+    // Notify student or referrer of every status change
+    const isReferral = updatedRequest.serviceName?.toUpperCase() === 'REFERRAL';
+    const recipientEmail = isReferral ? updatedRequest.referrerEmail : updatedRequest.studentEmail;
+    if (recipientEmail) {
+      if (status === 'Reschedule Requested' && !isReferral) {
+        // Send a specific actionable email prompting the student to pick a new time
+        sendRescheduleRequestToStudent(recipientEmail, updatedRequest.serviceName, updatedRequest.guestToken)
+          .catch(err => console.error('Reschedule request email failed:', err));
+      } else {
+        const emailFn = isReferral ? sendStatusUpdateToReferrer : sendStatusUpdateToStudent;
+        const nameArg  = isReferral ? updatedRequest.studentName : updatedRequest.serviceName;
+        emailFn(recipientEmail, nameArg, status, updatedRequest.guestToken)
+          .catch(err => console.error('Status update email failed:', err));
+      }
+    }
+
     res.json(updatedRequest);
   } catch (error) {
     console.error(error);
@@ -179,6 +187,20 @@ router.patch('/guest/reschedule/:token', async (req, res) => {
     );
 
     if (!updatedRequest) return res.status(404).json({ message: "Request not found" });
+
+    // Notify the assigned counsellor that the student has proposed a new schedule
+    if (updatedRequest.assignedCounselor && updatedRequest.assignedCounselor !== 'Unassigned') {
+      const counselor = await User.findOne({ name: updatedRequest.assignedCounselor });
+      if (counselor?.email) {
+        sendRescheduleNotificationToCounselor(
+          counselor.email,
+          updatedRequest.studentName,
+          updatedRequest.serviceName,
+          appointmentDate,
+          timeSlot
+        ).catch(err => console.error('Reschedule notification email failed:', err));
+      }
+    }
 
     res.json(updatedRequest);
   } catch (error) {

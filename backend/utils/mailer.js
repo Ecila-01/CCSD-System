@@ -187,6 +187,49 @@ const sendAppointmentReminder = async (toEmail, studentName, serviceName, appoin
   });
 };
 
+const sendRescheduleRequestToStudent = async (toEmail, serviceName, token) => {
+  const viewLink = `${FRONTEND_URL}/view-request/${token}`;
+  return sendMail({
+    to: toEmail,
+    subject: `Action Required: Please reschedule your ${serviceName} appointment`,
+    html: `
+      <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px; max-width: 600px;">
+        <h2 style="color: #c00000;">Reschedule Requested</h2>
+        <p>Hello,</p>
+        <p>Your counsellor has requested that you propose a new date and time for your <strong>${serviceName}</strong> appointment.</p>
+        <p>Please use the link below to submit your preferred schedule at your earliest convenience:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${viewLink}" style="background-color: #c00000; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Reschedule My Appointment
+          </a>
+        </div>
+        <p style="font-size: 11px; color: #999;">If the button above does not work, copy and paste this link: <br/> ${viewLink}</p>
+      </div>
+    `,
+  });
+};
+
+const sendRescheduleNotificationToCounselor = async (counselorEmail, studentName, serviceName, newDate, newTime) => {
+  return sendMail({
+    to: counselorEmail,
+    subject: `Reschedule Request: ${studentName} — ${serviceName}`,
+    fromLabel: 'UB CCSD System',
+    html: `
+      <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px; max-width: 600px;">
+        <h2 style="color: #c00000;">Appointment Rescheduled by Student</h2>
+        <p>The following student has submitted a new preferred schedule:</p>
+        <hr/>
+        <p><strong>Student:</strong> ${studentName}</p>
+        <p><strong>Service:</strong> ${serviceName}</p>
+        <p><strong>New Date:</strong> ${newDate}</p>
+        <p><strong>New Time:</strong> ${newTime}</p>
+        <br/>
+        <p>The request has been returned to <strong>Pending Review</strong>. Please log in to the dashboard to confirm or adjust the new schedule.</p>
+      </div>
+    `,
+  });
+};
+
 const sendPasswordResetOtp = async (toEmail, otp) => {
   return sendMail({
     to: toEmail,
@@ -219,4 +262,6 @@ module.exports = {
   sendPasswordResetOtp,
   sendCancellationNotification,
   sendAppointmentReminder,
+  sendRescheduleNotificationToCounselor,
+  sendRescheduleRequestToStudent,
 };

@@ -3,26 +3,27 @@
    ========================================= */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2000;
   padding: 20px;
+  /* dvh respects the actual visible viewport on iOS Safari */
+  height: 100vh;
+  height: 100dvh;
 }
 
 .modal-container {
   background: white;
   width: 100%;
-  max-width: 750px; 
+  max-width: 750px;
   height: 90vh;
+  height: 90dvh;
   display: flex;
-  flex-direction: column; 
-  overflow: hidden; 
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
   border-radius: 12px;
 }
@@ -375,29 +376,44 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, i
    8. MOBILE RESPONSIVENESS (All combined here!)
    ========================================= */
 @media screen and (max-width: 768px) {
-  
+
+  /* Bottom-sheet: anchor to bottom of screen, full-width, rounded top corners.
+     This guarantees the footer (Next button) is never pushed below the viewport,
+     even on iOS Safari where vh units include the browser chrome. */
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
   .modal-container {
-    width: 95%;
-    max-height: 92vh;
-    padding: 0; 
+    width: 100%;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    /* Use dvh so we don't exceed the *actual* visible viewport */
+    height: 94vh;
+    height: 94dvh;
+    max-height: 94dvh;
+    padding: 0;
   }
 
   .modal-header { padding: 12px 15px; }
-  .modal-header h2 { font-size: 1.1rem; }
+  .modal-header h2 { font-size: 1.05rem; }
 
-  /* Less padding inside the form to maximize screen real estate */
+  /* Less padding inside the form to maximise screen real estate */
   .form-scroll-area {
-    padding: 20px 15px;
-    max-height: none; 
+    padding: 18px 15px;
+    max-height: none;
   }
-  
-  .form-group { margin-bottom: 20px; }
+
+  .form-group { margin-bottom: 18px; }
 
   /* Reorganize the footer: Back button on top, Cancel/Next split evenly below it */
   .modal-footer {
     flex-direction: column;
-    padding: 15px;
-    gap: 12px;
+    padding: 12px 15px;
+    /* Add iOS home-indicator padding */
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    gap: 10px;
   }
 
   .footer-left { width: 100%; }
@@ -407,15 +423,15 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="date"]:focus, i
   }
 
   .cancel-btn, .next-btn, .submit-btn {
-    flex: 1; /* Makes them split 50/50 */
-    padding: 14px 10px; 
+    flex: 1;
+    padding: 14px 10px;
     font-size: 15px;
   }
 
   .back-btn {
     width: 100%;
     padding: 10px;
-    border: 1px solid #e2e8f0; /* Give back button a subtle border on mobile */
+    border: 1px solid #e2e8f0;
     background: #f8fafc;
     border-radius: 8px;
   }

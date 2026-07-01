@@ -252,14 +252,27 @@
     gap: 10px !important;
   }
   .schedules-page-header h2 { font-size: 19px; }
+  .new-session-btn { width: 100%; text-align: center; }
 
-  /* Stats: 1 column */
+  /* Stats: 2 columns */
   .schedules-stats-row {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px !important;
     margin-bottom: 16px !important;
   }
-  .sched-stat-card { padding: 14px 16px; }
+  .sched-stat-card { padding: 12px; }
+
+  /* Sidebar stacks above calendar */
+  .schedules-layout {
+    flex-direction: column !important;
+  }
+  .schedules-sidebar {
+    width: 100% !important;
+  }
+  .mini-cal-grid {
+    padding: 12px 10px !important;
+    gap: 8px 4px !important;
+  }
 
   /* Calendar controls: center navigator */
   .calendar-controls {

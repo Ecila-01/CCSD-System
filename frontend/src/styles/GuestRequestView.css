@@ -1,0 +1,99 @@
+/* ================================================
+   GUEST REQUEST VIEW — Responsive Styles
+   ================================================ */
+
+/* ── Outer page wrapper ── */
+.guest-page {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding: 60px 20px;
+  box-sizing: border-box;
+}
+
+/* ── Card header: status (left) + service type (right) ── */
+.guest-card-header {
+  padding: 24px 30px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;          /* wraps to 2 rows on narrow screens */
+}
+
+.guest-header-service {
+  text-align: right;
+  min-width: 0;             /* allows text to shrink */
+  flex-shrink: 1;
+}
+
+.guest-header-service h3 {
+  margin: 5px 0 0 0;
+  color: #1e293b;
+  font-size: 16px;
+  word-break: break-word;   /* long service names don't overflow the card */
+  overflow-wrap: anywhere;
+}
+
+/* ── Detail boxes: 2-col grid ── */
+.guest-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* ── Card body padding ── */
+.guest-card-body {
+  padding: 30px;
+}
+
+/* ── Reschedule panel ── */
+.guest-reschedule-panel {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* ================================================
+   MOBILE  (≤ 540px)
+   ================================================ */
+@media (max-width: 540px) {
+  .guest-page {
+    padding: 30px 12px;
+  }
+
+  .guest-card-header {
+    padding: 18px 16px;
+    gap: 10px;
+  }
+
+  /* On very small screens stack status above service type */
+  .guest-header-service {
+    text-align: left;
+    width: 100%;
+  }
+
+  .guest-header-service h3 {
+    font-size: 14px;
+  }
+
+  /* Single-column detail grid on small phones */
+  .guest-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .guest-card-body {
+    padding: 18px 16px;
+  }
+
+  .guest-reschedule-panel {
+    margin-top: 24px;
+    padding-top: 20px;
+  }
+
+  /* Cancel button footer */
+  .guest-cancel-footer {
+    padding: 16px !important;
+  }
+}

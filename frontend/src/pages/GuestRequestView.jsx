@@ -5,6 +5,7 @@ import { MdEvent, MdAccessTime, MdHistory, MdInfoOutline, MdClose, MdEditCalenda
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '../styles/AppointmentModal.css';
+import '../styles/GuestRequestView.css';
 
 const GuestRequestView = () => {
   const { token } = useParams();
@@ -124,7 +125,7 @@ const GuestRequestView = () => {
   const statusStyle = getStatusStyle(request.status);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', padding: '60px 20px' }}>
+    <div className="guest-page">
       <div style={{ maxWidth: '650px', margin: '0 auto' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -134,23 +135,23 @@ const GuestRequestView = () => {
 
         <div style={{ background: 'white', borderRadius: '20px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
           
-          <div style={{ padding: '30px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="guest-card-header">
             <div>
               <span style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' }}>Current Status</span>
-              <div style={{ 
+              <div style={{
                 marginTop: '5px', padding: '6px 16px', borderRadius: '50px', fontSize: '14px', fontWeight: '700',
-                backgroundColor: statusStyle.bg, color: statusStyle.text, border: `1px solid ${statusStyle.border}`, display: 'inline-block' 
+                backgroundColor: statusStyle.bg, color: statusStyle.text, border: `1px solid ${statusStyle.border}`, display: 'inline-block'
               }}>
                 {request.status.toUpperCase()}
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
+            <div className="guest-header-service">
               <span style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' }}>Service Type</span>
-              <h3 style={{ margin: '5px 0 0 0', color: '#1e293b' }}>{request.serviceName}</h3>
+              <h3>{request.serviceName}</h3>
             </div>
           </div>
 
-          <div style={{ padding: '30px' }}>
+          <div className="guest-card-body">
             
             {/* ✅ STATUS UPDATES TIMELINE */}
             {request.statusUpdates && request.statusUpdates.length > 0 && (
@@ -181,7 +182,7 @@ const GuestRequestView = () => {
               <MdInfoOutline size={18} /> Submission Details
             </h4>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div className="guest-detail-grid">
               <DetailBox label="Student Name" value={request.studentName} icon={<MdHistory color="#94a3b8" />} />
               <DetailBox label="Date Submitted" value={new Date(request.createdAt).toLocaleDateString()} icon={<MdHistory color="#94a3b8" />} />
               
@@ -195,7 +196,7 @@ const GuestRequestView = () => {
 
             {/* ✅ RESCHEDULE LOGIC SECTION */}
             {request.status === 'Reschedule Requested' && (
-              <div style={{ marginTop: '40px', paddingTop: '30px', borderTop: '1px solid #f1f5f9' }}>
+              <div className="guest-reschedule-panel">
                 {!isRescheduling ? (
                   <>
                     <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '15px', textAlign: 'center' }}>
@@ -262,7 +263,7 @@ const GuestRequestView = () => {
 
           {/* Cancel button — only for cancellable statuses */}
           {['Pending Review', 'In-Progress', 'Reschedule Requested'].includes(request.status) && (
-            <div style={{ padding: '20px 30px', borderTop: '1px solid #f1f5f9' }}>
+            <div className="guest-cancel-footer" style={{ padding: '20px 30px', borderTop: '1px solid #f1f5f9' }}>
               <button
                 onClick={() => setIsCancelModalOpen(true)}
                 style={{ ...dangerBtnStyle, width: '100%', backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}

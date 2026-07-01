@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { MdEvent, MdAccessTime, MdHistory, MdInfoOutline, MdClose, MdEditCalendar, MdChatBubbleOutline, MdCheckCircleOutline } from "react-icons/md";
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import '../styles/AppointmentModal.css';
 
 const GuestRequestView = () => {
   const { token } = useParams();
@@ -10,9 +13,10 @@ const GuestRequestView = () => {
   
   // States for Rescheduling
   const [isRescheduling, setIsRescheduling] = useState(false);
-  const [newDate, setNewDate] = useState("");
+  const [newDate, setNewDate] = useState(null);
   const [newTime, setNewTime] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30, workingDays: [1,2,3,4,5] });
 
   // States for Cancellation
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -31,7 +35,28 @@ const GuestRequestView = () => {
       }
     };
     fetchRequest();
+    axios.get(`${import.meta.env.VITE_API_URL}/api/system/settings`)
+      .then(res => setBizHours(res.data))
+      .catch(err => console.error("Error fetching business hours:", err));
   }, [token]);
+
+  const generateTimeSlots = () => {
+    const { businessHoursStart: startH, businessHoursEnd: endH, slotIntervalMinutes: interval } = bizHours;
+    const slots = [];
+    let totalMins = startH * 60;
+    const endMins = endH * 60;
+    while (totalMins < endMins) {
+      const hour = Math.floor(totalMins / 60);
+      const mins = totalMins % 60;
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+      const timeLabel = `${displayHour}:${String(mins).padStart(2, '0')} ${ampm}`;
+      const timeValue = `${String(hour).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+      slots.push({ label: timeLabel, value: timeValue });
+      totalMins += interval;
+    }
+    return slots;
+  };
 
   // Logic to handle the reschedule submission
   const handleRescheduleSubmit = async () => {
@@ -39,9 +64,10 @@ const GuestRequestView = () => {
     
     setIsSubmitting(true);
     try {
+      const formattedDate = newDate ? newDate.toLocaleDateString('en-CA') : "";
       // Update request: change date/time and set status back to "Pending Review"
       const res = await axios.patch(`${import.meta.env.VITE_API_URL}/api/requests/guest/reschedule/${token}`, {
-        appointmentDate: newDate,
+        appointmentDate: formattedDate,
         timeSlot: newTime,
         status: "Pending Review",
         statusNote: "Student updated the appointment schedule."
@@ -185,17 +211,42 @@ const GuestRequestView = () => {
                   <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '15px', border: '1px solid #e2e8f0' }}>
                     <h5 style={{ margin: '0 0 15px 0', color: '#1e293b' }}>Select New Schedule</h5>
                     <div style={{ display: 'grid', gap: '15px', marginBottom: '20px' }}>
-                       <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} style={inputStyle} />
-                       {/* Inside the GuestRequestView Reschedule Form */}
-                      <input 
-                        type="time" 
-                        value={newTime} 
-                        onChange={(e) => setNewTime(e.target.value)} 
-                        min="08:00" 
-                        max="17:00" 
-                        step="1800" // 1800 seconds = 30 minute increments
-                        style={inputStyle} 
-                      />
+                      <div>
+                        <p style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase' }}>Date</p>
+                        <div className="custom-datepicker-wrapper">
+                          <DatePicker
+                            selected={newDate}
+                            onChange={(date) => setNewDate(date)}
+                            minDate={new Date()}
+                            maxDate={new Date(new Date().setMonth(new Date().getMonth() + 2))}
+                            filterDate={(date) => (bizHours.workingDays || [1,2,3,4,5]).includes(date.getDay())}
+                            placeholderText="Select appointment date"
+                            dateFormat="MMMM d, yyyy"
+                            className="react-datepicker-custom-input"
+                            calendarClassName="ub-custom-calendar"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <p style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase' }}>Time</p>
+                        <div className="time-pill-grid">
+                          {generateTimeSlots().map((slot) => {
+                            const isSelected = newTime === slot.value;
+                            return (
+                              <label key={slot.value} className={`time-pill ${isSelected ? 'selected' : ''}`}>
+                                <input
+                                  type="radio"
+                                  name="guestNewTime"
+                                  value={slot.value}
+                                  onChange={() => setNewTime(slot.value)}
+                                  className="hidden-radio"
+                                />
+                                {slot.label}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button onClick={() => setIsRescheduling(false)} style={{ ...secondaryBtnStyle, flex: 1 }}>Cancel</button>

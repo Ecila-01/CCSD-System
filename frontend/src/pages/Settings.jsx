@@ -23,7 +23,7 @@ function Settings() {
   const [modelsInRestoreFile, setModelsInRestoreFile] = useState([]);
 
   // Business Hours States
-  const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30 });
+  const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30, workingDays: [1,2,3,4,5] });
   const [isSavingHours, setIsSavingHours] = useState(false);
 
   useEffect(() => {
@@ -262,6 +262,35 @@ function Settings() {
                 <option value={60}>1 hour</option>
               </select>
             </label>
+          </div>
+          <div style={{ marginTop: '16px' }}>
+            <span style={{ fontSize: '12px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '8px' }}>WORKING DAYS</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {[{ label: 'Sun', value: 0 }, { label: 'Mon', value: 1 }, { label: 'Tue', value: 2 }, { label: 'Wed', value: 3 }, { label: 'Thu', value: 4 }, { label: 'Fri', value: 5 }, { label: 'Sat', value: 6 }].map(({ label, value }) => {
+                const isActive = (bizHours.workingDays || [1,2,3,4,5]).includes(value);
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => {
+                      const current = bizHours.workingDays || [1,2,3,4,5];
+                      const updated = isActive ? current.filter(d => d !== value) : [...current, value].sort((a,b) => a-b);
+                      setBizHours(p => ({ ...p, workingDays: updated }));
+                    }}
+                    style={{
+                      padding: '6px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '1px solid',
+                      backgroundColor: isActive ? '#16a34a' : '#f8fafc',
+                      color: isActive ? 'white' : '#475569',
+                      borderColor: isActive ? '#16a34a' : '#cbd5e1',
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{ marginTop: '16px' }}>
             <button onClick={handleSaveHours} disabled={isSavingHours} style={{ ...primaryBtnStyle, backgroundColor: '#16a34a' }}>
               {isSavingHours ? 'Saving…' : 'Save Hours'}
             </button>

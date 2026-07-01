@@ -10,7 +10,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [submittedToken, setSubmittedToken] = useState("");
   const [liveDepts, setLiveDepts] = useState([]);
-  const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30 });
+  const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30, workingDays: [1,2,3,4,5] });
   
   // ✅ UPGRADED: Find the max form sections, then add 1 for the Summary Page
   const maxFormSection = service?.fields ? Math.max(...service.fields.map(f => f.section || 1)) : 1;
@@ -345,7 +345,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                                     }}
                                     minDate={isDOB ? null : new Date()} 
                                     maxDate={isDOB ? new Date() : new Date(new Date().setMonth(new Date().getMonth() + 2))} 
-                                    filterDate={isDOB ? undefined : (date) => date.getDay() !== 0} 
+                                    filterDate={isDOB ? undefined : (date) => (bizHours.workingDays || [1,2,3,4,5]).includes(date.getDay())}
                                     placeholderText={isDOB ? "Select your birth date" : "Select an appointment date"}
                                     dateFormat="MMMM d, yyyy"
                                     className="react-datepicker-custom-input"

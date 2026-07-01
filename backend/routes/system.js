@@ -114,12 +114,13 @@ router.get('/settings', async (req, res) => {
 // PUT update system settings
 router.put('/settings', async (req, res) => {
   try {
-    const { businessHoursStart, businessHoursEnd, slotIntervalMinutes } = req.body;
+    const { businessHoursStart, businessHoursEnd, slotIntervalMinutes, workingDays } = req.body;
     let settings = await SystemSettings.findOne();
     if (!settings) settings = new SystemSettings();
     if (businessHoursStart !== undefined) settings.businessHoursStart = Number(businessHoursStart);
     if (businessHoursEnd   !== undefined) settings.businessHoursEnd   = Number(businessHoursEnd);
     if (slotIntervalMinutes !== undefined) settings.slotIntervalMinutes = Number(slotIntervalMinutes);
+    if (workingDays !== undefined) settings.workingDays = workingDays;
     await settings.save();
     res.json(settings);
   } catch (err) {

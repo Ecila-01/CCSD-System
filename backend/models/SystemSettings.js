@@ -6,6 +6,8 @@ const SystemSettingsSchema = new mongoose.Schema({
   businessHoursEnd:   { type: Number, default: 16 },
   // Slot interval in minutes
   slotIntervalMinutes: { type: Number, default: 30 },
+  // Working days (0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat)
+  workingDays: { type: [Number], default: [1, 2, 3, 4, 5] },
 }, { timestamps: true });
 
 module.exports = mongoose.model('SystemSettings', SystemSettingsSchema);

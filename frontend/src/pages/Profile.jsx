@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import { MdOutlineMail, MdOutlineBadge, MdOutlineLock, MdVerifiedUser, MdHistory, MdDomain } from "react-icons/md";
+import TopBar from '../components/TopBar';
+import { MdOutlineMail, MdOutlineBadge, MdOutlineLock, MdVerifiedUser, MdHistory, MdDomain, MdOutlineNotifications } from "react-icons/md";
 import axios from 'axios'; // Make sure to import axios
 import '../styles/Dashboard.css';
-import '../styles/ManagePages.css'; 
+import '../styles/ManagePages.css';
 
 function Profile() {
   const [user, setUser] = useState(null);
@@ -15,7 +16,10 @@ function Profile() {
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+
+  // Email opt-out preference (default: opted IN / true)
+  const [emailOptIn, setEmailOptIn] = useState(true);
+
   // NEW: State for showing success/error messages
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -28,12 +32,15 @@ function Profile() {
       setUser(userData);
       setName(userData.name);
       setEmail(userData.email);
+      setEmailOptIn(userData.notificationPreferences?.newSubmissionEmails === true);
     }
   }, [navigate]);
 
   if (!user) return null;
 
-  // --- SUBMIT LOGIC ---
+  // --- ROLE & DEPARTMENT LOGIC ---
+  const isAdmin = user.role === 'admin';
+
   // --- SUBMIT LOGIC ---
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -43,8 +50,10 @@ function Profile() {
     const nameChanged = name !== user.name;
     const emailChanged = email !== user.email;
     const passwordAttempt = newPassword !== '';
+    const currentOptIn = user.notificationPreferences?.newSubmissionEmails === true;
+    const prefChanged = !isAdmin && emailOptIn !== currentOptIn;
 
-    if (!nameChanged && !emailChanged && !passwordAttempt) {
+    if (!nameChanged && !emailChanged && !passwordAttempt && !prefChanged) {
       setMessage({ type: 'info', text: 'No changes detected.' });
       return;
     }
@@ -62,7 +71,7 @@ function Profile() {
     }
 
     // 3. Build Payload based on Role
-    // Admin sends Name/Email if changed. Counselors only ever send password.
+    // Admin sends Name/Email if changed. Counselors only ever send password + prefs.
     const payload = {};
     if (isAdmin) {
       if (nameChanged) payload.name = name;
@@ -71,11 +80,14 @@ function Profile() {
     if (passwordAttempt) {
       payload.newPassword = newPassword; // Using 'newPassword' to match backend logic
     }
+    if (prefChanged) {
+      payload.notificationPreferences = { newSubmissionEmails: emailOptIn };
+    }
 
     setIsUpdating(true);
     try {
       const userId = user._id || user.id;
-      
+
       // ✅ Using your existing /:id route
       const response = await axios.put(`${import.meta.env.VITE_API_URL}/api/users/${userId}`, payload);
 
@@ -90,12 +102,12 @@ function Profile() {
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setNewPassword('');
       setConfirmPassword('');
-      
+
     } catch (error) {
       console.error("Update error:", error);
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Failed to update profile.' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to update profile.'
       });
     } finally {
       setIsUpdating(false);
@@ -103,10 +115,8 @@ function Profile() {
     }
   };
 
-  // --- ROLE & DEPARTMENT LOGIC ---
-  const isAdmin = user.role === 'admin';
-  const assignedDepts = isAdmin 
-    ? "Global Administrator (All)" 
+  const assignedDepts = isAdmin
+    ? "Global Administrator (All)"
     : (user.assignedDepartments?.length > 0 ? user.assignedDepartments.join(", ") : "Unassigned");
 
   // Dynamic style for disabled inputs
@@ -123,22 +133,17 @@ function Profile() {
       <Sidebar />
 
       <main className="main-content" style={{ flex: 1 }}>
-        <header className="content-header">
-          <div className="search-box" style={{ visibility: 'hidden' }}></div>
-          <div className="header-right">
-            <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-          </div>
-        </header>
+        <TopBar />
 
         <section className="profile-section">
           <div className="profile-inner">
-            
+
             {/* --- HEADER SECTION --- */}
             <div style={{ marginBottom: '30px' }}>
               <h2 style={{ color: '#0f172a', fontSize: '28px', fontWeight: '800', margin: '0' }}>Profile Settings</h2>
               <p style={{ color: '#64748b', fontSize: '15px', marginTop: '5px' }}>
-                {isAdmin 
-                  ? "Update your account identity and security credentials." 
+                {isAdmin
+                  ? "Update your account identity and security credentials."
                   : "Update your security credentials. Contact an administrator to change your personal details."}
               </p>
             </div>
@@ -187,14 +192,14 @@ function Profile() {
             {/* --- MAIN FORM CARD --- */}
             <div style={{ background: 'white', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
               <form onSubmit={handleUpdateProfile} style={{ padding: '40px' }}>
-                
+
                 {/* Section 1: Personal Info */}
                 <div style={{ marginBottom: '35px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h4 style={{ ...sectionHeaderStyle, margin: 0 }}>Personal Information</h4>
                     {!isAdmin && <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 'bold', backgroundColor: '#fee2e2', padding: '2px 8px', borderRadius: '4px' }}>Ask admin to change information</span>}
                   </div>
-                  
+
                   <div className="profile-form-grid">
                     <div>
                       <label style={labelStyle}>Full Name</label>
@@ -238,6 +243,33 @@ function Profile() {
                     Leave password fields blank if you do not wish to change your current password.
                   </p>
                 </div>
+
+                {/* Section 3: Email Notifications (counsellors only) */}
+                {!isAdmin && (
+                  <>
+                    <hr style={{ border: '0', borderTop: '1px solid #f1f5f9', marginBottom: '35px' }} />
+                    <div style={{ marginBottom: '40px' }}>
+                      <h4 style={sectionHeaderStyle}>Email Notifications</h4>
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer', padding: '14px 16px', border: '1px solid #e2e8f0', borderRadius: '8px', backgroundColor: '#fcfcfc' }}>
+                        <input
+                          type="checkbox"
+                          checked={emailOptIn}
+                          onChange={(e) => setEmailOptIn(e.target.checked)}
+                          style={{ marginTop: '3px', width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontWeight: '600', color: '#0f172a' }}>
+                            <MdOutlineNotifications size={18} style={{ color: '#8b0000' }} />
+                            Email me when a student in my department submits a request
+                          </span>
+                          <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
+                            Off by default. Leave it off to rely only on the in-app notification bell, or turn it on to also get an email for each new request.
+                          </span>
+                        </span>
+                      </label>
+                    </div>
+                  </>
+                )}
 
                 {/* --- BUTTONS --- */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '15px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}>

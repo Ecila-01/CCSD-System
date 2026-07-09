@@ -31,3 +31,7 @@ Thumbs.db
 .idea/
 *.swp
 *.bak
+
+# Local
+revised documents/
+_to_delete/

@@ -6,7 +6,8 @@ import {
   MdOutlinePersonOutline, MdOutlineMail, MdOutlineLock, 
   MdOutlineVisibilityOff, MdOutlineVisibility, MdBusiness 
 } from "react-icons/md";
-import Sidebar from '../components/Sidebar'; 
+import Sidebar from '../components/Sidebar';
+import TopBar from '../components/TopBar';
 import '../styles/ServiceModal.css'; 
 import '../styles/Dashboard.css';
 import '../styles/ManagePages.css'; 
@@ -135,21 +136,7 @@ const ManageCounselors = () => {
     <div className="dashboard-container" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f3f4f6' }}>
       <Sidebar />
       <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
-        <header className="content-header">
-          <div className="header-right">
-            <span>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </span>
-            <div className="user-pill">
-              <span className="role-tag">{user.role}</span>
-            </div>
-          </div>
-        </header>
+        <TopBar />
 
         <section className="dashboard-view" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '16px' }}>

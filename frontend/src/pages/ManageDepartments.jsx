@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { 
   MdAdd, MdOutlineEdit, MdOutlineDelete, MdClose, MdBusiness, MdSchool 
 } from "react-icons/md";
-import Sidebar from '../components/Sidebar'; 
+import Sidebar from '../components/Sidebar';
+import TopBar from '../components/TopBar';
 import StatusModal from '../components/StatusModal'; // ✅ Imported StatusModal
 import '../styles/Dashboard.css';
 import '../styles/ManagePages.css'; 
@@ -158,21 +159,7 @@ const ManageDepartments = () => {
       <Sidebar />
       <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
         
-        <header className="content-header">
-          <div className="header-right">
-            <span>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </span>
-            <div className="user-pill">
-              <span className="role-tag">{user.role}</span>
-            </div>
-          </div>
-        </header>
+        <TopBar />
 
         {/* MAIN VIEW */}
         <section className="dashboard-view" style={{ padding: '20px' }}>

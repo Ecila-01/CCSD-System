@@ -3,18 +3,62 @@ import "../styles/AppointmentModal.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+// Matches email addresses so we can render them without dumping the literal
+// address into the page source (reduces naive bot scraping).
+const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+
+// Renders an email as a "click to reveal" control. The address is held
+// base64-encoded until the user clicks, so the raw `name@domain` string is not
+// present in the initial DOM/HTML that scrapers read.
+const ObfuscatedEmail = ({ email }) => {
+  const [revealed, setRevealed] = useState(false);
+  const encoded = btoa(email);
+  if (revealed) {
+    const addr = atob(encoded);
+    return <a href={`mailto:${addr}`} style={{ color: "#c00000", fontWeight: 600 }}>{addr}</a>;
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => setRevealed(true)}
+      style={{ background: "none", border: "none", color: "#c00000", textDecoration: "underline", cursor: "pointer", padding: 0, font: "inherit" }}
+    >
+      [click to reveal email]
+    </button>
+  );
+};
+
+// Splits free-text instruction content into plain text + obfuscated emails.
+const renderInfoContent = (text) => {
+  if (!text) return null;
+  const parts = [];
+  const re = new RegExp(EMAIL_RE.source, "g");
+  let lastIndex = 0;
+  let match;
+  let key = 0;
+  while ((match = re.exec(text)) !== null) {
+    if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
+    parts.push(<ObfuscatedEmail key={`em-${key++}`} email={match[0]} />);
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
+  return parts;
+};
+
 const AppointmentModal = ({ isOpen, onClose, service }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [submittedToken, setSubmittedToken] = useState("");
+  const [submitError, setSubmitError] = useState("");
   const [liveDepts, setLiveDepts] = useState([]);
+  const [closures, setClosures] = useState([]);
   const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30, workingDays: [1,2,3,4,5] });
-  
+
   // ✅ UPGRADED: Find the max form sections, then add 1 for the Summary Page
   const maxFormSection = service?.fields ? Math.max(...service.fields.map(f => f.section || 1)) : 1;
-  const totalSteps = maxFormSection + 1; 
+  const totalSteps = maxFormSection + 1;
 
   // --- Date Restriction Helpers ---
   const getMinDate = () => {
@@ -25,9 +69,30 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
 
   const getMaxDate = () => {
     const max = new Date();
-    max.setMonth(max.getMonth() + 2); 
+    max.setMonth(max.getMonth() + 2);
     const offset = max.getTimezoneOffset() * 60000;
     return new Date(max.getTime() - offset).toISOString().split('T')[0];
+  };
+
+  // Local (timezone-safe) YYYY-MM-DD for a Date object
+  const fmtLocalDate = (d) => {
+    const off = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - off).toISOString().split('T')[0];
+  };
+
+  // A day is bookable-blocked when a whole-day closure exists for it
+  const isDayFullyClosed = (date) => {
+    const ds = fmtLocalDate(date);
+    return closures.some(c => c.date === ds && c.allDay !== false);
+  };
+
+  // A specific slot is blocked when a partial closure on that date covers it
+  const isSlotClosed = (dateStr, slotValue) => {
+    if (!dateStr) return false;
+    return closures.some(c =>
+      c.date === dateStr && c.allDay === false && c.startTime && c.endTime &&
+      slotValue >= c.startTime && slotValue < c.endTime
+    );
   };
 
   const generateTimeSlots = () => {
@@ -60,6 +125,11 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
         .then(res => res.json())
         .then(data => setBizHours(data))
         .catch(err => console.error("Error fetching business hours:", err));
+
+      fetch(`${import.meta.env.VITE_API_URL}/api/closures`)
+        .then(res => res.json())
+        .then(data => setClosures(Array.isArray(data) ? data : []))
+        .catch(err => console.error("Error fetching closures:", err));
     }
   }, [isOpen]);
 
@@ -79,6 +149,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
         setStep(1);
         setFormData({});
         setIsSuccess(false);
+        setSubmitError("");
       }, 300);
     }
     return () => {
@@ -99,11 +170,13 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   const handleBack = () => {
     const scrollArea = document.querySelector(".form-scroll-area");
     if (scrollArea) scrollArea.scrollTop = 0;
+    setSubmitError("");
     setStep((prev) => prev - 1);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError("");
 
     // If we aren't on the final summary page, just move to the next step
     if (step < totalSteps) {
@@ -117,7 +190,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
     setIsSubmitting(true);
     try {
       const getVal = (labelKeywords) => {
-        const field = service.fields.find(f => 
+        const field = service.fields.find(f =>
           labelKeywords.some(keyword => f.label.toLowerCase().includes(keyword.toLowerCase()))
         );
         return field ? formData[field.name] : "";
@@ -128,7 +201,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
       if (service.name.toUpperCase() === "REFERRAL") {
         extractedData = {
           studentName: getVal(["Student to be referred", "Name of the Student"]),
-          studentEmail: getVal(["Mobile Number", "Contact"]), 
+          studentEmail: getVal(["Mobile Number", "Contact"]),
           studentIdNumber: getVal(["ID Number (of Student)", "Student ID"]),
           referrerName: getVal(["Referring Faculty", "Full Name (Referring"]),
           referrerEmail: getVal(["Email Address (Referrer)"]),
@@ -146,7 +219,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
       const payload = {
         serviceId: service._id,
         serviceName: service.name,
-        status: "Pending Review", 
+        status: "Pending Review",
         ...extractedData,
         requiresSchedule: Boolean(service.requiresScheduling),
         appointmentDate: formData.preferredDate || formData.prefDate || "",
@@ -165,19 +238,21 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
         setSubmittedToken(result.guestToken);
         setIsSuccess(true);
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         console.error("Backend rejected the request:", errorData);
-        alert("Server Error. Check the console.");
+        // 409 = duplicate active request (per-service limit). Show the friendly message.
+        setSubmitError(errorData.message || "Something went wrong submitting your request. Please try again.");
       }
     } catch (error) {
       console.error("Submission error:", error);
+      setSubmitError("We couldn't reach the server. Please check your connection and try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const styledInput = {
-    width: '100%', padding: '12px 15px', borderRadius: '8px', border: '1px solid #cbd5e1', 
+    width: '100%', padding: '12px 15px', borderRadius: '8px', border: '1px solid #cbd5e1',
     backgroundColor: '#fff', fontSize: '15px', color: '#1e293b', outline: 'none',
     cursor: 'pointer', boxSizing: 'border-box', fontFamily: 'inherit', boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
   };
@@ -186,7 +261,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   const renderSummaryValue = (field) => {
     const val = formData[field.name];
     if (!val) return <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Not provided</span>;
-    
+
     // Format 24h time to 12h time (e.g., "14:30" -> "2:30 PM")
     if (field.type === 'time' && val.includes(':')) {
       const [h, m] = val.split(':');
@@ -195,7 +270,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
       const displayHour = hour % 12 || 12;
       return `${displayHour}:${m} ${ampm}`;
     }
-    
+
     // Format Dates nicely (e.g., "2026-04-23" -> "April 23, 2026")
     if (field.type === 'date') {
       const parts = val.split('-');
@@ -210,7 +285,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-container">
-        
+
         {isSuccess ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", textAlign: "center", padding: "5% 15px", boxSizing: "border-box" }}>
             <div style={{ width: "70px", height: "70px", borderRadius: "50%", backgroundColor: "#e8f5e9", color: "#2e7d32", fontSize: "35px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px auto" }}>✓</div>
@@ -235,13 +310,13 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
 
             <form className="dynamic-form" onSubmit={handleSubmit}>
               <div className="form-scroll-area">
-                
+
                 {/* ✅ UPGRADED: Logic Split between Form and Summary */}
                 {step < totalSteps ? (
                   getFieldsForStep().map((field, index) => (
                     <div key={index} className="form-group">
                       {field.type === "info" ? (
-                        <div className="info-display-box">{field.content}</div>
+                        <div className="info-display-box">{renderInfoContent(field.content)}</div>
                       ) : (
                         <>
                           {field.label && (
@@ -249,7 +324,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                                {field.label} {field.required && <span className="required">*</span>}
                              </label>
                           )}
-                          
+
                           {field.type === "select" ? (
                             <div className="select-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                               {(() => {
@@ -266,7 +341,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                                   } else {
                                     if (field.isSystemLinked === 'courses') {
                                       const selectedDept = liveDepts.find(d => d.name === parentValue);
-                                      displayOptions = selectedDept && selectedDept.courses.length > 0 
+                                      displayOptions = selectedDept && selectedDept.courses.length > 0
                                         ? [...selectedDept.courses.sort(), "Other"] : ["Other"];
                                     } else if (field.optionsMap && field.optionsMap[parentValue]) {
                                       displayOptions = field.optionsMap[parentValue];
@@ -293,9 +368,9 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                                           const updatedData = { ...prev, [field.name]: isOther ? "Other: " : val };
                                           const childField = service.fields.find(f => f.dependsOnLabel === field.label);
                                           if (childField) {
-                                            updatedData[childField.name] = ""; 
+                                            updatedData[childField.name] = "";
                                             const grandChildField = service.fields.find(f => f.dependsOnLabel === childField.label);
-                                            if (grandChildField) updatedData[grandChildField.name] = ""; 
+                                            if (grandChildField) updatedData[grandChildField.name] = "";
                                           }
                                           return updatedData;
                                         });
@@ -343,9 +418,9 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                                       const formattedDate = date ? date.toISOString().split('T')[0] : "";
                                       setFormData({ ...formData, [field.name]: formattedDate });
                                     }}
-                                    minDate={isDOB ? null : new Date()} 
-                                    maxDate={isDOB ? new Date() : new Date(new Date().setMonth(new Date().getMonth() + 2))} 
-                                    filterDate={isDOB ? undefined : (date) => (bizHours.workingDays || [1,2,3,4,5]).includes(date.getDay())}
+                                    minDate={isDOB ? null : new Date()}
+                                    maxDate={isDOB ? new Date() : new Date(new Date().setMonth(new Date().getMonth() + 2))}
+                                    filterDate={isDOB ? undefined : (date) => (bizHours.workingDays || [1,2,3,4,5]).includes(date.getDay()) && !isDayFullyClosed(date)}
                                     placeholderText={isDOB ? "Select your birth date" : "Select an appointment date"}
                                     dateFormat="MMMM d, yyyy"
                                     className="react-datepicker-custom-input"
@@ -359,21 +434,29 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                             </div>
                           ) : field.type === "time" ? (
                             <div className="time-pill-grid">
-                              {timeSlots.map((slot) => {
-                                const isSelected = formData[field.name] === slot.value;
-                                return (
-                                  <label 
-                                    key={slot.value} 
-                                    className={`time-pill ${isSelected ? 'selected' : ''}`}
-                                  >
-                                    <input
-                                      type="radio" name={field.name} value={slot.value} required={field.required}
-                                      onChange={handleChange} className="hidden-radio"
-                                    />
-                                    {slot.label}
-                                  </label>
-                                );
-                              })}
+                              {(() => {
+                                const apptDateField = service.fields.find(f => f.type === 'date' && !/(birth|dob)/i.test(f.label || ''));
+                                const selDate = apptDateField ? formData[apptDateField.name] : "";
+                                const openSlots = timeSlots.filter(slot => !isSlotClosed(selDate, slot.value));
+                                if (openSlots.length === 0) {
+                                  return <p style={{ color: '#b91c1c', fontSize: '13px', margin: 0 }}>No available times for the selected date. Please choose another day.</p>;
+                                }
+                                return openSlots.map((slot) => {
+                                  const isSelected = formData[field.name] === slot.value;
+                                  return (
+                                    <label
+                                      key={slot.value}
+                                      className={`time-pill ${isSelected ? 'selected' : ''}`}
+                                    >
+                                      <input
+                                        type="radio" name={field.name} value={slot.value} required={field.required}
+                                        onChange={handleChange} className="hidden-radio"
+                                      />
+                                      {slot.label}
+                                    </label>
+                                  );
+                                });
+                              })()}
                             </div>
                           ) : (
                             <input
@@ -394,7 +477,13 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                     <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '20px' }}>
                       Please verify that the information below is correct before submitting your request.
                     </p>
-                    
+
+                    {submitError && (
+                      <div style={{ backgroundColor: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', padding: '12px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>
+                        {submitError}
+                      </div>
+                    )}
+
                     <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' }}>
                       {service.fields.filter(f => f.type !== 'info').map((field) => (
                         <div key={field.name} style={{ marginBottom: '15px', borderBottom: '1px solid #e2e8f0', paddingBottom: '15px' }}>

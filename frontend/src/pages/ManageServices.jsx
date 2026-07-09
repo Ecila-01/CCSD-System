@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Sidebar from '../components/Sidebar'; 
+import Sidebar from '../components/Sidebar';
+import TopBar from '../components/TopBar';
 import ServiceModal from '../components/ServiceModal'; // <-- IMPORT THE NEW MODAL
 import '../styles/ManageServices.css';
 import '../styles/ManagePages.css'; 
@@ -125,21 +126,7 @@ function ManageServices() {
     <div className="dashboard-container">
       <Sidebar />
       <main className="main-content">
-        <header className="content-header">
-          <div className="header-right">
-            <span>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </span>
-            <div className="user-pill">
-              <span className="role-tag">{user.role}</span>
-            </div>
-          </div>
-        </header>
+        <TopBar />
 
         <section className="services-view">
           <div className="services-page-header">

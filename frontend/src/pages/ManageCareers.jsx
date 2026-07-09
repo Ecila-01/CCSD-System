@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
+import TopBar from '../components/TopBar';
 import CareerModal from '../components/CareerModal';
 import AddCareerModal from '../components/AddCareerModal';
 import StatusModal from '../components/StatusModal';
@@ -230,21 +231,7 @@ function ManageCareers() {
     <div className="dashboard-container">
       <Sidebar />
       <main className="main-content">
-        <header className="content-header">
-          <div className="header-right">
-            <span>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </span>
-            <div className="user-pill">
-              <span className="role-tag">{user.role}</span>
-            </div>
-          </div>
-        </header>
+        <TopBar />
 
         <section className="announcements-view">
           <div className="page-header-row">

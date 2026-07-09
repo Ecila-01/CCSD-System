@@ -33,7 +33,7 @@ router.post('/register', async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      assignedDepartments: assignedDepartments || [] 
+      assignedDepartments: assignedDepartments || []
     });
 
     await newUser.save();
@@ -44,13 +44,11 @@ router.post('/register', async (req, res) => {
 });
 
 // @route   PUT /api/users/:id
-// @desc    Update user details (Handles both Admin Dashboard AND Profile Page)
-// @route   PUT /api/users/:id
 // @desc    Update user details (Handles Admin Dashboard AND Profile Page)
 router.put('/:id', async (req, res) => {
   try {
-    const { name, email, password, newPassword, role, assignedDepartments } = req.body;
-    
+    const { name, email, password, newPassword, role, assignedDepartments, notificationPreferences } = req.body;
+
     let user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -61,6 +59,14 @@ router.put('/:id', async (req, res) => {
     if (email) updateData.email = email;
     if (role) updateData.role = role;
     if (assignedDepartments) updateData.assignedDepartments = assignedDepartments;
+
+    // 1b. Notification preferences (merge so partial updates don't wipe others)
+    if (notificationPreferences !== undefined) {
+      updateData.notificationPreferences = {
+        ...(user.notificationPreferences ? user.notificationPreferences.toObject() : {}),
+        ...notificationPreferences,
+      };
+    }
 
     // 2. Handle Password (check for 'password' from admin dashboard OR 'newPassword' from profile)
     const passwordInput = newPassword || password;
@@ -76,9 +82,9 @@ router.put('/:id', async (req, res) => {
     ).select('-password');
 
     // Return the updated user object so the frontend can update LocalStorage
-    res.json({ 
-      message: "Update successful", 
-      user: updatedUser 
+    res.json({
+      message: "Update successful",
+      user: updatedUser
     });
 
   } catch (error) {

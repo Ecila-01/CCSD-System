@@ -12,6 +12,8 @@ const departmentRoutes = require('./routes/departments');
 const aboutRoutes = require('./routes/aboutRoutes');
 const systemRoutes = require('./routes/system');
 const careerRoutes = require('./routes/career');
+const notificationRoutes = require('./routes/notifications');
+const closureRoutes = require('./routes/closures');
 const cron = require('node-cron');
 const ServiceRequest = require('./models/ServiceRequest');
 const { sendAppointmentReminder } = require('./utils/mailer');
@@ -53,6 +55,8 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/about', aboutRoutes);
 app.use('/api/system', systemRoutes);
 app.use('/api/careers', careerRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/closures', closureRoutes);
 // Note: I removed the app.use('/uploads', express.static(...)) block.
 // You no longer need it because Cloudinary hosts your images now!
 

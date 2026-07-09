@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MdClose, MdOutlineEmail, MdOutlineCalendarToday, MdEditNote } from "react-icons/md";
-import '../styles/ServiceModal.css'; 
+import '../styles/ServiceModal.css';
 import axios from 'axios';
 import StatusModal from './StatusModal'; // ✅ Importing your custom StatusModal
 
@@ -18,6 +18,9 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
   const [statusNote, setStatusNote] = useState("");
+
+  // --- ACCEPT-TIME SLOT CONFLICTS ---
+  const [slotConflicts, setSlotConflicts] = useState([]);
 
   // --- STATES FOR SUCCESS/ERROR POPUP ---
   const [statusPopup, setStatusPopup] = useState({
@@ -54,7 +57,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
     } else {
       fetchServiceTemplate();
     }
-  }, [request]); 
+  }, [request]);
 
   const getFieldLabel = (key) => {
     const matchingField = serviceFields.find(field => field.name === key);
@@ -86,8 +89,24 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
   };
 
   // --- OPEN NOTE MODAL ---
-  const initiateStatusUpdate = (status) => {
+  const initiateStatusUpdate = async (status) => {
     setPendingStatus(status);
+    setStatusNote("");
+    setSlotConflicts([]);
+
+    // When accepting a scheduled appointment, warn if the same slot is already
+    // taken by another active request (heads-up only — the counsellor decides).
+    if (status === 'In-Progress' && Boolean(request.requiresSchedule) && request.appointmentDate && request.timeSlot) {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/requests/slot-conflicts`, {
+          params: { date: request.appointmentDate, time: request.timeSlot, excludeId: request._id }
+        });
+        setSlotConflicts(res.data || []);
+      } catch (err) {
+        console.error("Error checking slot conflicts:", err);
+      }
+    }
+
     setIsNoteModalOpen(true);
   };
 
@@ -97,9 +116,9 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
     try {
       const currentUser = JSON.parse(localStorage.getItem("user"));
       let counselorToAssign = request.assignedCounselor || 'Unassigned';
-      
+
       if (request.status === 'Pending Review' && pendingStatus === 'In-Progress') {
-        counselorToAssign = currentUser.name; 
+        counselorToAssign = currentUser.name;
       }
 
       await axios.patch(`${import.meta.env.VITE_API_URL}/api/requests/${request._id}`, {
@@ -147,15 +166,15 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
     <>
       <div className="service-modal-overlay">
         <div className="service-modal-card" style={{ maxWidth: '650px' }}>
-          
-          <div className="modal-header bg-red" style={{ 
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-            position: 'relative', padding: '15px 20px' 
+
+          <div className="modal-header bg-red" style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            position: 'relative', padding: '15px 20px'
           }}>
             <h2 style={{ margin: 0, fontSize: '18px', color: 'white' }}>Request Details</h2>
-            <button type="button" className="close-btn" onClick={onClose} style={{ 
-                background: 'transparent', border: 'none', color: 'white', 
-                cursor: 'pointer', display: 'flex', alignItems: 'center', 
+            <button type="button" className="close-btn" onClick={onClose} style={{
+                background: 'transparent', border: 'none', color: 'white',
+                cursor: 'pointer', display: 'flex', alignItems: 'center',
                 justifyContent: 'center', padding: '5px'
               }}>
               <MdClose size={28} />
@@ -163,13 +182,13 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
           </div>
 
           <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto', padding: '20px' }}>
-            
+
             {/* --- FORM CONTENT --- */}
             <div className="form-section" style={{ marginBottom: '25px' }}>
               {isReferral ? (
-                <div style={{ 
-                    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', 
-                    background: '#fcfcfc', padding: '20px', borderRadius: '12px', 
+                <div style={{
+                    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px',
+                    background: '#fcfcfc', padding: '20px', borderRadius: '12px',
                     border: '1px solid #eee', position: 'relative'
                   }}>
                     <div style={{ position: 'absolute', top: '15px', right: '15px', textAlign: 'right' }}>
@@ -334,8 +353,27 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
               <MdEditNote size={24} />
             </div>
             <div style={{ padding: '20px' }}>
+
+              {/* ── SLOT CONFLICT REMINDER ── */}
+              {slotConflicts.length > 0 && (
+                <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', color: '#9a3412', padding: '10px 12px', borderRadius: '6px', marginBottom: '14px', fontSize: '13px' }}>
+                  <strong>⚠ Slot already booked:</strong> {slotConflicts.length} other active request{slotConflicts.length > 1 ? 's' : ''} at {request.appointmentDate} {request.timeSlot}:
+                  <ul style={{ margin: '6px 0 0', paddingLeft: '18px' }}>
+                    {slotConflicts.map(c => (
+                      <li key={c._id}>
+                        {c.studentName} — {c.status}
+                        {c.assignedCounselor && c.assignedCounselor !== 'Unassigned' ? ` (with ${c.assignedCounselor})` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                  <div style={{ marginTop: '6px', fontSize: '12px' }}>
+                    You can still accept — this is just a heads-up so you can decline or reschedule the others.
+                  </div>
+                </div>
+              )}
+
               <label style={{ fontSize: '12px', color: '#666', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>ADD A NOTE (OPTIONAL)</label>
-              <textarea 
+              <textarea
                 style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px', outline: 'none', fontSize: '14px' }}
                 placeholder="Include instructions or reason for change..."
                 rows="4"
@@ -354,7 +392,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
       )}
 
       {/* --- ✅ YOUR STATUS MODAL INTEGRATION --- */}
-      <StatusModal 
+      <StatusModal
         isOpen={statusPopup.isOpen}
         type={statusPopup.type}
         title={statusPopup.title}

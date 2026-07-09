@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
+import TopBar from '../components/TopBar';
 import StatusModal from '../components/StatusModal';
-import { MdBackup, MdRestore, MdWarning, MdDownload, MdUpload, MdDeleteForever, MdClose, MdSchedule } from "react-icons/md";
+import { MdBackup, MdRestore, MdWarning, MdDownload, MdUpload, MdDeleteForever, MdClose, MdSchedule, MdBlock, MdEventBusy, MdAdd, MdDelete } from "react-icons/md";
 import '../styles/Dashboard.css';
 
 // The exact model names for the backend
@@ -13,34 +14,79 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
 function Settings() {
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Checklist States
   const [backupChecklist, setBackupChecklist] = useState(ALL_MODELS);
-  const [wipeChecklist, setWipeChecklist] = useState(['ServiceRequest', 'Announcement']); 
-  
+  const [wipeChecklist, setWipeChecklist] = useState(['ServiceRequest', 'Announcement']);
+
   // Restore States
   const [restoreFile, setRestoreFile] = useState(null);
   const [modelsInRestoreFile, setModelsInRestoreFile] = useState([]);
 
-  // Business Hours States
-  const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30, workingDays: [1,2,3,4,5] });
+  // Business Hours + settings States
+  const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30, workingDays: [1,2,3,4,5], submissionLimitEnabled: true, maxActivePerService: 1 });
   const [isSavingHours, setIsSavingHours] = useState(false);
+
+  // Office Closures
+  const [closures, setClosures] = useState([]);
+  const [closureForm, setClosureForm] = useState({ date: '', allDay: true, startTime: '08:00', endTime: '17:00', reason: '' });
+  const [isSavingClosure, setIsSavingClosure] = useState(false);
 
   useEffect(() => {
     axios.get(`${import.meta.env.VITE_API_URL}/api/system/settings`)
-      .then(res => setBizHours(res.data))
+      .then(res => setBizHours(prev => ({ ...prev, ...res.data })))
       .catch(err => console.error("Error fetching settings:", err));
+
+    fetchClosures();
   }, []);
+
+  const fetchClosures = () => {
+    axios.get(`${import.meta.env.VITE_API_URL}/api/closures`)
+      .then(res => setClosures(res.data || []))
+      .catch(err => console.error("Error fetching closures:", err));
+  };
 
   const handleSaveHours = async () => {
     setIsSavingHours(true);
     try {
       await axios.put(`${import.meta.env.VITE_API_URL}/api/system/settings`, bizHours);
-      setStatusModal({ isOpen: true, type: 'success', title: 'Saved', message: 'Business hours updated successfully.', onConfirm: () => setStatusModal({ isOpen: false }) });
+      setStatusModal({ isOpen: true, type: 'success', title: 'Saved', message: 'Settings updated successfully.', onConfirm: () => setStatusModal({ isOpen: false }) });
     } catch (err) {
-      setStatusModal({ isOpen: true, type: 'error', title: 'Error', message: 'Failed to save business hours.', onConfirm: () => setStatusModal({ isOpen: false }) });
+      setStatusModal({ isOpen: true, type: 'error', title: 'Error', message: 'Failed to save settings.', onConfirm: () => setStatusModal({ isOpen: false }) });
     } finally {
       setIsSavingHours(false);
+    }
+  };
+
+  const handleAddClosure = async () => {
+    if (!closureForm.date) return alert("Please pick a date to block.");
+    if (!closureForm.allDay && (!closureForm.startTime || !closureForm.endTime)) {
+      return alert("Please provide a start and end time for a partial closure.");
+    }
+    if (!closureForm.allDay && closureForm.startTime >= closureForm.endTime) {
+      return alert("End time must be after the start time.");
+    }
+    setIsSavingClosure(true);
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/closures`, {
+        ...closureForm,
+        createdBy: storedUser?.name || '',
+      });
+      setClosureForm({ date: '', allDay: true, startTime: '08:00', endTime: '17:00', reason: '' });
+      fetchClosures();
+    } catch (err) {
+      setStatusModal({ isOpen: true, type: 'error', title: 'Error', message: err.response?.data?.message || 'Failed to add closure.', onConfirm: () => setStatusModal({ isOpen: false }) });
+    } finally {
+      setIsSavingClosure(false);
+    }
+  };
+
+  const handleDeleteClosure = async (id) => {
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/closures/${id}`);
+      setClosures(prev => prev.filter(c => c._id !== id));
+    } catch (err) {
+      setStatusModal({ isOpen: true, type: 'error', title: 'Error', message: 'Failed to remove closure.', onConfirm: () => setStatusModal({ isOpen: false }) });
     }
   };
 
@@ -49,6 +95,13 @@ function Settings() {
     if (h < 12) return `${h}:00 AM`;
     if (h === 12) return '12:00 PM';
     return `${h - 12}:00 PM`;
+  };
+
+  const fmtClosureDate = (dStr) => {
+    const parts = (dStr || '').split('-');
+    if (parts.length !== 3) return dStr;
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' });
   };
 
   // Modal States
@@ -68,38 +121,38 @@ function Settings() {
   // --- ACTION 1: BACKUP ---
   const handleGenerateBackup = async () => {
     if (backupChecklist.length === 0) return alert("Please select at least one collection to backup.");
-    
+
     setStatusModal({ isOpen: true, type: 'loading', title: 'Generating Backup...', message: 'Gathering selected records...' });
     setIsLoading(true);
 
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/system/backup`, { modelsToBackup: backupChecklist });
-      
+
       const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: "application/json" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      
+
       // --- NEW READABLE DATE FORMATTING ---
       const now = new Date();
-      
+
       // Get exact date (Outputs: "April 30, 2026")
-      const dateStr = now.toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: '2-digit', 
-        year: 'numeric' 
+      const dateStr = now.toLocaleDateString('en-US', {
+        month: 'long',
+        day: '2-digit',
+        year: 'numeric'
       });
-      
+
       // Get exact time (Outputs: "10:30 am" -> converted to "10-30 am" for Windows safety)
-      const timeStr = now.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit', 
-        hour12: true 
+      const timeStr = now.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
       }).toLowerCase().replace(':', '-');
-        
+
       // Set the new highly readable filename
       link.download = `CCSD_Backup_${dateStr} - ${timeStr}.json`;
-      
+
       document.body.appendChild(link); link.click(); document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
@@ -147,12 +200,12 @@ function Settings() {
         <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1' }}>
           <strong style={{ display: 'block', marginBottom: '5px', fontSize: '13px' }}>Collections to be overwritten:</strong>
           <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '14px', color: '#334155' }}>
-            {restorableModels.length > 0 
+            {restorableModels.length > 0
               ? restorableModels.map(model => <li key={model}><b>{model === 'ServiceRequest' ? 'Cases' : model}</b></li>)
               : <li><i>No restorable collections found.</i></li>
             }
           </ul>
-          
+
           {includesUsers && (
             <div style={{ marginTop: '10px', padding: '8px', backgroundColor: '#dcfce3', color: '#166534', border: '1px solid #bbf7d0', fontSize: '12px' }}>
               <strong>🛡️ Security Lock:</strong> User data was found in this backup but will be safely ignored to prevent you from being locked out of your admin account.
@@ -167,7 +220,7 @@ function Settings() {
   const executeRestore = async () => {
     setConfirmModal({ isOpen: false });
     setStatusModal({ isOpen: true, type: 'loading', title: 'Restoring...', message: 'Overwriting database...' });
-    
+
     const formData = new FormData(); formData.append('backupFile', restoreFile);
     try {
       await axios.post(`${import.meta.env.VITE_API_URL}/api/system/restore`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -180,7 +233,7 @@ function Settings() {
   // --- ACTION 3: WIPE ---
   const triggerWipe = () => {
     if (wipeChecklist.length === 0) return alert("Select at least one collection to wipe.");
-    
+
     // Map display names for the warning modal
     const displayWipeList = wipeChecklist.map(model => model === 'ServiceRequest' ? 'Cases' : model).join(', ');
 
@@ -196,7 +249,7 @@ function Settings() {
   const executeWipe = async () => {
     setConfirmModal({ isOpen: false });
     setStatusModal({ isOpen: true, type: 'loading', title: 'Wiping...', message: 'Deleting records...' });
-    
+
     try {
       await axios.post(`${import.meta.env.VITE_API_URL}/api/system/wipe`, { modelsToWipe: wipeChecklist });
       setStatusModal({ isOpen: true, type: 'success', title: 'Wipe Complete', message: 'Selected collections have been emptied.', onConfirm: () => setStatusModal({ isOpen: false }) });
@@ -209,23 +262,9 @@ function Settings() {
     <div className="dashboard-container" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f1f5f9' }}>
       <Sidebar />
       <main className="main-content" >
-                
+
         {/* --- TOP BAR (Date & Admin) --- */}
-        <header className="content-header">
-          <div className="header-right">
-            <span>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </span>
-            <div className="user-pill">
-              <span className="role-tag">Admin</span>
-            </div>
-          </div>
-        </header>
+        <TopBar />
         <div style={{ padding: '0 30px' }}>
         {/* --- PAGE TITLE ROW (Matches Manage Departments) --- */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', marginTop: '10px' }}>
@@ -297,8 +336,110 @@ function Settings() {
           </div>
         </div>
 
+        {/* ── DUPLICATE SUBMISSION LIMIT ── */}
+        <div style={{ ...cardStyle, marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+            <div style={iconWrapper('#eff6ff', '#2563eb')}><MdBlock size={24} /></div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '16px' }}>Duplicate Submission Limit</h3>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#64748b' }}>Stops the same email from booking a service multiple times (e.g. 8:00, 8:30, 9:00…). For scheduled services the limit applies per day.</p>
+            </div>
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#334155', cursor: 'pointer', marginBottom: '16px' }}>
+            <input
+              type="checkbox"
+              checked={bizHours.submissionLimitEnabled !== false}
+              onChange={e => setBizHours(p => ({ ...p, submissionLimitEnabled: e.target.checked }))}
+              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+            />
+            Enforce the submission limit
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', fontWeight: '700', color: '#475569', maxWidth: '260px' }}>
+            MAX ACTIVE REQUESTS PER SERVICE (PER EMAIL)
+            <input
+              type="number"
+              min={1}
+              value={bizHours.maxActivePerService ?? 1}
+              disabled={bizHours.submissionLimitEnabled === false}
+              onChange={e => setBizHours(p => ({ ...p, maxActivePerService: Math.max(1, Number(e.target.value) || 1) }))}
+              style={{ ...selectSt, minWidth: '100px', backgroundColor: bizHours.submissionLimitEnabled === false ? '#f1f5f9' : '#fff' }}
+            />
+          </label>
+          <div style={{ marginTop: '16px' }}>
+            <button onClick={handleSaveHours} disabled={isSavingHours} style={{ ...primaryBtnStyle, backgroundColor: '#2563eb' }}>
+              {isSavingHours ? 'Saving…' : 'Save Limit'}
+            </button>
+          </div>
+        </div>
+
+        {/* ── OFFICE CLOSURES / BLACKOUT DATES ── */}
+        <div style={{ ...cardStyle, marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+            <div style={iconWrapper('#fef2f2', '#dc2626')}><MdEventBusy size={24} /></div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '16px' }}>Office Closures &amp; Holidays</h3>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#64748b' }}>Block days (or specific hours) so clients can't book appointments when the office is closed.</p>
+            </div>
+          </div>
+
+          {/* Add form */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end', marginBottom: '20px' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', fontWeight: '700', color: '#475569' }}>
+              DATE
+              <input type="date" value={closureForm.date} onChange={e => setClosureForm(p => ({ ...p, date: e.target.value }))} style={selectSt} />
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#334155', paddingBottom: '8px' }}>
+              <input type="checkbox" checked={closureForm.allDay} onChange={e => setClosureForm(p => ({ ...p, allDay: e.target.checked }))} style={{ width: '15px', height: '15px' }} />
+              Whole day
+            </label>
+            {!closureForm.allDay && (
+              <>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', fontWeight: '700', color: '#475569' }}>
+                  FROM
+                  <input type="time" value={closureForm.startTime} onChange={e => setClosureForm(p => ({ ...p, startTime: e.target.value }))} style={selectSt} />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', fontWeight: '700', color: '#475569' }}>
+                  TO
+                  <input type="time" value={closureForm.endTime} onChange={e => setClosureForm(p => ({ ...p, endTime: e.target.value }))} style={selectSt} />
+                </label>
+              </>
+            )}
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', fontWeight: '700', color: '#475569', flex: 1, minWidth: '160px' }}>
+              REASON (OPTIONAL)
+              <input type="text" placeholder="e.g. Foundation Day" value={closureForm.reason} onChange={e => setClosureForm(p => ({ ...p, reason: e.target.value }))} style={selectSt} />
+            </label>
+            <button onClick={handleAddClosure} disabled={isSavingClosure} style={{ ...primaryBtnStyle, backgroundColor: '#dc2626' }}>
+              <MdAdd size={18} /> {isSavingClosure ? 'Adding…' : 'Block Date'}
+            </button>
+          </div>
+
+          {/* List */}
+          {closures.length === 0 ? (
+            <p style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic', margin: 0 }}>No closures scheduled.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {closures.map(c => (
+                <div key={c._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 14px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#0f172a' }}>
+                      {fmtClosureDate(c.date)}
+                      <span style={{ marginLeft: '10px', fontSize: '12px', fontWeight: '700', color: c.allDay ? '#dc2626' : '#b45309', backgroundColor: c.allDay ? '#fee2e2' : '#fef3c7', padding: '2px 8px', borderRadius: '10px' }}>
+                        {c.allDay ? 'Whole day' : `${c.startTime}–${c.endTime}`}
+                      </span>
+                    </div>
+                    {c.reason && <div style={{ fontSize: '12px', color: '#64748b', marginTop: '3px' }}>{c.reason}</div>}
+                  </div>
+                  <button onClick={() => handleDeleteClosure(c._id)} title="Remove" style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '6px' }}>
+                    <MdDelete size={20} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
-          
+
           {/* BACKUP CARD */}
           <div style={cardStyle}>
             {/* flex: 1 pushes the button to the bottom */}
@@ -310,7 +451,7 @@ function Settings() {
               <div style={checklistContainer}>
                 {ALL_MODELS.map(model => (
                   <label key={model} style={checkboxLabel}>
-                    <input type="checkbox" checked={backupChecklist.includes(model)} onChange={() => toggleBackupModel(model)} /> 
+                    <input type="checkbox" checked={backupChecklist.includes(model)} onChange={() => toggleBackupModel(model)} />
                     {/* Visual check for ServiceRequest */}
                     {model === 'ServiceRequest' ? 'Cases' : model}
                   </label>
@@ -347,7 +488,7 @@ function Settings() {
               <div style={checklistContainer}>
                 {ALL_MODELS.map(model => (
                   <label key={`wipe-${model}`} style={{ ...checkboxLabel, opacity: model === 'User' ? 0.5 : 1 }}>
-                    <input type="checkbox" checked={wipeChecklist.includes(model)} disabled={model === 'User'} onChange={() => toggleWipeModel(model)} /> 
+                    <input type="checkbox" checked={wipeChecklist.includes(model)} disabled={model === 'User'} onChange={() => toggleWipeModel(model)} />
                     {/* Visual check for ServiceRequest */}
                     {model === 'ServiceRequest' ? 'Cases' : model} {model === 'User' && '(Locked)'}
                   </label>

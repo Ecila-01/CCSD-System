@@ -14,7 +14,7 @@ import {
   MdAccountBalance,
   MdMenu,
   MdClose,
-  MdOutlineSettings,      
+  MdOutlineSettings,
   MdOutlineAdminPanelSettings,
 } from 'react-icons/md';
 import '../styles/Sidebar.css';
@@ -72,7 +72,7 @@ const Sidebar = () => {
 
       {/* Sidebar panel */}
       <div className={`sidebar${isOpen ? ' open' : ''}`}>
-        <div className="sidebar-logo">
+        <div className="sidebar-logo" style={{ position: 'relative' }}>
           <img src={ccsdLogo} alt="CCSD Logo" className="sidebar-ccsd-logo" />
           <img src={ubLogo} alt="UB Logo" className="sidebar-ub-logo" />
         </div>

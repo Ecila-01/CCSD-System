@@ -34,17 +34,19 @@ const login = async (req, res) => {
       { expiresIn: '8h' }, // Staff stays logged in for a full shift
       (err, token) => {
         if (err) throw err;
-        
+
         // ✅ THE FIX: Added assignedDepartments and email to the response
-        res.json({ 
-          token, 
-          user: { 
-            id: user.id, 
-            name: user.name, 
+        res.json({
+          token,
+          user: {
+            id: user.id,
+            name: user.name,
             email: user.email,
             role: user.role,
-            assignedDepartments: user.assignedDepartments || [] // 👈 Grabs the array!
-          } 
+            assignedDepartments: user.assignedDepartments || [], // 👈 Grabs the array!
+            // So the Profile toggle reflects the saved state after login
+            notificationPreferences: user.notificationPreferences || { newSubmissionEmails: false }
+          }
         });
       }
     );
@@ -62,7 +64,7 @@ const forgotPassword = async (req, res) => {
     // 1. Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "If this email exists, an OTP will be sent." }); 
+      return res.status(404).json({ message: "If this email exists, an OTP will be sent." });
     }
 
     // 2. Generate a 6-digit OTP
@@ -70,12 +72,12 @@ const forgotPassword = async (req, res) => {
 
     // 3. Save OTP and Expiry (10 minutes from now) to database
     user.resetPasswordOtp = otp;
-    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; 
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
     // 4. Send the email using the specific OTP mailer function you imported
     // ✅ THIS IS THE PART THAT CHANGED
-    await sendPasswordResetOtp(user.email, otp); 
+    await sendPasswordResetOtp(user.email, otp);
 
     res.status(200).json({ message: "OTP sent to email." });
   } catch (error) {

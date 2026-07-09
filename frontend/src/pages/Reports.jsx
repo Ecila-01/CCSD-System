@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
+import TopBar from '../components/TopBar';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -217,12 +218,7 @@ function Reports() {
       <Sidebar />
 
       <main className="main-content" style={{ padding: '20px', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
-        <header className="content-header">
-          <div className="header-right">
-            <span>{now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-            <div className="user-pill"><span className="role-tag">{user?.role}</span></div>
-          </div>
-        </header>
+        <TopBar />
 
         <section className="reports-view">
 

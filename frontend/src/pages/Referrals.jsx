@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import TopBar from '../components/TopBar';
 import CasesTable from '../components/CasesTable';
 import RequestDetailsModal from '../components/RequestDetailsModal';
 import '../styles/Referrals.css';
@@ -53,21 +54,7 @@ function Referrals() {
       <Sidebar />
 
       <main className="main-content">
-        <header className="content-header">
-          <div className="header-right">
-            <span>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </span>
-            <div className="user-pill">
-              <span className="role-tag">{user.role}</span>
-            </div>
-          </div>
-        </header>
+        <TopBar />
 
         {/* ── Page body ── */}
         <section className="referrals-view">

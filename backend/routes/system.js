@@ -51,10 +51,10 @@ router.post('/restore', upload.single('backupFile'), async (req, res) => {
     }
 
     const models = Object.keys(backupContent.data);
-    
+
     // 🔥 THE HARD LOCK: Filter out the 'User' model so it is NEVER restored
     const safeModelsToRestore = models.filter(modelName => modelName !== 'User');
-    
+
     for (const modelName of safeModelsToRestore) {
       if (mongoose.modelNames().includes(modelName)) {
         const Model = mongoose.model(modelName);
@@ -74,7 +74,7 @@ router.post('/restore', upload.single('backupFile'), async (req, res) => {
   }
 });
 
-// 3. SELECTIVE WIPE DATABASE 
+// 3. SELECTIVE WIPE DATABASE
 // Changed to POST to accept an array of models from the frontend checklist
 router.post('/wipe', async (req, res) => {
   try {
@@ -86,13 +86,13 @@ router.post('/wipe', async (req, res) => {
 
     // 🔥 THE HARD LOCK: Filter out the 'User' model so it is NEVER wiped
     const safeModelsToWipe = modelsToWipe.filter(modelName => modelName !== 'User');
-    
+
     for (const modelName of safeModelsToWipe) {
       if (mongoose.modelNames().includes(modelName)) {
         await mongoose.model(modelName).deleteMany({});
       }
     }
-    
+
     res.status(200).json({ message: "Selected records wiped successfully. Users were kept safe." });
   } catch (error) {
     console.error("Wipe failed:", error);
@@ -114,13 +114,18 @@ router.get('/settings', async (req, res) => {
 // PUT update system settings
 router.put('/settings', async (req, res) => {
   try {
-    const { businessHoursStart, businessHoursEnd, slotIntervalMinutes, workingDays } = req.body;
+    const {
+      businessHoursStart, businessHoursEnd, slotIntervalMinutes, workingDays,
+      submissionLimitEnabled, maxActivePerService
+    } = req.body;
     let settings = await SystemSettings.findOne();
     if (!settings) settings = new SystemSettings();
     if (businessHoursStart !== undefined) settings.businessHoursStart = Number(businessHoursStart);
     if (businessHoursEnd   !== undefined) settings.businessHoursEnd   = Number(businessHoursEnd);
     if (slotIntervalMinutes !== undefined) settings.slotIntervalMinutes = Number(slotIntervalMinutes);
     if (workingDays !== undefined) settings.workingDays = workingDays;
+    if (submissionLimitEnabled !== undefined) settings.submissionLimitEnabled = Boolean(submissionLimitEnabled);
+    if (maxActivePerService !== undefined) settings.maxActivePerService = Math.max(1, Number(maxActivePerService) || 1);
     await settings.save();
     res.json(settings);
   } catch (err) {

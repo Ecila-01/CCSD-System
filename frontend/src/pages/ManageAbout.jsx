@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
+import TopBar from '../components/TopBar';
 import StatusModal from '../components/StatusModal';
 import {
   MdSave, MdAdd, MdDeleteOutline, MdOutlineEdit,
@@ -164,21 +165,7 @@ const ManageAbout = () => {
       <Sidebar />
       <main className="main-content" style={{ flex: 1, overflowY: 'auto' }}>
         
-        <header className="content-header">
-          <div className="header-right">
-            <span>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </span>
-            <div className="user-pill">
-              <span className="role-tag">Admin</span>
-            </div>
-          </div>
-        </header>
+        <TopBar />
 
         <section style={{ padding: '30px', maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '30px' }}>
           

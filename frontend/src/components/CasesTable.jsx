@@ -106,6 +106,7 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
     indicatorSeparator: () => ({ display: 'none' }),
     dropdownIndicator: (base) => ({ ...base, padding: '0 0 0 4px', color: '#6b7280', '&:hover': { color: '#3b82f6' } }),
     menu: (base) => ({ ...base, width: 'max-content', minWidth: '100%', zIndex: 50 }),
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
     option: (base, state) => ({ ...base, fontSize: '13px', color: '#1e293b', backgroundColor: state.isFocused ? '#f1f5f9' : 'white', cursor: 'pointer' })
   };
 
@@ -123,7 +124,7 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
         <thead>
           <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
             <th style={{ padding: '16px 10px 16px 20px', minWidth: '160px' }}>
-              <Select options={caseOptions} styles={headerSelectStyles} isSearchable={true} value={caseOptions.find(o => o.value === filterCase)} onChange={(option) => setFilterCase(option ? option.value : '')} />
+              <Select options={caseOptions} styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" isSearchable={true} value={caseOptions.find(o => o.value === filterCase)} onChange={(option) => setFilterCase(option ? option.value : '')} />
             </th>
             
             <th style={{ padding: '16px 20px' }}>
@@ -134,7 +135,7 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
               {/* ✅ NEW: Department Select */}
               <Select 
                 options={departmentOptions} 
-                styles={headerSelectStyles} 
+                styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" 
                 isSearchable={true} 
                 value={departmentOptions.find(o => o.value === filterDepartment)} 
                 onChange={(option) => setFilterDepartment(option ? option.value : '')} 
@@ -145,11 +146,11 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
             <th style={{ ...plainHeaderStyle, padding: '16px 20px' }}>TIME</th>
             
             <th style={{ padding: '16px 10px', minWidth: '150px' }}>
-              <Select options={statusOptions} styles={headerSelectStyles} isSearchable={true} value={statusOptions.find(o => o.value === filterStatus)} onChange={(option) => setFilterStatus(option ? option.value : '')} />
+              <Select options={statusOptions} styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" isSearchable={true} value={statusOptions.find(o => o.value === filterStatus)} onChange={(option) => setFilterStatus(option ? option.value : '')} />
             </th>
             
             <th style={{ padding: '16px 10px', minWidth: '180px' }}>
-              <Select options={counselorOptions} styles={headerSelectStyles} isSearchable={true} value={counselorOptions.find(o => o.value === filterCounselor)} onChange={(option) => setFilterCounselor(option ? option.value : '')} />
+              <Select options={counselorOptions} styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" isSearchable={true} value={counselorOptions.find(o => o.value === filterCounselor)} onChange={(option) => setFilterCounselor(option ? option.value : '')} />
             </th>
             
             <th style={{ ...plainHeaderStyle, padding: '16px 20px' }}>ACTIONS</th>

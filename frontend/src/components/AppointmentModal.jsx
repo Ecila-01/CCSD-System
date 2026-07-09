@@ -415,7 +415,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                                   <DatePicker
                                     selected={formData[field.name] ? new Date(formData[field.name]) : null}
                                     onChange={(date) => {
-                                      const formattedDate = date ? date.toISOString().split('T')[0] : "";
+                                      const formattedDate = date ? fmtLocalDate(date) : "";
                                       setFormData({ ...formData, [field.name]: formattedDate });
                                     }}
                                     minDate={isDOB ? null : new Date()}

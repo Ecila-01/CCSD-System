@@ -254,6 +254,20 @@ router.patch('/guest/cancel/:token', async (req, res) => {
           ).catch(err => console.error("Cancellation email failed:", err));
         }
       }
+    } else {
+      // No assignee yet — notify the whole department so the cancellation isn't missed
+      const dept = updatedRequest.requestData?.department;
+      const deptCounselors = await findCounselorsForDepartment(dept);
+      if (deptCounselors.length > 0) {
+        await Notification.insertMany(deptCounselors.map(c => ({
+          recipientId: c._id,
+          type: 'cancellation',
+          title: 'Request cancelled',
+          message: `${updatedRequest.studentName} cancelled their ${updatedRequest.serviceName}${dept ? ' (' + dept + ')' : ''}.`,
+          relatedRequestId: updatedRequest._id,
+          department: dept,
+        }))).catch(err => console.error('Dept cancellation notification failed:', err));
+      }
     }
 
     res.json(updatedRequest);
@@ -310,6 +324,20 @@ router.patch('/guest/reschedule/:token', async (req, res) => {
             timeSlot
           ).catch(err => console.error('Reschedule notification email failed:', err));
         }
+      }
+    } else {
+      // No assignee yet — notify the whole department about the proposed new schedule
+      const dept = updatedRequest.requestData?.department;
+      const deptCounselors = await findCounselorsForDepartment(dept);
+      if (deptCounselors.length > 0) {
+        await Notification.insertMany(deptCounselors.map(c => ({
+          recipientId: c._id,
+          type: 'reschedule',
+          title: 'Schedule change proposed',
+          message: `${updatedRequest.studentName} proposed a new time for ${updatedRequest.serviceName}: ${appointmentDate} ${timeSlot}.`,
+          relatedRequestId: updatedRequest._id,
+          department: dept,
+        }))).catch(err => console.error('Dept reschedule notification failed:', err));
       }
     }
 

@@ -168,7 +168,7 @@ function Reports() {
       { label: 'TOTAL REQUESTS',       value: reqs.length },
       { label: 'COMPLETED',             value: stats.completed.length },
       { label: 'PENDING / IN-PROGRESS', value: stats.pending.length },
-      { label: 'DECLINED / CANCELLED',  value: stats.declined.length },
+      { label: 'CANCELLED',  value: stats.declined.length },
       { label: 'COMPLETION RATE',       value: `${stats.rate}%` },
       ...(reportType === 'overall'
         ? [{ label: 'TOTAL REFERRALS', value: overallStats.referralCount }]
@@ -277,7 +277,7 @@ function Reports() {
               <KPI label="Total Requests"        value={activeReqs.length}                  color="#0284c7" />
               <KPI label="Completed"             value={activeStats.completed.length}        color="#16a34a" />
               <KPI label="Pending / In-Progress" value={activeStats.pending.length}          color="#f59e0b" />
-              <KPI label="Declined / Cancelled"  value={activeStats.declined.length}         color="#dc2626" />
+              <KPI label="Cancelled"  value={activeStats.declined.length}         color="#dc2626" />
               <KPI label="Completion Rate"       value={`${activeStats.rate}%`}              color="#7c3aed" />
               {reportType === 'overall' && (
                 <KPI label="Total Referrals"     value={overallStats.referralCount}          color="#c00000" />
@@ -297,7 +297,7 @@ function Reports() {
                     <Legend />
                     <Bar dataKey="completed" name="Completed" stackId="a" fill="#16a34a" radius={[0,0,4,4]} />
                     <Bar dataKey="pending"   name="Pending"   stackId="a" fill="#f59e0b" />
-                    <Bar dataKey="declined"  name="Declined"  stackId="a" fill="#dc2626" radius={[4,4,0,0]} />
+                    <Bar dataKey="declined"  name="Cancelled"  stackId="a" fill="#dc2626" radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -362,7 +362,7 @@ function Reports() {
                     <Legend />
                     <Bar dataKey="completed" name="Completed" stackId="a" fill="#16a34a" radius={[0,0,4,4]} />
                     <Bar dataKey="pending"   name="Pending"   stackId="a" fill="#f59e0b" />
-                    <Bar dataKey="declined"  name="Declined"  stackId="a" fill="#dc2626" radius={[4,4,0,0]} />
+                    <Bar dataKey="declined"  name="Cancelled"  stackId="a" fill="#dc2626" radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </>
@@ -463,7 +463,7 @@ function SummaryTable({ rows, colHeader, nameKey, emptyMsg }) {
       <table style={tbl}>
         <thead>
           <tr>
-            {[colHeader, 'Total', 'Completed', 'Pending', 'Declined', 'Completion Rate'].map(h => (
+            {[colHeader, 'Total', 'Completed', 'Pending', 'Cancelled', 'Completion Rate'].map(h => (
               <th key={h} style={th}>{h}</th>
             ))}
           </tr>

@@ -310,6 +310,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                   {requiresSchedule && (
                     <button onClick={() => initiateStatusUpdate('Reschedule Requested')} style={{ padding: '10px 15px', background: '#fff3e0', color: '#e65100', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>Request Reschedule</button>
                   )}
+                  <button onClick={() => initiateStatusUpdate('Cancelled')} style={{ padding: '10px 15px', background: '#eceff1', color: '#455a64', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>Cancel Case</button>
                   <button onClick={() => initiateStatusUpdate('In-Progress')} style={{ padding: '10px 20px', background: '#1976d2', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>
                     {isReferral ? "Accept Referral" : "Accept Request"}
                   </button>
@@ -325,7 +326,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                   ) : (
                     <>
                       <button onClick={() => initiateStatusUpdate('Reschedule Requested')} style={{ padding: '10px 15px', background: '#fff3e0', color: '#e65100', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>Reschedule</button>
-                      <button onClick={() => initiateStatusUpdate('No-Show')} style={{ padding: '10px 15px', background: '#eceff1', color: '#455a64', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>No-Show</button>
+                      <button onClick={() => initiateStatusUpdate('Cancelled')} style={{ padding: '10px 15px', background: '#eceff1', color: '#455a64', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>Cancel Case</button>
                       <button onClick={() => initiateStatusUpdate('Completed')} style={{ padding: '10px 20px', background: '#2e7d32', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>Mark Completed</button>
                     </>
                   )}
@@ -336,7 +337,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                 <button onClick={() => initiateStatusUpdate('Completed')} style={{ padding: '10px 20px', background: '#2e7d32', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>Confirm Received</button>
               )}
 
-              {(request.status === 'Reschedule Requested' || request.status === 'No-Show') && (
+              {(request.status === 'Reschedule Requested' || request.status === 'Cancelled') && (
                 <button onClick={() => initiateStatusUpdate('In-Progress')} style={{ padding: '10px 20px', background: '#1976d2', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>Resume Case</button>
               )}
             </div>
@@ -367,7 +368,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                     ))}
                   </ul>
                   <div style={{ marginTop: '6px', fontSize: '12px' }}>
-                    You can still accept — this is just a heads-up so you can decline or reschedule the others.
+                    You can still accept — this is just a reminder.
                   </div>
                 </div>
               )}

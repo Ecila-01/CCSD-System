@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const Announcement = require('../models/Announcement');
-const upload = require('../middleware/upload'); 
+const upload = require('../middleware/upload');
 const cloudinary = require('cloudinary').v2;
+const { requireAuth, requireRole } = require('../middleware/auth');
 
-// GET all announcements (Admin View - should show all)
+const adminOnly = [requireAuth, requireRole('admin')];
+
+// GET all announcements (PUBLIC)
 router.get('/', async (req, res) => {
   try {
     const announcements = await Announcement.find().sort({ datePosted: -1 });
@@ -14,24 +17,21 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST a new announcement
-router.post('/', (req, res, next) => {
+// POST a new announcement (admin only)
+router.post('/', adminOnly, (req, res, next) => {
   upload.single('image')(req, res, (uploadErr) => {
     if (uploadErr) {
-      console.error('Upload middleware error:', uploadErr);
+      console.error('Upload middleware error:', uploadErr.message);
       return res.status(500).json({ message: 'Image upload failed: ' + uploadErr.message });
     }
     next();
   });
-}, async (req, res, next) => {
+}, async (req, res) => {
   try {
     const imageUrl = req.file ? req.file.path : null;
-
     if (!imageUrl) {
       return res.status(400).json({ message: 'An image is required.' });
     }
-
-    console.log('Creating announcement with image:', imageUrl, 'body:', req.body);
 
     const news = new Announcement({
       title: req.body.title,
@@ -45,80 +45,61 @@ router.post('/', (req, res, next) => {
     const savedNews = await news.save();
     res.status(201).json(savedNews);
   } catch (err) {
-    console.error('Announcement POST error:', err.message, err.stack);
     res.status(400).json({ message: err.message });
   }
 });
 
-// DELETE an announcement
-router.delete('/:id', async (req, res) => {
+// DELETE an announcement (admin only)
+router.delete('/:id', adminOnly, async (req, res) => {
   try {
     const announcement = await Announcement.findById(req.params.id);
-    
     if (!announcement) {
       return res.status(404).json({ message: "Announcement not found" });
     }
 
-    // ✅ NEW: Tell Cloudinary to delete the image
     if (announcement.image && announcement.image.includes('cloudinary')) {
-      // Extract the 'public_id' from the URL (Cloudinary needs this to know which file to delete)
-      // Example URL: https://res.cloudinary.com/.../ccsd_uploads/d0qpirf9ry0hmaypkr9.jpg
       const parts = announcement.image.split('/');
-      const filename = parts.pop().split('.')[0]; // Gets 'd0qpirf9ry0hmaypkr9'
-      const folder = parts.pop(); // Gets 'ccsd_uploads'
-      const publicId = `${folder}/${filename}`; 
-
+      const filename = parts.pop().split('.')[0];
+      const folder = parts.pop();
+      const publicId = `${folder}/${filename}`;
       await cloudinary.uploader.destroy(publicId);
-      console.log(`✅ Deleted image from Cloudinary: ${publicId}`);
     }
 
-    // Delete the database document
     await Announcement.findByIdAndDelete(req.params.id);
-
     res.json({ message: 'Announcement and Cloudinary image deleted successfully' });
   } catch (err) {
-    console.error("Delete Error:", err);
+    console.error("Delete Error:", err.message);
     res.status(500).json({ message: err.message });
   }
 });
 
-
-// PATCH (Update) an announcement
-router.patch('/:id', upload.single('image'), async (req, res) => {
+// PATCH (Update) an announcement (admin only)
+router.patch('/:id', adminOnly, upload.single('image'), async (req, res) => {
   try {
-    let updateData = req.body;
-
-    // ✅ CLOUDINARY FIX: Again, just use req.file.path
+    const updateData = {
+      ...(req.body.title !== undefined && { title: req.body.title }),
+      ...(req.body.shortDescription !== undefined && { shortDescription: req.body.shortDescription }),
+      ...(req.body.content !== undefined && { content: req.body.content }),
+      ...(req.body.category !== undefined && { category: req.body.category }),
+      ...(req.body.eventDate !== undefined && { eventDate: req.body.eventDate }),
+      ...(req.body.status !== undefined && { status: req.body.status }),
+    };
     if (req.file) {
       updateData.image = req.file.path;
     }
 
-    // 🔍 NEW: Log the incoming data before updating
-    console.log(`\n--- UPDATING ANNOUNCEMENT ID: ${req.params.id} ---`);
-    console.log("Incoming data to apply:", updateData);
-
     const updated = await Announcement.findByIdAndUpdate(
       req.params.id,
       { $set: updateData },
-      { 
-        returnDocument: 'after', 
-        runValidators: true      
-      }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!updated) {
-      console.log("❌ Update failed: Announcement not found.");
       return res.status(404).json({ message: "Not found" });
     }
-
-    // 🔍 NEW: Log the final result after MongoDB saves it
-    console.log("✅ Successfully updated! New MongoDB Document:");
-    console.log(updated);
-    console.log("------------------------------------------------\n");
-
     res.json(updated);
   } catch (err) {
-    console.error("Patch Error:", err);
+    console.error("Patch Error:", err.message);
     res.status(400).json({ message: err.message });
   }
 });

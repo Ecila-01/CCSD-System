@@ -1,20 +1,24 @@
 // backend/utils/mailer.js
 const { google } = require('googleapis');
 const MailComposer = require('nodemailer/lib/mail-composer');
-console.log('OAUTH CHECK:', {
-  user: process.env.GMAIL_USER,
-  clientId: process.env.OAUTH_CLIENT_ID ? 'SET' : 'MISSING',
-  secret: process.env.OAUTH_CLIENT_SECRET ? 'SET' : 'MISSING',
-  refresh: process.env.OAUTH_REFRESH_TOKEN ? 'SET' : 'MISSING',
-});
+
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
-const GMAIL_USER = process.env.GMAIL_USER; // e.g. ecila070102@gmail.com
+const GMAIL_USER = process.env.GMAIL_USER;
+
+// Escape user-supplied values before interpolating them into email HTML,
+// so a crafted name/reason/etc. can't inject markup or links (phishing).
+const esc = (v = '') => String(v)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
 
 // --- OAuth2 Client Setup ---
 const oauth2Client = new google.auth.OAuth2(
   process.env.OAUTH_CLIENT_ID,
   process.env.OAUTH_CLIENT_SECRET,
-  'https://developers.google.com/oauthplayground' // Must match your authorized redirect URI
+  'https://developers.google.com/oauthplayground'
 );
 
 oauth2Client.setCredentials({
@@ -49,13 +53,13 @@ const sendMail = async ({ to, subject, html, fromLabel = 'UB CCSD Team' }) => {
 // --- Public mail functions ---
 
 const sendGuestLink = async (toEmail, serviceName, token, serviceInfo) => {
-  const viewLink = `${FRONTEND_URL}/view-request/${token}`;
+  const viewLink = `${FRONTEND_URL}/view-request/${encodeURIComponent(token)}`;
 
   const infoHtmlBlock = serviceInfo
     ? `
       <div style="background-color: #f8fafc; border-left: 4px solid #c00000; padding: 15px; margin: 20px 0;">
         <h4 style="margin: 0 0 8px 0; color: #1e293b;">Important Information regarding this service:</h4>
-        <p style="margin: 0; color: #475569; font-size: 14px; white-space: pre-wrap;">${serviceInfo}</p>
+        <p style="margin: 0; color: #475569; font-size: 14px; white-space: pre-wrap;">${esc(serviceInfo)}</p>
       </div>
     `
     : '';
@@ -67,7 +71,7 @@ const sendGuestLink = async (toEmail, serviceName, token, serviceInfo) => {
       <div style="font-family: sans-serif; max-width: 600px; border: 1px solid #eee; padding: 20px;">
         <h2 style="color: #c00000;">University of Baguio - CCSD</h2>
         <p>Hello,</p>
-        <p>We have received your request for <strong>${serviceName}</strong>.</p>
+        <p>We have received your request for <strong>${esc(serviceName)}</strong>.</p>
         ${infoHtmlBlock}
         <p>You can track the status of your request via your secure guest link below:</p>
         <div style="text-align: center; margin: 30px 0;">
@@ -89,10 +93,10 @@ const sendCounselorNotification = async (counselorEmail, studentName, department
     html: `
       <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px;">
         <h2 style="color: #c00000;">New Service Request</h2>
-        <p>A student from your assigned department (<strong>${department}</strong>) has submitted a request.</p>
+        <p>A student from your assigned department (<strong>${esc(department)}</strong>) has submitted a request.</p>
         <hr/>
-        <p><strong>Student:</strong> ${studentName}</p>
-        <p><strong>Service:</strong> ${serviceName}</p>
+        <p><strong>Student:</strong> ${esc(studentName)}</p>
+        <p><strong>Service:</strong> ${esc(serviceName)}</p>
         <br/>
         <p>Please log in to the Admin Dashboard to review the details.</p>
       </div>
@@ -101,7 +105,7 @@ const sendCounselorNotification = async (counselorEmail, studentName, department
 };
 
 const sendStatusUpdateToStudent = async (toEmail, serviceName, newStatus, token) => {
-  const viewLink = `${FRONTEND_URL}/view-request/${token}`;
+  const viewLink = `${FRONTEND_URL}/view-request/${encodeURIComponent(token)}`;
 
   return sendMail({
     to: toEmail,
@@ -110,7 +114,7 @@ const sendStatusUpdateToStudent = async (toEmail, serviceName, newStatus, token)
       <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px; max-width: 600px;">
         <h2 style="color: #c00000;">Status Update</h2>
         <p>Hello,</p>
-        <p>Your request for <strong>${serviceName}</strong> has been updated to: <span style="font-weight: bold; color: #2563eb;">${newStatus.toUpperCase()}</span>.</p>
+        <p>Your request for <strong>${esc(serviceName)}</strong> has been updated to: <span style="font-weight: bold; color: #2563eb;">${esc(String(newStatus).toUpperCase())}</span>.</p>
         <p>You can view the full details and track further updates using your secure link below:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${viewLink}" style="background-color: #c00000; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
@@ -124,7 +128,7 @@ const sendStatusUpdateToStudent = async (toEmail, serviceName, newStatus, token)
 };
 
 const sendStatusUpdateToReferrer = async (toEmail, studentName, newStatus, token) => {
-  const viewLink = `${FRONTEND_URL}/view-request/${token}`;
+  const viewLink = `${FRONTEND_URL}/view-request/${encodeURIComponent(token)}`;
 
   return sendMail({
     to: toEmail,
@@ -133,7 +137,7 @@ const sendStatusUpdateToReferrer = async (toEmail, studentName, newStatus, token
       <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px; max-width: 600px;">
         <h2 style="color: #c00000;">Referral Status Update</h2>
         <p>Hello,</p>
-        <p>Regarding your referral for <strong>${studentName}</strong>: the case status has been updated to <span style="font-weight: bold; color: #2563eb;">${newStatus.toUpperCase()}</span>.</p>
+        <p>Regarding your referral for <strong>${esc(studentName)}</strong>: the case status has been updated to <span style="font-weight: bold; color: #2563eb;">${esc(String(newStatus).toUpperCase())}</span>.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${viewLink}" style="background-color: #c00000; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
             Track Case Progress
@@ -157,9 +161,9 @@ const sendCancellationNotification = async (counselorEmail, studentName, service
         <h2 style="color: #c00000;">Appointment Cancelled</h2>
         <p>The following appointment has been cancelled by the client:</p>
         <hr/>
-        <p><strong>Student:</strong> ${studentName}</p>
-        <p><strong>Service:</strong> ${serviceName}</p>
-        ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+        <p><strong>Student:</strong> ${esc(studentName)}</p>
+        <p><strong>Service:</strong> ${esc(serviceName)}</p>
+        ${reason ? `<p><strong>Reason:</strong> ${esc(reason)}</p>` : ''}
         <br/>
         <p>Please log in to the dashboard to review and take action.</p>
       </div>
@@ -174,11 +178,11 @@ const sendAppointmentReminder = async (toEmail, studentName, serviceName, appoin
     html: `
       <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px; max-width: 600px;">
         <h2 style="color: #c00000;">Appointment Reminder</h2>
-        <p>Hello${studentName ? ' ' + studentName : ''},</p>
-        <p>This is a reminder that your <strong>${serviceName}</strong> appointment is scheduled <strong>in about 1 hour</strong>.</p>
+        <p>Hello${studentName ? ' ' + esc(studentName) : ''},</p>
+        <p>This is a reminder that your <strong>${esc(serviceName)}</strong> appointment is scheduled <strong>in about 1 hour</strong>.</p>
         <div style="background-color: #f8fafc; border-left: 4px solid #c00000; padding: 15px; margin: 20px 0;">
-          <p style="margin: 0;"><strong>Date:</strong> ${appointmentDate}</p>
-          <p style="margin: 6px 0 0 0;"><strong>Time:</strong> ${timeSlot}</p>
+          <p style="margin: 0;"><strong>Date:</strong> ${esc(appointmentDate)}</p>
+          <p style="margin: 6px 0 0 0;"><strong>Time:</strong> ${esc(timeSlot)}</p>
         </div>
         <p>Please make sure you are ready or contact CCSD if you need to reschedule.</p>
         <p style="font-size: 11px; color: #999;">This is an automated reminder. Please do not reply.</p>
@@ -188,7 +192,7 @@ const sendAppointmentReminder = async (toEmail, studentName, serviceName, appoin
 };
 
 const sendRescheduleRequestToStudent = async (toEmail, serviceName, token) => {
-  const viewLink = `${FRONTEND_URL}/view-request/${token}`;
+  const viewLink = `${FRONTEND_URL}/view-request/${encodeURIComponent(token)}`;
   return sendMail({
     to: toEmail,
     subject: `Action Required: Please reschedule your ${serviceName} appointment`,
@@ -196,7 +200,7 @@ const sendRescheduleRequestToStudent = async (toEmail, serviceName, token) => {
       <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px; max-width: 600px;">
         <h2 style="color: #c00000;">Reschedule Requested</h2>
         <p>Hello,</p>
-        <p>Your counsellor has requested that you propose a new date and time for your <strong>${serviceName}</strong> appointment.</p>
+        <p>Your counsellor has requested that you propose a new date and time for your <strong>${esc(serviceName)}</strong> appointment.</p>
         <p>Please use the link below to submit your preferred schedule at your earliest convenience:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${viewLink}" style="background-color: #c00000; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
@@ -219,10 +223,10 @@ const sendRescheduleNotificationToCounselor = async (counselorEmail, studentName
         <h2 style="color: #c00000;">Appointment Rescheduled by Student</h2>
         <p>The following student has submitted a new preferred schedule:</p>
         <hr/>
-        <p><strong>Student:</strong> ${studentName}</p>
-        <p><strong>Service:</strong> ${serviceName}</p>
-        <p><strong>New Date:</strong> ${newDate}</p>
-        <p><strong>New Time:</strong> ${newTime}</p>
+        <p><strong>Student:</strong> ${esc(studentName)}</p>
+        <p><strong>Service:</strong> ${esc(serviceName)}</p>
+        <p><strong>New Date:</strong> ${esc(newDate)}</p>
+        <p><strong>New Time:</strong> ${esc(newTime)}</p>
         <br/>
         <p>The request has been returned to <strong>Pending Review</strong>. Please log in to the dashboard to confirm or adjust the new schedule.</p>
       </div>
@@ -238,14 +242,11 @@ const sendPasswordResetOtp = async (toEmail, otp) => {
       <div style="font-family: sans-serif; border: 1px solid #eee; padding: 30px; max-width: 600px; text-align: center; margin: 0 auto;">
         <h2 style="color: #c00000; margin-bottom: 10px;">Password Reset Request</h2>
         <p style="color: #475569; font-size: 15px;">You requested to reset your password for the UB CCSD Admin Portal.</p>
-        
         <p style="margin-top: 30px; color: #1e293b;">Your One-Time Password (OTP) is:</p>
         <div style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #1e293b; margin: 10px 0 20px 0; padding: 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; display: inline-block;">
-          ${otp}
+          ${esc(otp)}
         </div>
-        
         <p style="color: #dc2626; font-weight: bold; font-size: 13px;">This code will expire in 10 minutes.</p>
-        
         <div style="font-size: 11px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
           If you did not request a password reset, please ignore this email. Your account remains secure.
         </div>

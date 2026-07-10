@@ -2,25 +2,24 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const { requireAuth, requireRole } = require('../middleware/auth');
 
-// @route   GET /api/users
-// @desc    Get all staff accounts
-router.get('/', async (req, res) => {
+// @route   GET /api/users   (admin only — staff directory)
+router.get('/', requireAuth, requireRole('admin'), async (req, res) => {
   try {
-    const users = await User.find().select('-password');
+    const users = await User.find().select('-password -resetPasswordOtp -resetPasswordExpires');
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Server Error fetching users" });
   }
 });
 
-// @route   POST /api/users/register
-// @desc    Create a new account with departments
-router.post('/register', async (req, res) => {
+// @route   POST /api/users/register   (admin only — create staff account)
+router.post('/register', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const { name, email, password, role, assignedDepartments } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: String(email || '').toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ message: "Email already in use" });
     }
@@ -44,9 +43,16 @@ router.post('/register', async (req, res) => {
 });
 
 // @route   PUT /api/users/:id
-// @desc    Update user details (Handles Admin Dashboard AND Profile Page)
-router.put('/:id', async (req, res) => {
+// Admins may edit anyone. A non-admin may edit ONLY their own account, and
+// may NOT change privilege-relevant fields (role, assignedDepartments).
+router.put('/:id', requireAuth, async (req, res) => {
   try {
+    const isAdmin = req.user.role === 'admin';
+    const isSelf = String(req.user.id) === String(req.params.id);
+    if (!isAdmin && !isSelf) {
+      return res.status(403).json({ message: "Forbidden: you can only edit your own account" });
+    }
+
     const { name, email, password, newPassword, role, assignedDepartments, notificationPreferences } = req.body;
 
     let user = await User.findById(req.params.id);
@@ -54,13 +60,17 @@ router.put('/:id', async (req, res) => {
 
     const updateData = {};
 
-    // 1. Only update Identity fields if provided (for Admins)
+    // Identity fields
     if (name) updateData.name = name;
     if (email) updateData.email = email;
-    if (role) updateData.role = role;
-    if (assignedDepartments) updateData.assignedDepartments = assignedDepartments;
 
-    // 1b. Notification preferences (merge so partial updates don't wipe others)
+    // Privilege-relevant fields — ADMIN ONLY (blocks self-escalation)
+    if (isAdmin) {
+      if (role) updateData.role = role;
+      if (assignedDepartments) updateData.assignedDepartments = assignedDepartments;
+    }
+
+    // Notification preferences (merge so partial updates don't wipe others)
     if (notificationPreferences !== undefined) {
       updateData.notificationPreferences = {
         ...(user.notificationPreferences ? user.notificationPreferences.toObject() : {}),
@@ -68,9 +78,9 @@ router.put('/:id', async (req, res) => {
       };
     }
 
-    // 2. Handle Password (check for 'password' from admin dashboard OR 'newPassword' from profile)
+    // Password (admin dashboard sends 'password'; profile page sends 'newPassword')
     const passwordInput = newPassword || password;
-    if (passwordInput && passwordInput.trim() !== "") {
+    if (passwordInput && String(passwordInput).trim() !== "") {
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(passwordInput, salt);
     }
@@ -79,9 +89,8 @@ router.put('/:id', async (req, res) => {
       req.params.id,
       { $set: updateData },
       { new: true, runValidators: true }
-    ).select('-password');
+    ).select('-password -resetPasswordOtp -resetPasswordExpires');
 
-    // Return the updated user object so the frontend can update LocalStorage
     res.json({
       message: "Update successful",
       user: updatedUser
@@ -93,8 +102,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// @route   DELETE /api/users/:id
-router.delete('/:id', async (req, res) => {
+// @route   DELETE /api/users/:id   (admin only)
+router.delete('/:id', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: "User deleted successfully" });

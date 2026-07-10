@@ -1,41 +1,41 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { sendPasswordResetOtp } = require('../utils/mailer');
+
+const MAX_OTP_ATTEMPTS = 5;
+
+// Normalise an email coming from the request body to a safe lowercase string.
+const normEmail = (email) => String(email || '').trim().toLowerCase();
 
 const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // 1. Check if user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normEmail(email) });
     if (!user) {
       return res.status(400).json({ message: "Invalid Credentials" });
     }
 
-    // 2. Compare Password
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(String(password || ''), user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid Credentials" });
     }
 
-    // 3. Create JWT Payload
     const payload = {
       user: {
         id: user.id,
-        role: user.role // We include the role for frontend access control
+        role: user.role
       }
     };
 
-    // 4. Sign the Token
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: '8h' }, // Staff stays logged in for a full shift
+      { expiresIn: '8h' },
       (err, token) => {
         if (err) throw err;
-
-        // ✅ THE FIX: Added assignedDepartments and email to the response
         res.json({
           token,
           user: {
@@ -43,8 +43,7 @@ const login = async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
-            assignedDepartments: user.assignedDepartments || [], // 👈 Grabs the array!
-            // So the Profile toggle reflects the saved state after login
+            assignedDepartments: user.assignedDepartments || [],
             notificationPreferences: user.notificationPreferences || { newSubmissionEmails: false }
           }
         });
@@ -58,54 +57,76 @@ const login = async (req, res) => {
 
 // --- 1. GENERATE AND SEND OTP ---
 const forgotPassword = async (req, res) => {
+  // Always respond the same way so attackers can't enumerate accounts.
+  const uniform = () =>
+    res.status(200).json({ message: "If this email exists, an OTP has been sent." });
+
   try {
-    const { email } = req.body;
-
-    // 1. Find user by email
+    const email = normEmail(req.body.email);
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "If this email exists, an OTP will be sent." });
-    }
+    if (!user) return uniform();
 
-    // 2. Generate a 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Cryptographically secure 6-digit OTP.
+    const otp = String(crypto.randomInt(100000, 1000000));
 
-    // 3. Save OTP and Expiry (10 minutes from now) to database
     user.resetPasswordOtp = otp;
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+    user.resetPasswordAttempts = 0;
     await user.save();
 
-    // 4. Send the email using the specific OTP mailer function you imported
-    // ✅ THIS IS THE PART THAT CHANGED
     await sendPasswordResetOtp(user.email, otp);
-
-    res.status(200).json({ message: "OTP sent to email." });
+    return uniform();
   } catch (error) {
-    console.error("Forgot Password Error:", error);
-    res.status(500).json({ message: "Server error while sending OTP." });
+    console.error("Forgot Password Error:", error.message);
+    // Still return the uniform message to avoid leaking anything.
+    return res.status(200).json({ message: "If this email exists, an OTP has been sent." });
   }
+};
+
+// Shared OTP validation with per-account attempt lockout.
+// Returns the user document on success, or null after sending an error response.
+const validateOtp = async (req, res) => {
+  const email = normEmail(req.body.email);
+  const otp = String(req.body.otp || '');
+
+  const user = await User.findOne({
+    email,
+    resetPasswordExpires: { $gt: Date.now() }
+  });
+
+  // No active reset cycle at all.
+  if (!user || !user.resetPasswordOtp) {
+    res.status(400).json({ message: "Invalid or expired OTP." });
+    return null;
+  }
+
+  // Too many wrong tries — invalidate the OTP entirely.
+  if (user.resetPasswordAttempts >= MAX_OTP_ATTEMPTS) {
+    user.resetPasswordOtp = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+    res.status(429).json({ message: "Too many incorrect attempts. Please request a new OTP." });
+    return null;
+  }
+
+  if (user.resetPasswordOtp !== otp) {
+    user.resetPasswordAttempts += 1;
+    await user.save();
+    res.status(400).json({ message: "Invalid or expired OTP." });
+    return null;
+  }
+
+  return user;
 };
 
 // --- 2. VERIFY THE OTP ---
 const verifyOtp = async (req, res) => {
   try {
-    const { email, otp } = req.body;
-
-    // Look for the user with the exact email, exact OTP, and an expiry date in the future
-    const user = await User.findOne({
-      email,
-      resetPasswordOtp: otp,
-      resetPasswordExpires: { $gt: Date.now() } // $gt means "Greater Than" right now
-    });
-
-    if (!user) {
-      return res.status(400).json({ message: "Invalid or expired OTP." });
-    }
-
-    // If found, it's valid!
+    const user = await validateOtp(req, res);
+    if (!user) return; // response already sent
     res.status(200).json({ message: "OTP verified successfully." });
   } catch (error) {
-    console.error("Verify OTP Error:", error);
+    console.error("Verify OTP Error:", error.message);
     res.status(500).json({ message: "Server error while verifying OTP." });
   }
 };
@@ -113,38 +134,30 @@ const verifyOtp = async (req, res) => {
 // --- 3. SAVE THE NEW PASSWORD ---
 const resetPassword = async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
-
-    // Double-check the OTP is still valid just in case they lingered on the reset screen
-    const user = await User.findOne({
-      email,
-      resetPasswordOtp: otp,
-      resetPasswordExpires: { $gt: Date.now() }
-    });
-
-    if (!user) {
-      return res.status(400).json({ message: "Session expired. Please request a new OTP." });
+    const { newPassword } = req.body;
+    if (!newPassword || String(newPassword).length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters." });
     }
 
-    // Hash the new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    const user = await validateOtp(req, res);
+    if (!user) return; // response already sent
 
-    // Save new password and clear the OTP fields so they can't be reused
-    user.password = hashedPassword;
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(String(newPassword), salt);
     user.resetPasswordOtp = null;
     user.resetPasswordExpires = null;
+    user.resetPasswordAttempts = 0;
     await user.save();
 
     res.status(200).json({ message: "Password updated successfully." });
   } catch (error) {
-    console.error("Reset Password Error:", error);
+    console.error("Reset Password Error:", error.message);
     res.status(500).json({ message: "Server error while resetting password." });
   }
 };
 
 module.exports = {
-  login, // Ensure your existing login is exported
+  login,
   forgotPassword,
   verifyOtp,
   resetPassword

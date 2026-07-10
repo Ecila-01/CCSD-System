@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const OfficeClosure = require('../models/OfficeClosure');
+const { requireAuth, requireRole } = require('../middleware/auth');
 
-// GET /api/closures  → all closures, soonest first
+const adminOnly = [requireAuth, requireRole('admin')];
+
+// GET /api/closures  (PUBLIC — the booking calendar needs blackout dates)
 router.get('/', async (req, res) => {
   try {
     const closures = await OfficeClosure.find().sort({ date: 1 });
@@ -12,8 +15,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/closures  → add a closure (full day, or a time-range within a day)
-router.post('/', async (req, res) => {
+// POST /api/closures  (admin only)
+router.post('/', adminOnly, async (req, res) => {
   try {
     const { date, allDay, startTime, endTime, reason, createdBy } = req.body;
     if (!date) return res.status(400).json({ message: 'A date is required.' });
@@ -38,8 +41,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// DELETE /api/closures/:id  → remove a closure
-router.delete('/:id', async (req, res) => {
+// DELETE /api/closures/:id  (admin only)
+router.delete('/:id', adminOnly, async (req, res) => {
   try {
     await OfficeClosure.findByIdAndDelete(req.params.id);
     res.json({ message: 'Closure removed' });

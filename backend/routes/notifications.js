@@ -1,10 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const Notification = require('../models/Notification');
+const { requireAuth } = require('../middleware/auth');
 
-// GET /api/notifications/:userId/unread-count  → { count }
-// (declared before /:userId so the extra segment matches this route)
-router.get('/:userId/unread-count', async (req, res) => {
+// Ensure the caller may only act on their OWN notifications.
+function ownUserId(req, res, next) {
+  if (String(req.user.id) !== String(req.params.userId)) {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+  next();
+}
+
+// GET /:userId/unread-count
+router.get('/:userId/unread-count', requireAuth, ownUserId, async (req, res) => {
   try {
     const count = await Notification.countDocuments({ recipientId: req.params.userId, read: false });
     res.json({ count });
@@ -13,8 +21,8 @@ router.get('/:userId/unread-count', async (req, res) => {
   }
 });
 
-// GET /api/notifications/:userId  → 50 most recent notifications for a user
-router.get('/:userId', async (req, res) => {
+// GET /:userId  → 50 most recent notifications for that user
+router.get('/:userId', requireAuth, ownUserId, async (req, res) => {
   try {
     const notifications = await Notification.find({ recipientId: req.params.userId })
       .sort({ createdAt: -1 })
@@ -25,8 +33,8 @@ router.get('/:userId', async (req, res) => {
   }
 });
 
-// PATCH /api/notifications/:userId/read-all  → mark every unread as read
-router.patch('/:userId/read-all', async (req, res) => {
+// PATCH /:userId/read-all
+router.patch('/:userId/read-all', requireAuth, ownUserId, async (req, res) => {
   try {
     await Notification.updateMany(
       { recipientId: req.params.userId, read: false },
@@ -38,11 +46,11 @@ router.patch('/:userId/read-all', async (req, res) => {
   }
 });
 
-// PATCH /api/notifications/:id/read  → mark a single notification as read
-router.patch('/:id/read', async (req, res) => {
+// PATCH /:id/read  → mark a single notification as read (only if it is yours)
+router.patch('/:id/read', requireAuth, async (req, res) => {
   try {
-    const n = await Notification.findByIdAndUpdate(
-      req.params.id,
+    const n = await Notification.findOneAndUpdate(
+      { _id: req.params.id, recipientId: req.user.id },
       { $set: { read: true } },
       { new: true }
     );

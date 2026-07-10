@@ -3,8 +3,11 @@ const router = express.Router();
 const Career = require('../models/Career');
 const upload = require('../middleware/upload');
 const cloudinary = require('cloudinary').v2;
+const { requireAuth, requireRole } = require('../middleware/auth');
 
-// GET all career announcements (Admin View - shows all)
+const adminOnly = [requireAuth, requireRole('admin')];
+
+// GET all career announcements (PUBLIC)
 router.get('/', async (req, res) => {
   try {
     const careers = await Career.find().sort({ datePosted: -1 });
@@ -14,15 +17,14 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST a new career announcement
-router.post('/', upload.single('image'), async (req, res) => {
+// POST a new career announcement (admin only)
+router.post('/', adminOnly, upload.single('image'), async (req, res) => {
   try {
-    // Cloudinary stores the secure URL in req.file.path
     const imageUrl = req.file ? req.file.path : null;
 
     const career = new Career({
       title: req.body.title,
-      shortDescription: req.body.shortDescription, // included (the announcement route is missing this)
+      shortDescription: req.body.shortDescription,
       content: req.body.content,
       category: req.body.category,
       eventDate: req.body.eventDate,
@@ -36,40 +38,41 @@ router.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
-// DELETE a career announcement
-router.delete('/:id', async (req, res) => {
+// DELETE a career announcement (admin only)
+router.delete('/:id', adminOnly, async (req, res) => {
   try {
     const career = await Career.findById(req.params.id);
-
     if (!career) {
       return res.status(404).json({ message: "Career announcement not found" });
     }
 
-    // Tell Cloudinary to delete the image
     if (career.image && career.image.includes('cloudinary')) {
       const parts = career.image.split('/');
       const filename = parts.pop().split('.')[0];
       const folder = parts.pop();
       const publicId = `${folder}/${filename}`;
-
       await cloudinary.uploader.destroy(publicId);
-      console.log(`Deleted image from Cloudinary: ${publicId}`);
     }
 
     await Career.findByIdAndDelete(req.params.id);
-
     res.json({ message: 'Career announcement and Cloudinary image deleted successfully' });
   } catch (err) {
-    console.error("Delete Error:", err);
+    console.error("Delete Error:", err.message);
     res.status(500).json({ message: err.message });
   }
 });
 
-// PATCH (Update) a career announcement - also handles status toggle
-router.patch('/:id', upload.single('image'), async (req, res) => {
+// PATCH (Update) a career announcement (admin only)
+router.patch('/:id', adminOnly, upload.single('image'), async (req, res) => {
   try {
-    let updateData = req.body;
-
+    const updateData = {
+      ...(req.body.title !== undefined && { title: req.body.title }),
+      ...(req.body.shortDescription !== undefined && { shortDescription: req.body.shortDescription }),
+      ...(req.body.content !== undefined && { content: req.body.content }),
+      ...(req.body.category !== undefined && { category: req.body.category }),
+      ...(req.body.eventDate !== undefined && { eventDate: req.body.eventDate }),
+      ...(req.body.status !== undefined && { status: req.body.status }),
+    };
     if (req.file) {
       updateData.image = req.file.path;
     }
@@ -77,19 +80,15 @@ router.patch('/:id', upload.single('image'), async (req, res) => {
     const updated = await Career.findByIdAndUpdate(
       req.params.id,
       { $set: updateData },
-      {
-        returnDocument: 'after',
-        runValidators: true
-      }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!updated) {
       return res.status(404).json({ message: "Not found" });
     }
-
     res.json(updated);
   } catch (err) {
-    console.error("Patch Error:", err);
+    console.error("Patch Error:", err.message);
     res.status(400).json({ message: err.message });
   }
 });

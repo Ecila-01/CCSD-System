@@ -1,16 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const AboutContent = require('../models/AboutContent');
+const { requireAuth, requireRole } = require('../middleware/auth');
 
-// @route   GET /api/about
-// @desc    Get the About Page content
-// @access  Public (Anyone can view the about page)
+// @route GET /api/about  (PUBLIC — anyone can view the About page)
 router.get('/', async (req, res) => {
   try {
-    // Find the single about document
     let aboutData = await AboutContent.findOne();
-
-    // Fallback: If for some reason the database is empty, return a default object
     if (!aboutData) {
       aboutData = await AboutContent.create({
         missionStatement: "Mission coming soon...",
@@ -18,35 +14,33 @@ router.get('/', async (req, res) => {
         teamMembers: []
       });
     }
-
     res.status(200).json(aboutData);
   } catch (error) {
-    console.error("Error fetching About content:", error);
     res.status(500).json({ message: "Server error while fetching About content" });
   }
 });
 
-// @route   PUT /api/about
-// @desc    Update the About Page content
-// @access  Private (Admin Only)
-router.put('/', async (req, res) => {
+// @route PUT /api/about  (admin only)
+router.put('/', requireAuth, requireRole('admin'), async (req, res) => {
   try {
-    // NOTE: If you have an authentication middleware, you should add it to this route
-    // e.g., router.put('/', verifyToken, isAdmin, async (req, res) => { ... }
+    // Whitelist the editable fields (prevents arbitrary key injection).
+    const { missionStatement, objectives, teamMembers, visionStatement, orgChart } = req.body;
+    const updateData = {
+      ...(missionStatement !== undefined && { missionStatement }),
+      ...(visionStatement !== undefined && { visionStatement }),
+      ...(objectives !== undefined && { objectives }),
+      ...(teamMembers !== undefined && { teamMembers }),
+      ...(orgChart !== undefined && { orgChart }),
+    };
 
-    // Find the very first document and update it with everything in req.body
     const updatedAbout = await AboutContent.findOneAndUpdate(
-      {}, // Empty filter means "just grab the first document you find"
-      { $set: req.body }, 
-      { new: true, upsert: true } // 'new' returns updated doc, 'upsert' creates it if it doesn't exist
+      {},
+      { $set: updateData },
+      { new: true, upsert: true }
     );
 
-    res.status(200).json({ 
-      message: "About page updated successfully", 
-      data: updatedAbout 
-    });
+    res.status(200).json({ message: "About page updated successfully", data: updatedAbout });
   } catch (error) {
-    console.error("Error updating About content:", error);
     res.status(500).json({ message: "Server error while updating About content" });
   }
 });

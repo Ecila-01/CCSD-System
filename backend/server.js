@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 const upload = require('./middleware/upload');
+const { requireAuth, requireRole } = require('./middleware/auth');
+const { securityHeaders, sanitizeBody, rateLimit } = require('./middleware/security');
 const serviceRoutes = require('./routes/serviceRoutes');
 const authRoutes = require('./routes/authRoutes');
 const requestRoutes = require('./routes/requests');
@@ -20,34 +22,47 @@ const { sendAppointmentReminder } = require('./utils/mailer');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-// Middleware
+// Behind a hosting proxy (Render/Vercel/etc.) so req.ip reflects the real client
+app.set('trust proxy', 1);
+// Don't advertise Express in response headers
+app.disable('x-powered-by');
+
+// ── Security middleware ──
+app.use(securityHeaders);
 app.use(cors({
     origin: [
-        "http://localhost:5173",       // ✅ Allows your local testing
-        "https://ub-ccsd.vercel.app"   // ✅ Allows your live Vercel site
+        "http://localhost:5173",       // local testing
+        "https://ub-ccsd.vercel.app"   // live Vercel site
     ],
     credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '100kb' })); // cap JSON body size (basic DoS guard)
+app.use(sanitizeBody);                      // strip NoSQL operators from bodies/params
+
+// Throttle authentication endpoints (brute-force / OTP guessing)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: 'Too many attempts. Please wait a few minutes and try again.',
+});
 
 // ==========================================
-// NEW ROUTE: Cloudinary Upload
+// Cloudinary Upload (staff only)
 // ==========================================
-// ✅ CORRECT (The Cloudinary Way)
-app.post('/api/upload', upload.single('image'), (req, res) => {
+app.post('/api/upload', requireAuth, requireRole('admin'), upload.single('image'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
-  // Just send back the raw Cloudinary link!
   res.status(200).json({ imageUrl: req.file.path });
 });
 
 // ==========================================
 // APP ROUTES
+// (Access control is enforced INSIDE each router: public/guest routes stay
+//  open; staff/admin actions are guarded with requireAuth / requireRole.)
 // ==========================================
 app.use('/api/services', serviceRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/users', userRoutes);
@@ -57,16 +72,14 @@ app.use('/api/system', systemRoutes);
 app.use('/api/careers', careerRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/closures', closureRoutes);
-// Note: I removed the app.use('/uploads', express.static(...)) block.
-// You no longer need it because Cloudinary hosts your images now!
 
 // MongoDB Connection
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("🚀 MongoDB Connected: CCSD-Cluster is live!");
+    console.log("MongoDB Connected: CCSD-Cluster is live!");
   } catch (err) {
-    console.error("❌ MongoDB connection error:", err.message);
+    console.error("MongoDB connection error:", err.message);
     process.exit(1);
   }
 };
@@ -74,15 +87,13 @@ const connectDB = async () => {
 connectDB();
 
 // ── APPOINTMENT REMINDER CRON JOB ──
-// Runs every 15 minutes; finds appointments 60–75 min away that haven't been reminded yet
+// Runs every 15 minutes; finds appointments 60-75 min away not yet reminded.
 cron.schedule('*/15 * * * *', async () => {
   try {
     const now = new Date();
-    const windowStart = new Date(now.getTime() + 60 * 60 * 1000);  // 60 min from now
-    const windowEnd   = new Date(now.getTime() + 75 * 60 * 1000);  // 75 min from now
+    const windowStart = new Date(now.getTime() + 60 * 60 * 1000);
+    const windowEnd   = new Date(now.getTime() + 75 * 60 * 1000);
 
-    // Appointments store date as "YYYY-MM-DD" and time as "HH:MM"
-    // Build date strings for today/tomorrow to limit the search scope
     const todayStr    = now.toISOString().slice(0, 10);
     const tomorrowStr = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
@@ -95,7 +106,6 @@ cron.schedule('*/15 * * * *', async () => {
     });
 
     for (const req of candidates) {
-      // Parse "HH:MM" into today's datetime
       const [hour, min] = (req.timeSlot || '').split(':').map(Number);
       if (isNaN(hour) || isNaN(min)) continue;
 
@@ -127,10 +137,15 @@ app.get('/', (req, res) => {
   res.send("CCSD Backend API is running...");
 });
 
-// Global error handler — catches errors from middleware (e.g. multer/Cloudinary failures)
+// Global error handler — never leak internal error details in production.
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-  res.status(err.status || 500).json({ message: err.message || 'Internal server error' });
+  const status = err.status || 500;
+  const isProd = process.env.NODE_ENV === 'production';
+  const safeMessage = (!isProd || status < 500)
+    ? (err.message || 'Error')
+    : 'Internal server error';
+  res.status(status).json({ message: safeMessage });
 });
 
 // Start Server

@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Department = require('../models/Department');
+const { requireAuth, requireRole } = require('../middleware/auth');
 
-// @route   GET /api/departments
-// @desc    Get all departments and their courses
+const adminOnly = [requireAuth, requireRole('admin')];
+
+// GET all departments (PUBLIC — the public intake form needs the list)
 router.get('/', async (req, res) => {
   try {
     const departments = await Department.find().sort({ name: 1 });
@@ -13,36 +15,30 @@ router.get('/', async (req, res) => {
   }
 });
 
-// @route   POST /api/departments
-// @desc    Create a new department
-router.post('/', async (req, res) => {
+// POST create a department (admin only)
+router.post('/', adminOnly, async (req, res) => {
   try {
     const { name, fullName, courses } = req.body;
-    
-    const existing = await Department.findOne({ name: name.toUpperCase() });
+    const existing = await Department.findOne({ name: String(name || '').toUpperCase() });
     if (existing) return res.status(400).json({ message: "Department already exists" });
 
     const newDept = new Department({ name, fullName, courses: courses || [] });
     await newDept.save();
-    
     res.status(201).json(newDept);
   } catch (error) {
     res.status(500).json({ message: "Server Error creating department" });
   }
 });
 
-// @route   PUT /api/departments/:id
-// @desc    Update a department (e.g., Add or remove courses)
-router.put('/:id', async (req, res) => {
+// PUT update a department (admin only)
+router.put('/:id', adminOnly, async (req, res) => {
   try {
     const { name, fullName, courses } = req.body;
-    
     const updatedDept = await Department.findByIdAndUpdate(
       req.params.id,
       { $set: { name, fullName, courses } },
       { returnDocument: 'after', runValidators: true }
     );
-
     if (!updatedDept) return res.status(404).json({ message: "Department not found" });
     res.json(updatedDept);
   } catch (error) {
@@ -50,9 +46,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// @route   DELETE /api/departments/:id
-// @desc    Delete a department
-router.delete('/:id', async (req, res) => {
+// DELETE a department (admin only)
+router.delete('/:id', adminOnly, async (req, res) => {
   try {
     await Department.findByIdAndDelete(req.params.id);
     res.json({ message: "Department deleted" });

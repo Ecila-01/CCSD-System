@@ -3,13 +3,21 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const multer = require('multer');
 const SystemSettings = require('../models/SystemSettings');
+const { requireAuth, requireRole } = require('../middleware/auth');
 
-// Store uploaded backup file in memory
-const upload = multer({ storage: multer.memoryStorage() });
+// Store uploaded backup file in memory (cap size to avoid memory-exhaustion DoS)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB
+});
 
-// 1. SELECTIVE SYSTEM BACKUP
-// Changed to POST to accept an array of models from the frontend checklist
-router.post('/backup', async (req, res) => {
+const adminOnly = [requireAuth, requireRole('admin')];
+
+// Fields that must never be included in a backup export.
+const SENSITIVE_USER_FIELDS = ['password', 'resetPasswordOtp', 'resetPasswordExpires'];
+
+// 1. SELECTIVE SYSTEM BACKUP  (admin only)
+router.post('/backup', adminOnly, async (req, res) => {
   try {
     const { modelsToBackup } = req.body;
 
@@ -23,12 +31,12 @@ router.post('/backup', async (req, res) => {
       data: {}
     };
 
-    // Loop ONLY through the models the user checked on the frontend
     for (const modelName of modelsToBackup) {
-      // Safety check: Ensure the requested model actually exists in the database
       if (mongoose.modelNames().includes(modelName)) {
         const Model = mongoose.model(modelName);
-        backupData.data[modelName] = await Model.find({});
+        // Never export credential/secret fields (they live on the User model).
+        const projection = SENSITIVE_USER_FIELDS.map(f => '-' + f).join(' ');
+        backupData.data[modelName] = await Model.find({}).select(projection);
       }
     }
 
@@ -39,9 +47,8 @@ router.post('/backup', async (req, res) => {
   }
 });
 
-// 2. SYSTEM RESTORE
-// Reads the uploaded JSON file and restores whatever collections are inside it
-router.post('/restore', upload.single('backupFile'), async (req, res) => {
+// 2. SYSTEM RESTORE  (admin only)
+router.post('/restore', adminOnly, upload.single('backupFile'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No backup file uploaded." });
 
@@ -52,7 +59,7 @@ router.post('/restore', upload.single('backupFile'), async (req, res) => {
 
     const models = Object.keys(backupContent.data);
 
-    // 🔥 THE HARD LOCK: Filter out the 'User' model so it is NEVER restored
+    // HARD LOCK: never restore the User collection.
     const safeModelsToRestore = models.filter(modelName => modelName !== 'User');
 
     for (const modelName of safeModelsToRestore) {
@@ -60,9 +67,9 @@ router.post('/restore', upload.single('backupFile'), async (req, res) => {
         const Model = mongoose.model(modelName);
         const dataToInsert = backupContent.data[modelName];
 
-        await Model.deleteMany({}); // Wipe current collection
+        await Model.deleteMany({});
         if (dataToInsert.length > 0) {
-          await Model.insertMany(dataToInsert); // Insert backup records
+          await Model.insertMany(dataToInsert);
         }
       }
     }
@@ -74,9 +81,8 @@ router.post('/restore', upload.single('backupFile'), async (req, res) => {
   }
 });
 
-// 3. SELECTIVE WIPE DATABASE
-// Changed to POST to accept an array of models from the frontend checklist
-router.post('/wipe', async (req, res) => {
+// 3. SELECTIVE WIPE DATABASE  (admin only)
+router.post('/wipe', adminOnly, async (req, res) => {
   try {
     const { modelsToWipe } = req.body;
 
@@ -84,7 +90,7 @@ router.post('/wipe', async (req, res) => {
       return res.status(400).json({ message: "No models provided for wiping." });
     }
 
-    // 🔥 THE HARD LOCK: Filter out the 'User' model so it is NEVER wiped
+    // HARD LOCK: never wipe the User collection.
     const safeModelsToWipe = modelsToWipe.filter(modelName => modelName !== 'User');
 
     for (const modelName of safeModelsToWipe) {
@@ -100,7 +106,7 @@ router.post('/wipe', async (req, res) => {
   }
 });
 
-// GET system settings (returns singleton, creates default if none exists)
+// GET system settings  (PUBLIC — the booking calendar needs business hours/closures config)
 router.get('/settings', async (req, res) => {
   try {
     let settings = await SystemSettings.findOne();
@@ -111,8 +117,8 @@ router.get('/settings', async (req, res) => {
   }
 });
 
-// PUT update system settings
-router.put('/settings', async (req, res) => {
+// PUT update system settings  (admin only)
+router.put('/settings', adminOnly, async (req, res) => {
   try {
     const {
       businessHoursStart, businessHoursEnd, slotIntervalMinutes, workingDays,

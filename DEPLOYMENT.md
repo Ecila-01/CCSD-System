@@ -83,7 +83,7 @@ The application code enforces authentication (JWT), role-based access, rate limi
 2. **Set `NODE_ENV=production`** and a **strong `JWT_SECRET`** (section 2).
 3. **Set `CORS_ORIGINS`** to the exact frontend origin(s). Do not use `*`.
 4. **Security response headers on the frontend host.** If you deploy the frontend on Vercel, `vercel.json` applies them automatically. On any other host, replicate them. Recommended set:
-   - `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'`
+   - `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'`
    - `X-Content-Type-Options: nosniff`
    - `X-Frame-Options: DENY`
    - `Referrer-Policy: strict-origin-when-cross-origin`

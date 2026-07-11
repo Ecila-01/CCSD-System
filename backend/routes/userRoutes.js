@@ -19,6 +19,10 @@ router.post('/register', requireAuth, requireRole('admin'), async (req, res) => 
   try {
     const { name, email, password, role, assignedDepartments } = req.body;
 
+    if (!password || String(password).length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters." });
+    }
+
     const existingUser = await User.findOne({ email: String(email || '').toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ message: "Email already in use" });
@@ -81,6 +85,9 @@ router.put('/:id', requireAuth, async (req, res) => {
     // Password (admin dashboard sends 'password'; profile page sends 'newPassword')
     const passwordInput = newPassword || password;
     if (passwordInput && String(passwordInput).trim() !== "") {
+      if (String(passwordInput).length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters." });
+      }
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(passwordInput, salt);
     }

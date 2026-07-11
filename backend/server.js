@@ -29,11 +29,14 @@ app.disable('x-powered-by');
 
 // ── Security middleware ──
 app.use(securityHeaders);
+// Allowed frontend origins. For deployment, set CORS_ORIGINS as a
+// comma-separated list (e.g. "https://ccsd.university.edu"). Falls back to
+// local/dev origins when unset.
+const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+    : ["http://localhost:5173", "https://ub-ccsd.vercel.app"];
 app.use(cors({
-    origin: [
-        "http://localhost:5173",       // local testing
-        "https://ub-ccsd.vercel.app"   // live Vercel site
-    ],
+    origin: allowedOrigins,
     credentials: true
 }));
 app.use(express.json({ limit: '100kb' })); // cap JSON body size (basic DoS guard)

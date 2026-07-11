@@ -186,10 +186,12 @@ router.patch('/:id', requireAuth, async (req, res) => {
 
     const update = { status, assignedCounselor };
 
+    const actor = await User.findById(req.user.id).select('name role');
     const historyEntry = {
       status,
       note: statusNote || `Status updated to ${status}`,
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      updatedBy: actor ? `${actor.name} (${actor.role})` : 'Staff'
     };
 
     const updatedRequest = await ServiceRequest.findByIdAndUpdate(

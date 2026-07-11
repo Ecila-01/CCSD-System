@@ -27,7 +27,8 @@ const serviceRequestSchema = new mongoose.Schema({
 statusUpdates: [{
   status: String,
   updatedAt: { type: Date, default: Date.now },
-  note: String // e.g., "Student missed the 10am slot"
+  note: String, // e.g., "Student missed the 10am slot"
+  updatedBy: String // name + role of the staff member who made this change
 }],
   assignedCounselor: { type: String, default: 'Unassigned' },
   // --- THE VITAL EXTRACTED FIELDS ---

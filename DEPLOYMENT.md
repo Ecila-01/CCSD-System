@@ -42,6 +42,12 @@ npm install
 npm start          # runs node server.js
 ```
 
+> **Dependency note:** image uploads go through the official `cloudinary` v2 SDK
+> directly (`middleware/upload.js` uses multer memory storage +
+> `cloudinary.uploader.upload_stream`). The unmaintained `multer-storage-cloudinary`
+> wrapper was removed because it only declares a `cloudinary@^1` peer dependency and
+> breaks a plain `npm install` on strict npm hosts (Render, CI). Do not re-add it.
+
 Put a process manager in front of it (systemd, pm2, or the platform's own supervisor) so it restarts on crash. Terminate TLS/HTTPS at your reverse proxy or platform. If you run behind a proxy/load balancer, `app.set('trust proxy', 1)` is already set so client IPs (used for rate limiting) resolve correctly.
 
 ---

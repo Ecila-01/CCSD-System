@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { cldThumb } from '../utils/cloudinary';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
 import StatusModal from '../components/StatusModal';
@@ -186,7 +187,7 @@ const ManageAbout = () => {
               {formData.heroImage && (
                 <div style={{ marginBottom: '10px', position: 'relative', borderRadius: '6px', overflow: 'hidden', maxHeight: '120px' }}>
                   <img
-                    src={formData.heroImage}
+                    src={cldThumb(formData.heroImage, { w: 480, crop: 'scale', face: false })}
                     alt="Hero background"
                     style={{ width: '100%', height: '120px', objectFit: 'cover', display: 'block' }}
                     onError={(e) => { e.target.style.display = 'none'; }}
@@ -274,12 +275,12 @@ const ManageAbout = () => {
                         src={
                           !member.imageUrl 
                             ? "https://www.gravatar.com/avatar/?d=mp" 
-                            : member.imageUrl.startsWith('http') 
-                              ? member.imageUrl 
-                              : `${import.meta.env.VITE_API_URL}${member.imageUrl}`
+                            : cldThumb(member.imageUrl.startsWith('http') ? member.imageUrl : `${import.meta.env.VITE_API_URL}${member.imageUrl}`, { w: 240, h: 240 })
                         } 
                         alt={member.name} 
                         style={profilePhoto} 
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => { e.target.src = "https://www.gravatar.com/avatar/?d=mp"; }}
                       />
                     </div>
@@ -311,12 +312,12 @@ const ManageAbout = () => {
                         src={
                           !member.imageUrl 
                             ? "https://www.gravatar.com/avatar/?d=mp" 
-                            : member.imageUrl.startsWith('http') 
-                              ? member.imageUrl 
-                              : `${import.meta.env.VITE_API_URL}${member.imageUrl}`
+                            : cldThumb(member.imageUrl.startsWith('http') ? member.imageUrl : `${import.meta.env.VITE_API_URL}${member.imageUrl}`, { w: 240, h: 240 })
                         } 
                         alt={member.name} 
                         style={profilePhoto} 
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => { e.target.src = "https://www.gravatar.com/avatar/?d=mp"; }}
                       />
                     </div>
@@ -348,12 +349,12 @@ const ManageAbout = () => {
                         src={
                           !member.imageUrl 
                             ? "https://www.gravatar.com/avatar/?d=mp" 
-                            : member.imageUrl.startsWith('http') 
-                              ? member.imageUrl 
-                              : `${import.meta.env.VITE_API_URL}${member.imageUrl}`
+                            : cldThumb(member.imageUrl.startsWith('http') ? member.imageUrl : `${import.meta.env.VITE_API_URL}${member.imageUrl}`, { w: 240, h: 240 })
                         } 
                         alt={member.name} 
                         style={profilePhoto} 
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => { e.target.src = "https://www.gravatar.com/avatar/?d=mp"; }}
                       />
                     </div>
@@ -388,9 +389,7 @@ const ManageAbout = () => {
                     src={
                       !memberForm.imageUrl 
                         ? "https://www.gravatar.com/avatar/?d=mp" 
-                        : (memberForm.imageUrl.startsWith('blob:') || memberForm.imageUrl.startsWith('http'))
-                          ? memberForm.imageUrl 
-                          : `${import.meta.env.VITE_API_URL}${memberForm.imageUrl}`
+                        : cldThumb((memberForm.imageUrl.startsWith('blob:') || memberForm.imageUrl.startsWith('http')) ? memberForm.imageUrl : `${import.meta.env.VITE_API_URL}${memberForm.imageUrl}`, { w: 120, h: 120 })
                     } 
                     alt="Preview" 
                     style={{

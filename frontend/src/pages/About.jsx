@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "../styles/About.css";
 import ccsdLogo from "../assets/ccsdLogo.png";
+import { cldThumb } from "../utils/cloudinary";
 
 // ── Org Chart Components ──
 const OrgCard = ({ name, role, tag, imageUrl, small }) => (
@@ -11,12 +12,12 @@ const OrgCard = ({ name, role, tag, imageUrl, small }) => (
         src={
           !imageUrl 
             ? "https://www.gravatar.com/avatar/?d=mp" 
-            : imageUrl.startsWith('http') 
-              ? imageUrl 
-              : `${import.meta.env.VITE_API_URL}${imageUrl}`
+            : cldThumb(imageUrl.startsWith('http') ? imageUrl : `${import.meta.env.VITE_API_URL}${imageUrl}`, { w: 200, h: 200 })
         } 
         alt={name} 
         className="org-card__photo" 
+        loading="lazy"
+        decoding="async"
         onError={(e) => { e.target.src = "https://www.gravatar.com/avatar/?d=mp"; }}
       />
     </div>
@@ -81,7 +82,7 @@ export default function About() {
         className="ccsd-hero"
         ref={addRef}
         style={aboutData.heroImage ? {
-          backgroundImage: `linear-gradient(rgba(30,41,59,0.72), rgba(30,41,59,0.72)), url(${aboutData.heroImage})`,
+          backgroundImage: `linear-gradient(rgba(30,41,59,0.72), rgba(30,41,59,0.72)), url(${cldThumb(aboutData.heroImage, { w: 1600, crop: 'scale', face: false })})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         } : undefined}

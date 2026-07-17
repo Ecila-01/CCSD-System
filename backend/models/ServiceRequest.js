@@ -30,6 +30,14 @@ statusUpdates: [{
   note: String, // e.g., "Student missed the 10am slot"
   updatedBy: String // name + role of the staff member who made this change
 }],
+  // Free-form case journal notes (independent of status changes). Append-only.
+  caseNotes: [{
+    text: { type: String, required: true },
+    author: String,   // "Name (role)" snapshot of who wrote it
+    authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+  }],
   assignedCounselor: { type: String, default: 'Unassigned' },
   // --- THE VITAL EXTRACTED FIELDS ---
   // The Student (The primary subject of the service)

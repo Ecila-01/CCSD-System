@@ -22,6 +22,23 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
   // --- ACCEPT-TIME SLOT CONFLICTS ---
   const [slotConflicts, setSlotConflicts] = useState([]);
 
+  // --- Case journal (Phase 1) ---
+  const [caseNotes, setCaseNotes] = useState(request?.caseNotes || []);
+  const [noteText, setNoteText] = useState("");
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [noteError, setNoteError] = useState("");
+  const [showStatusHistory, setShowStatusHistory] = useState(false);
+
+  // The dashboard keeps this modal mounted and swaps the `request` prop, so
+  // re-sync the journal whenever a different case is opened (otherwise the
+  // previous case's notes/toggle state leak into the next one).
+  useEffect(() => {
+    setCaseNotes(request?.caseNotes || []);
+    setNoteText("");
+    setNoteError("");
+    setShowStatusHistory(false);
+  }, [request?._id]);
+
   // --- STATES FOR SUCCESS/ERROR POPUP ---
   const [statusPopup, setStatusPopup] = useState({
     isOpen: false,
@@ -157,6 +174,27 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
     onClose(); // Close the detail modal
   };
 
+  // --- Case journal: add a note ---
+  const handleAddNote = async () => {
+    const text = noteText.trim();
+    if (!text) return;
+    setIsAddingNote(true);
+    setNoteError("");
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/requests/${request._id}/notes`,
+        { text }
+      );
+      setCaseNotes(res.data.caseNotes || []);
+      setNoteText("");
+    } catch (error) {
+      console.error("Failed to add note:", error);
+      setNoteError("Could not save the note. Please try again.");
+    } finally {
+      setIsAddingNote(false);
+    }
+  };
+
   // Logic Helpers
   const isGoodMoral = request.serviceName.toUpperCase().includes('GOOD MORAL');
   const isReferral = request.serviceName.toUpperCase() === "REFERRAL";
@@ -273,6 +311,70 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                   {isReassigning ? 'Reassigning…' : 'Reassign'}
                 </button>
               </div>
+            </div>
+
+            <hr className="divider" style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
+
+            {/* CASE JOURNAL */}
+            <div className="form-section case-journal">
+              <h3 className="section-title" style={{ fontSize: '16px', color: '#444', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MdEditNote size={20} /> Case Journal
+              </h3>
+              <p style={{ fontSize: '12px', color: '#888', margin: '0 0 8px' }}>
+                Notes on the concern, how sessions went, and follow-up plans. Each note is saved to the case record with your name and the date.
+              </p>
+
+              <textarea
+                className="cj-input"
+                placeholder="Write a case note (e.g. concern raised, how the session went, next meeting plan)…"
+                value={noteText}
+                onChange={e => { setNoteText(e.target.value); if (noteError) setNoteError(''); }}
+              />
+              <div className="cj-addrow" style={{ justifyContent: 'flex-end' }}>
+                {noteError && <span style={{ color: '#c62828', fontSize: '12px', marginRight: 'auto' }}>{noteError}</span>}
+                <button className="cj-add-btn" onClick={handleAddNote} disabled={isAddingNote || !noteText.trim()}>
+                  {isAddingNote ? 'Saving…' : 'Add Note'}
+                </button>
+              </div>
+
+              <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                <span style={{ fontSize: '13px', color: '#666', fontWeight: 600 }}>
+                  {caseNotes.length} note{caseNotes.length === 1 ? '' : 's'}
+                </span>
+                <button className="cj-toggle" onClick={() => setShowStatusHistory(v => !v)}>
+                  {showStatusHistory ? 'Hide status history' : 'Show status history'}
+                </button>
+              </div>
+
+              {(() => {
+                const fmt = (d) => { try { return new Date(d).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return ''; } };
+                const items = [
+                  ...caseNotes.map(n => ({ kind: 'note', at: n.createdAt, ...n })),
+                  ...(showStatusHistory ? (request.statusUpdates || []).map(su => ({ kind: 'status', at: su.updatedAt, ...su })) : []),
+                ].sort((a, b) => new Date(b.at) - new Date(a.at));
+
+                if (items.length === 0) {
+                  return <p className="cj-empty">No case notes yet. Add the first note above.</p>;
+                }
+                return (
+                  <div className="cj-timeline">
+                    {items.map((it, i) => it.kind === 'note' ? (
+                      <div key={'n' + i} className="cj-note">
+                        <div className="cj-note-head">
+                          <span className="cj-meta">{it.author || 'Staff'} · {fmt(it.at)}</span>
+                        </div>
+                        <div className="cj-note-text">{it.text}</div>
+                      </div>
+                    ) : (
+                      <div key={'s' + i} className="cj-status-row">
+                        <span>▸ Status → <strong>{it.status}</strong></span>
+                        {it.note ? <span>· {it.note}</span> : null}
+                        <span>· {it.updatedBy || 'Staff'} · {fmt(it.at)}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
 
             <hr className="divider" style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />

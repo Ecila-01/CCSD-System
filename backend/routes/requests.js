@@ -223,6 +223,35 @@ router.patch('/:id', requireAuth, async (req, res) => {
   }
 });
 
+// STAFF: add a free-form case note (append-only case journal).
+router.post('/:id/notes', requireAuth, async (req, res) => {
+  try {
+    const text = (req.body.text || '').trim();
+    if (!text) return res.status(400).json({ message: 'Note text is required.' });
+
+
+    const actor = await User.findById(req.user.id).select('name role');
+    const note = {
+      text,
+      author: actor ? `${actor.name} (${actor.role})` : 'Staff',
+      authorId: req.user.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const updated = await ServiceRequest.findByIdAndUpdate(
+      req.params.id,
+      { $push: { caseNotes: note } },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: 'Request not found' });
+    res.status(201).json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error adding note' });
+  }
+});
+
 // PUBLIC (guest token): student cancels their own appointment.
 router.patch('/guest/cancel/:token', async (req, res) => {
   try {

@@ -97,8 +97,12 @@ cron.schedule('*/15 * * * *', async () => {
     const windowStart = new Date(now.getTime() + 60 * 60 * 1000);
     const windowEnd   = new Date(now.getTime() + 75 * 60 * 1000);
 
-    const todayStr    = now.toISOString().slice(0, 10);
-    const tomorrowStr = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    // appointmentDate is a Manila (UTC+8) wall-clock date, so derive the
+    // candidate day strings in that timezone regardless of the server's TZ.
+    const manilaDate = (d) =>
+      new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(d);
+    const todayStr    = manilaDate(now);
+    const tomorrowStr = manilaDate(new Date(now.getTime() + 24 * 60 * 60 * 1000));
 
     const candidates = await ServiceRequest.find({
       requiresSchedule: true,
@@ -112,7 +116,9 @@ cron.schedule('*/15 * * * *', async () => {
       const [hour, min] = (req.timeSlot || '').split(':').map(Number);
       if (isNaN(hour) || isNaN(min)) continue;
 
-      const apptTime = new Date(req.appointmentDate + 'T' + String(hour).padStart(2, '0') + ':' + String(min).padStart(2, '0') + ':00');
+      // Interpret the stored wall-clock date+time as Manila local (+08:00) so the
+      // comparison holds even when the server runs in UTC (e.g. Render).
+      const apptTime = new Date(req.appointmentDate + 'T' + String(hour).padStart(2, '0') + ':' + String(min).padStart(2, '0') + ':00+08:00');
       if (apptTime >= windowStart && apptTime <= windowEnd) {
         try {
           await sendAppointmentReminder(

@@ -120,25 +120,12 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    let currentSection = 1;
-    let currentWeight = 0; // Starts at 0 now because there are no hidden vital fields!
-    const MAX_WEIGHT_PER_PAGE = 7; 
 
     // Track used keys to prevent duplicate database names
     const usedKeys = new Set(); 
 
     // 1. Process Fields
     const finalFields = fields.map((field) => {
-      let fieldWeight = 1; 
-      if (field.type === 'select' || field.type === 'textarea') fieldWeight = 2;
-      if (field.type === 'info') fieldWeight = 3;
-
-      if (currentWeight + fieldWeight > MAX_WEIGHT_PER_PAGE) {
-        currentSection++;
-        currentWeight = 0; 
-      }
-      currentWeight += fieldWeight;
-
       // --- THE COMMON FIELD INTERCEPTOR ---
       let dbFieldName = "";
       const lowerLabel = field.label.toLowerCase();
@@ -187,8 +174,7 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
 
       return {
         ...field,
-        name: finalName,
-        section: currentSection
+        name: finalName
       };
     });
 

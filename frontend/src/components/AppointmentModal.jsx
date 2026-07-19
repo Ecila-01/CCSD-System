@@ -57,8 +57,47 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30, workingDays: [1,2,3,4,5] });
 
   // ✅ UPGRADED: Find the max form sections, then add 1 for the Summary Page
-  const maxFormSection = service?.fields ? Math.max(...service.fields.map(f => f.section || 1)) : 1;
-  const totalSteps = maxFormSection + 1;
+  // Sections are computed at render time from field order + weights (nothing stored on the field).
+  const MAX_WEIGHT_PER_PAGE = 10; // page "height budget"; raise for fewer/taller pages, lower for more/shorter
+  // Approximate a field's rendered height (not just its type): tall controls and
+  // paragraph-length question labels count for more, so pages balance by real height.
+  const fieldWeight = (f) => {
+    const t = f.type;
+    let w = t === 'info' ? 3 : t === 'textarea' ? 2 : t === 'time' ? 2 : t === 'select' ? 2 : 1;
+    const labelLen = (f.label || '').length;
+    if (labelLen > 120) w += 2;        // paragraph-length prompt (e.g. consent statements)
+    else if (labelLen > 60) w += 1;    // wraps to ~2 lines
+    if (t === 'info' && (f.content || '').length > 250) w += 1; // long disclaimer block
+    return w;
+  };
+  const computeFormSections = (fields = []) => {
+    // Keep a time-slot field on the same page as the date it immediately follows,
+    // so the two halves of "when" never split across a page break.
+    const atoms = [];
+    for (const f of fields) {
+      const prev = atoms.length ? atoms[atoms.length - 1] : null;
+      if (f.type === 'time' && prev && prev.length === 1 && prev[0].type === 'date') {
+        prev.push(f);
+      } else {
+        atoms.push([f]);
+      }
+    }
+    const pages = [];
+    let current = [];
+    let weight = 0;
+    for (const atom of atoms) {
+      const w = atom.reduce((sum, f) => sum + fieldWeight(f), 0);
+      if (current.length && weight + w > MAX_WEIGHT_PER_PAGE) {
+        pages.push(current); current = []; weight = 0;
+      }
+      current.push(...atom); weight += w;
+    }
+    if (current.length) pages.push(current);
+    return pages;
+  };
+  const formSections = computeFormSections(service?.fields || []);
+  const maxFormSection = formSections.length; // number of form pages (0 = no custom fields)
+  const totalSteps = maxFormSection + 1;       // +1 for the summary / review page
 
   // --- Date Restriction Helpers ---
   const getMinDate = () => {
@@ -160,7 +199,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   if (!isOpen || !service) return null;
 
   const getFieldsForStep = () => {
-    return service.fields.filter((f) => (f.section || 1) === step);
+    return formSections[step - 1] || [];
   };
 
   const handleChange = (e) => {

@@ -14,6 +14,19 @@ router.get('/', requireAuth, requireRole('admin'), async (req, res) => {
   }
 });
 
+// @route   GET /api/users/assignable   (any authenticated staff)
+// Minimal staff list for the case-reassignment dropdown. Unlike the full admin
+// directory (GET /), this returns only _id, name and role — no emails or account
+// fields — so counsellors can reassign cases without access to the full directory.
+router.get('/assignable', requireAuth, async (req, res) => {
+  try {
+    const staff = await User.find().select('name role');
+    res.json(staff);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error fetching assignable staff" });
+  }
+});
+
 // @route   POST /api/users/register   (admin only — create staff account)
 router.post('/register', requireAuth, requireRole('admin'), async (req, res) => {
   try {

@@ -52,7 +52,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
     setReassignValue(request.assignedCounselor || '');
 
     // Fetch all staff for reassignment dropdown
-    axios.get(`${import.meta.env.VITE_API_URL}/api/users`)
+    axios.get(`${import.meta.env.VITE_API_URL}/api/users/assignable`)
       .then(res => setAllCounselors(res.data))
       .catch(err => console.error("Error fetching counselors:", err));
 

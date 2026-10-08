@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
-import { MdOutlineMail, MdOutlineBadge, MdOutlineLock, MdVerifiedUser, MdHistory, MdDomain, MdOutlineNotifications } from "react-icons/md";
+import { MdOutlineMail, MdOutlineBadge, MdOutlineLock, MdVerifiedUser, MdHistory, MdDomain, MdOutlineNotifications, MdVisibility, MdVisibilityOff } from "react-icons/md";
 import axios from 'axios'; // Make sure to import axios
 import '../styles/Dashboard.css';
 import '../styles/ManagePages.css';
@@ -16,6 +16,8 @@ function Profile() {
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Email opt-out preference (default: opted IN / true)
   const [emailOptIn, setEmailOptIn] = useState(true);
@@ -228,14 +230,32 @@ function Profile() {
                       <label style={labelStyle}>New Password</label>
                       <div style={{ position: 'relative' }}>
                         <MdOutlineLock style={iconStyle} size={20} />
-                        <input type="password" placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={inputStyle} />
+                        <input type={showNewPassword ? 'text' : 'password'} placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={passwordInputStyle} />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(visible => !visible)}
+                          aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                          title={showNewPassword ? 'Hide password' : 'Show password'}
+                          style={passwordToggleStyle}
+                        >
+                          {showNewPassword ? <MdVisibilityOff size={20} /> : <MdVisibility size={20} />}
+                        </button>
                       </div>
                     </div>
                     <div>
                       <label style={labelStyle}>Confirm Password</label>
                       <div style={{ position: 'relative' }}>
                         <MdOutlineLock style={iconStyle} size={20} />
-                        <input type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={inputStyle} />
+                        <input type={showConfirmPassword ? 'text' : 'password'} placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={passwordInputStyle} />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(visible => !visible)}
+                          aria-label={showConfirmPassword ? 'Hide confirmation password' : 'Show confirmation password'}
+                          title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                          style={passwordToggleStyle}
+                        >
+                          {showConfirmPassword ? <MdVisibilityOff size={20} /> : <MdVisibility size={20} />}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -322,12 +342,30 @@ const inputStyle = {
   transition: 'border-color 0.2s'
 };
 
+const passwordInputStyle = {
+  ...inputStyle,
+  paddingRight: '44px'
+};
+
 const iconStyle = {
   position: 'absolute',
   left: '14px',
   top: '50%',
   transform: 'translateY(-50%)',
   color: '#94a3b8'
+};
+
+const passwordToggleStyle = {
+  position: 'absolute',
+  right: '10px',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  display: 'flex',
+  padding: '4px',
+  border: 'none',
+  background: 'transparent',
+  color: '#64748b',
+  cursor: 'pointer'
 };
 
 const miniCardStyle = {

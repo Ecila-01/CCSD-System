@@ -439,7 +439,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                 <button onClick={() => initiateStatusUpdate('Completed')} style={{ padding: '10px 20px', background: '#2e7d32', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>Confirm Received</button>
               )}
 
-              {(request.status === 'Reschedule Requested' || request.status === 'Cancelled') && (
+              {request.status === 'Reschedule Requested' && (
                 <button onClick={() => initiateStatusUpdate('In-Progress')} style={{ padding: '10px 20px', background: '#1976d2', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>Resume Case</button>
               )}
             </div>

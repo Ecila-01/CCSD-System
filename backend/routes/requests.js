@@ -184,6 +184,12 @@ router.patch('/:id', requireAuth, async (req, res) => {
   try {
     const { status, assignedCounselor, statusNote } = req.body;
 
+    const existingRequest = await ServiceRequest.findById(req.params.id).select('status');
+    if (!existingRequest) return res.status(404).json({ message: "Request not found" });
+    if (existingRequest.status === 'Cancelled' && status !== 'Cancelled') {
+      return res.status(400).json({ message: 'Cancelled cases cannot be resumed.' });
+    }
+
     const update = { status, assignedCounselor };
 
     const actor = await User.findById(req.user.id).select('name role');
@@ -199,8 +205,6 @@ router.patch('/:id', requireAuth, async (req, res) => {
       { $set: update, $push: { statusUpdates: historyEntry } },
       { new: true }
     );
-
-    if (!updatedRequest) return res.status(404).json({ message: "Request not found" });
 
     const isReferral = updatedRequest.serviceName?.toUpperCase() === 'REFERRAL';
     const recipientEmail = isReferral ? updatedRequest.referrerEmail : updatedRequest.studentEmail;

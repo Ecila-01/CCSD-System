@@ -36,3 +36,5 @@ Thumbs.db
 revised documents/
 _to_delete/
 _local/
+.vercel
+.env*

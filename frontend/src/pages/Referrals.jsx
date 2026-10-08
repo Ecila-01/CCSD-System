@@ -21,8 +21,11 @@ function Referrals() {
   const fetchRequests = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/requests`);
+      if (!response.ok) {
+        throw new Error(`Unable to load referrals (${response.status})`);
+      }
       const data = await response.json();
-      setRequests(data);
+      setRequests(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching referrals:', error);
     }
@@ -37,7 +40,9 @@ function Referrals() {
 
   if (!user) return null;
 
-  const referralRequests = requests.filter(req => req.serviceName === 'REFERRAL');
+  const referralRequests = requests.filter(
+    req => String(req.serviceName || '').trim().toUpperCase() === 'REFERRAL'
+  );
 
   const totalCount    = referralRequests.length;
   const pendingReview = referralRequests.filter(r => r.status === 'Pending Review').length;

@@ -86,9 +86,11 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
   };
 
   if (!request) return null;
+  const isCancelled = request.status === 'Cancelled';
 
   // --- REASSIGN HANDLER ---
   const handleReassign = async () => {
+    if (isCancelled) return;
     if (!reassignValue || reassignValue === request.assignedCounselor) return;
     setIsReassigning(true);
     try {
@@ -292,6 +294,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                 <select
                   value={reassignValue}
                   onChange={e => setReassignValue(e.target.value)}
+                  disabled={isCancelled}
                   style={{ flex: 1, minWidth: '180px', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', color: '#334155' }}
                 >
                   <option value="Unassigned">Unassigned</option>
@@ -301,11 +304,11 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                 </select>
                 <button
                   onClick={handleReassign}
-                  disabled={isReassigning || reassignValue === request.assignedCounselor}
+                  disabled={isCancelled || isReassigning || reassignValue === request.assignedCounselor}
                   style={{
-                    padding: '8px 14px', backgroundColor: reassignValue !== request.assignedCounselor ? '#1976d2' : '#e2e8f0',
-                    color: reassignValue !== request.assignedCounselor ? 'white' : '#94a3b8',
-                    border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: isReassigning ? 'wait' : 'pointer', fontSize: '13px'
+                    padding: '8px 14px', backgroundColor: !isCancelled && reassignValue !== request.assignedCounselor ? '#1976d2' : '#e2e8f0',
+                    color: !isCancelled && reassignValue !== request.assignedCounselor ? 'white' : '#94a3b8',
+                    border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: isCancelled ? 'not-allowed' : isReassigning ? 'wait' : 'pointer', fontSize: '13px'
                   }}
                 >
                   {isReassigning ? 'Reassigning…' : 'Reassign'}

@@ -186,8 +186,8 @@ router.patch('/:id', requireAuth, async (req, res) => {
 
     const existingRequest = await ServiceRequest.findById(req.params.id).select('status');
     if (!existingRequest) return res.status(404).json({ message: "Request not found" });
-    if (existingRequest.status === 'Cancelled' && status !== 'Cancelled') {
-      return res.status(400).json({ message: 'Cancelled cases cannot be resumed.' });
+    if (existingRequest.status === 'Cancelled') {
+      return res.status(400).json({ message: 'Cancelled cases cannot be changed or reassigned.' });
     }
 
     const update = { status, assignedCounselor };

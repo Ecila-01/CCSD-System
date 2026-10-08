@@ -1,7 +1,18 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const dns = require('node:dns');
 require('dotenv').config();
+
+// Some local networks reject MongoDB Atlas SRV DNS queries. Set
+// MONGODB_DNS_SERVERS (for example, "1.1.1.1,8.8.8.8") in a local .env file
+// to use those resolvers for MongoDB's DNS lookups. Production remains on its
+// hosting provider's resolver unless the variable is explicitly configured.
+if (process.env.MONGODB_DNS_SERVERS) {
+  dns.setServers(
+    process.env.MONGODB_DNS_SERVERS.split(',').map(server => server.trim()).filter(Boolean)
+  );
+}
 const upload = require('./middleware/upload');
 const { requireAuth, requireRole } = require('./middleware/auth');
 const { securityHeaders, sanitizeBody, rateLimit } = require('./middleware/security');

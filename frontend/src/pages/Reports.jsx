@@ -9,6 +9,8 @@ import {
 import '../styles/Dashboard.css';
 import '../styles/Reports.css';
 import PDFExportButton from '../components/PDFExportButton';
+import ExportDropdown from '../components/ExportDropdown';
+import { exportExcel, exportWord } from '../utils/exportReport';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const toMonthValue = (date) =>
@@ -41,6 +43,7 @@ function Reports() {
   const [user]                    = useState(storedUser);
   const [isLoading, setIsLoading] = useState(true);
   const [casePage, setCasePage]   = useState(1);
+  const [exporting, setExporting] = useState(null); // 'word' | 'excel' | null
   const CASE_PAGE_SIZE = 20;
 
   const now = new Date();
@@ -159,7 +162,7 @@ function Reports() {
     return { ...s, weeks };
   }, [myFiltered, monthLabels]);
 
-  // ── data passed directly to PDF generator ─────────────────────────────────
+  // ── data passed directly to PDF / Word / Excel generators ─────────────────
   const pdfStatsData = useMemo(() => {
     const stats  = reportType === 'overall' ? overallStats : myStats;
     const reqs   = reportType === 'overall' ? filtered    : myFiltered;
@@ -196,10 +199,6 @@ function Reports() {
       ? `CCSD_Report_${startMonth}_${endMonth}`
       : `${(user?.name ?? 'Staff').replace(/\s+/g,'_')}_Accomplishment_${startMonth}_${endMonth}`;
 
-  const rangeLabel = `${new Date(...parseMonthValue(startMonth).month !== undefined
-    ? [parseMonthValue(startMonth).year, parseMonthValue(startMonth).month]
-    : []).toLocaleString?.('default', { month:'long', year:'numeric' }) ?? startMonth}`;
-
   const prettyRange = (() => {
     const { year: sy, month: sm } = parseMonthValue(startMonth);
     const { year: ey, month: em } = parseMonthValue(endMonth);
@@ -212,6 +211,32 @@ function Reports() {
 
   const activeReqs = reportType === 'overall' ? filtered   : myFiltered;
   const activeStats = reportType === 'overall' ? overallStats : myStats;
+
+  // ── Word / Excel export ────────────────────────────────────────────────────
+  const handleExport = async (type) => {
+    setExporting(type);
+    try {
+      const payload = {
+        statsData: pdfStatsData,
+        cases: activeReqs.map(r => ({
+          date: new Date(r.createdAt).toLocaleDateString(),
+          client: getClientName(r),
+          service: r.serviceName || 'N/A',
+          assignedTo: r.assignedCounselor || 'Unassigned',
+          status: r.status,
+        })),
+        reportTitle: getReportTitle(),
+        filename: getFilename(),
+        generatedBy: user?.name ?? 'Staff',
+        chartEl: pdfRef.current,
+      };
+      await (type === 'excel' ? exportExcel(payload) : exportWord(payload));
+    } catch (err) {
+      console.error('Export failed:', err);
+    } finally {
+      setExporting(null);
+    }
+  };
 
   return (
     <div className="dashboard-container">
@@ -254,11 +279,19 @@ function Reports() {
                 </label>
               </div>
 
-              <PDFExportButton
-                statsData={pdfStatsData}
-                filename={getFilename()}
-                reportTitle={getReportTitle()}
-                generatedBy={user?.name ?? 'Staff'}
+              {/* Single export dropdown: PDF / Word / Excel */}
+              <ExportDropdown
+                exporting={exporting}
+                onWord={() => handleExport('word')}
+                onExcel={() => handleExport('excel')}
+                pdfItem={
+                  <PDFExportButton
+                    statsData={pdfStatsData}
+                    filename={getFilename()}
+                    reportTitle={getReportTitle()}
+                    generatedBy={user?.name ?? 'Staff'}
+                  />
+                }
               />
             </div>
           </div>

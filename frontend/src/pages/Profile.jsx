@@ -230,7 +230,7 @@ function Profile() {
                       <label style={labelStyle}>New Password</label>
                       <div style={{ position: 'relative' }}>
                         <MdOutlineLock style={iconStyle} size={20} />
-                        <input type={showNewPassword ? 'text' : 'password'} placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={passwordInputStyle} />
+                        <input type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={passwordInputStyle} />
                         <button
                           type="button"
                           onClick={() => setShowNewPassword(visible => !visible)}
@@ -246,7 +246,7 @@ function Profile() {
                       <label style={labelStyle}>Confirm Password</label>
                       <div style={{ position: 'relative' }}>
                         <MdOutlineLock style={iconStyle} size={20} />
-                        <input type={showConfirmPassword ? 'text' : 'password'} placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={passwordInputStyle} />
+                        <input type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={passwordInputStyle} />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(visible => !visible)}

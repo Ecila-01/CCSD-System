@@ -13,7 +13,8 @@ The app has two parts:
 
 - **Node.js 18+** (tested on Node 22).
 - **MongoDB** (Atlas or self-hosted). One database; collections are created automatically.
-- A **Cloudinary** account (image uploads) and a **Gmail account with OAuth2** (transactional email). Both can be swapped for equivalents, but the code currently targets these.
+- An approved outbound email service with SMTP access. The backend uses Nodemailer, so the provider can be the university relay or another SMTP service.
+- MongoDB (Atlas or university-managed) and Cloudinary (or an alternative image/object storage service, which requires adapting the upload integration).
 
 ---
 
@@ -30,9 +31,13 @@ Create `backend/.env` (never commit it — it is git-ignored). All of these are 
 | `CORS_ORIGINS` | Comma-separated list of allowed frontend origins | e.g. `https://ccsd.university.edu`. If unset, falls back to dev origins. **Set this to your real frontend URL(s).** |
 | `FRONTEND_URL` | Base URL used to build links in emails (guest tracking links) | e.g. `https://ccsd.university.edu`. |
 | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | Image storage | From the Cloudinary dashboard. |
-| `GMAIL_USER` | Sender email address | The mailbox that sends system email. |
-| `OAUTH_CLIENT_ID` / `OAUTH_CLIENT_SECRET` / `OAUTH_REFRESH_TOKEN` | Gmail OAuth2 credentials | Generated via Google Cloud + OAuth Playground. |
+| `MAIL_HOST` | SMTP server hostname | Obtain from MIS or the selected email provider. |
+| `MAIL_PORT` | SMTP port | Usually `587` for STARTTLS or `465` for implicit TLS; use the value MIS approves. Defaults to `587`. |
+| `MAIL_SECURE` | Whether to use implicit TLS | Set `true` for port `465`; normally `false` for STARTTLS on `587`. |
+| `MAIL_FROM` | Approved sender email address | MIS must authorize this sender/domain for the application. |
+| `MAIL_USER` / `MAIL_PASSWORD` | Optional SMTP authentication | Set only if the university relay requires credentials. Keep the password in the hosting provider's secret store. |
 | `BASE_URL` | Backend's own public URL | Optional; used where the API references itself. |
+| `MONGODB_DNS_SERVERS` | Optional DNS resolver override | Development workaround only for networks that block Atlas SRV lookups. Do not set in production unless MIS directs it. |
 
 ### Build & run (backend)
 
@@ -120,10 +125,35 @@ After the first admin exists, all further staff accounts are created from the in
 
 ---
 
-## 7. Dependency maintenance
+## 7. University turnover checklist
+
+Transfer ownership before asking MIS to operate production. The university should own the source repository, hosting projects, domain/DNS, database organization, image storage account, and email sender. Do not transfer personal passwords; create university-owned accounts and rotate credentials.
+
+### Decisions and access MIS needs to provide
+
+- **Hosting and domain:** choose where to run the Node.js backend and serve the Vite static frontend; provide the production frontend and API hostnames, TLS certificates, DNS access, and deployment/restart method. The frontend needs a single-page-app fallback to `/index.html` for routes such as `/dashboard`.
+- **Database:** choose university-managed MongoDB or an institution-owned Atlas organization; provision a database, least-privilege application user, network/private connectivity, backups, retention, and a migration window. The app stores requests, accounts, services, schedules, announcements, departments, and system settings in MongoDB.
+- **Email:** choose an approved SMTP relay/provider and supply host, port, TLS mode, approved sender, and optional authentication. Confirm allowed recipients, sending limits, SPF/DKIM/DMARC or relay policy, and whether password-reset and guest-link emails are permitted. The app sends submission links, status/cancellation/reschedule notices, reminders, counselor notifications, and password-reset OTPs.
+- **Images:** decide whether to keep Cloudinary under a university-owned account or migrate uploads to university object storage. Current image uploads use Cloudinary; changing provider requires code changes and migrating existing image URLs/assets.
+- **Secrets and users:** create fresh production values for `JWT_SECRET`, database credentials, SMTP credentials (if used), and Cloudinary credentials. Seed the first admin securely, then let that admin create staff accounts. Never copy secrets into Git, tickets, or this guide.
+- **Operations and privacy:** name service owners, support contacts, monitoring/log retention, incident response, database backup/restore responsibility, data retention, and an approved process for student-data access. Confirm institutional privacy/security review before production cutover.
+
+### Environment handoff
+
+Set backend variables in the university host's secret manager (or a protected server environment file): `MONGO_URI`, `JWT_SECRET`, `NODE_ENV=production`, `CORS_ORIGINS`, `FRONTEND_URL`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURE`, `MAIL_FROM`, and optional `MAIL_USER`/`MAIL_PASSWORD`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`. The platform supplies `PORT` when applicable. Set frontend build variable `VITE_API_URL` to the university API origin. `VITE_API_URL` is embedded in the public frontend bundle and must never contain a secret.
+
+### Suggested cutover sequence
+
+1. MIS provisions university-owned hosting, database, SMTP sender/relay, domain, and image-storage account (or approves keeping Cloudinary).
+2. Export and securely transfer database records and upload assets as approved; verify ownership and access before changing DNS.
+3. Configure fresh secrets, build/deploy the frontend with the new API URL, and deploy the backend with the exact frontend origin in CORS.
+4. Validate login/roles, request submission and guest links, password-reset OTP, counselor notifications, status messages, scheduled reminders, uploads, database backup/restore, and deep-link refresh.
+5. Switch DNS, monitor logs and email delivery, then revoke personal-account credentials and hosting access after MIS accepts operations.
+
+## 8. Dependency maintenance
 
 Run `npm audit` in both `backend/` and `frontend/` periodically and apply `npm audit fix`. Two backend packages (`cloudinary`, `nodemailer`) may require a major-version bump (`npm audit fix --force`) — after doing so, verify **image upload/delete** and **email sending** still work. Most frontend audit findings are build-time tooling (Vite/esbuild/Babel) and do not affect the deployed static site.
 
 ---
 
-*The application-level security controls (JWT verification, RBAC, rate limiting, NoSQL-injection sanitization, OTP hardening, output escaping) are implemented in code and require no configuration. This document covers only the environment and hosting configuration the deployer must provide.*
+*The application-level security controls (JWT verification, RBAC, rate limiting, NoSQL-injection sanitization, OTP hardening, output escaping) are implemented in code and require no configuration. The university must still approve the hosting, data handling, and external services described above.*

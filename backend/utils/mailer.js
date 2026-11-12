@@ -1,9 +1,7 @@
 // backend/utils/mailer.js
-const { google } = require('googleapis');
-const MailComposer = require('nodemailer/lib/mail-composer');
+const nodemailer = require('nodemailer');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
-const GMAIL_USER = process.env.GMAIL_USER;
 
 // Escape user-supplied values before interpolating them into email HTML,
 // so a crafted name/reason/etc. can't inject markup or links (phishing).
@@ -14,39 +12,31 @@ const esc = (v = '') => String(v)
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
 
-// --- OAuth2 Client Setup ---
-const oauth2Client = new google.auth.OAuth2(
-  process.env.OAUTH_CLIENT_ID,
-  process.env.OAUTH_CLIENT_SECRET,
-  'https://developers.google.com/oauthplayground'
-);
-
-oauth2Client.setCredentials({
-  refresh_token: process.env.OAUTH_REFRESH_TOKEN,
-});
-
-const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-
 // --- Core send function ---
 const sendMail = async ({ to, subject, html, fromLabel = 'UB CCSD Team' }) => {
-  const mail = new MailComposer({
-    from: `"${fromLabel}" <${GMAIL_USER}>`,
+  const host = process.env.MAIL_HOST;
+  const port = Number(process.env.MAIL_PORT || 587);
+  const secure = String(process.env.MAIL_SECURE || '').toLowerCase() === 'true';
+  const fromAddress = process.env.MAIL_FROM;
+
+  if (!host || !fromAddress) {
+    throw new Error('Email is not configured. Set MAIL_HOST and MAIL_FROM.');
+  }
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    ...(process.env.MAIL_USER
+      ? { auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASSWORD || '' } }
+      : {}),
+  });
+
+  return transporter.sendMail({
+    from: `"${fromLabel}" <${fromAddress}>`,
     to,
     subject,
     html,
-    textEncoding: 'base64',
-  });
-
-  const message = await mail.compile().build();
-  const raw = Buffer.from(message)
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-
-  return gmail.users.messages.send({
-    userId: 'me',
-    requestBody: { raw },
   });
 };
 

@@ -9,6 +9,24 @@ const { requireAuth } = require('../middleware/auth');
 const { rateLimit } = require('../middleware/security');
 const { sendGuestLink, sendCounselorNotification, sendStatusUpdateToStudent, sendStatusUpdateToReferrer, sendCancellationNotification, sendRescheduleNotificationToCounselor, sendRescheduleRequestToStudent } = require('../utils/mailer');
 const Service = require('../models/Service');
+const OfficeClosure = require('../models/OfficeClosure');
+const { scopeForStaff, guestView, scheduleError } = require('../utils/requestPolicy');
+
+const staffScope = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).select('role assignedDepartments');
+    if (!user || !['admin', 'counsellor'].includes(user.role)) return res.status(403).json({ message: 'Access denied.' });
+    req.requestScope = scopeForStaff(user);
+    next();
+  } catch (error) { next(error); }
+};
+
+async function validateSchedule(date, time) {
+  const [settings, closures] = await Promise.all([
+    SystemSettings.findOne(), OfficeClosure.find({ date }),
+  ]);
+  return scheduleError(date, time, settings || {}, closures);
+}
 
 // Statuses that count as "finished" — a request in one of these no longer
 // occupies a slot and no longer counts against the per-service submission limit.
@@ -30,6 +48,14 @@ const submitLimiter = rateLimit({
 router.post("/", submitLimiter, async (req, res) => {
   try {
     const body = req.body;
+    const service = await Service.findById(body.serviceId);
+    if (!service || service.status !== 'Active') return res.status(400).json({ message: 'Select an active service.' });
+    body.serviceName = service.name;
+    body.requiresSchedule = Boolean(service.requiresScheduling);
+    if (body.requiresSchedule) {
+      const error = await validateSchedule(body.appointmentDate, body.timeSlot);
+      if (error) return res.status(400).json({ message: error });
+    }
     const isReferral = (body.serviceName || '').toUpperCase() === "REFERRAL";
     const submitterEmail = isReferral ? body.referrerEmail : body.studentEmail;
     const studentDept = body.requestData?.department;
@@ -128,7 +154,7 @@ router.post("/", submitLimiter, async (req, res) => {
     await Promise.all([studentEmailPromise, counselorNotifyPromise])
       .catch(err => console.error("A post-submit side-effect failed, but data was saved:", err));
 
-    res.status(201).json(savedRequest);
+    res.status(201).json({ ...guestView(savedRequest), guestToken: savedRequest.guestToken });
 
   } catch (error) {
     console.error(error);
@@ -137,12 +163,13 @@ router.post("/", submitLimiter, async (req, res) => {
 });
 
 // STAFF: Slot conflicts — other active requests already at a given date + time.
-router.get('/slot-conflicts', requireAuth, async (req, res) => {
+router.get('/slot-conflicts', requireAuth, staffScope, async (req, res) => {
   try {
     const { date, time, excludeId } = req.query;
     if (!date || !time) return res.json([]);
 
     const query = {
+      ...req.requestScope,
       appointmentDate: date,
       timeSlot: time,
       status: { $in: ACTIVE_STATUSES },
@@ -163,16 +190,16 @@ router.get('/guest/:token', async (req, res) => {
   try {
     const request = await ServiceRequest.findOne({ guestToken: String(req.params.token) });
     if (!request) return res.status(404).json({ message: "Invalid tracking link" });
-    res.json(request);
+    res.json(guestView(request));
   } catch (error) {
     res.status(500).json({ message: "Server Error fetching guest request" });
   }
 });
 
 // STAFF: Fetch all requests for the Admin Dashboard.
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, staffScope, async (req, res) => {
   try {
-    const requests = await ServiceRequest.find().sort({ createdAt: -1 });
+    const requests = await ServiceRequest.find(req.requestScope).sort({ createdAt: -1 });
     res.json(requests);
   } catch (error) {
     res.status(500).json({ message: 'Server error fetching requests' });
@@ -180,11 +207,14 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // STAFF: Update Status (Accept/Decline/Reschedule).
-router.patch('/:id', requireAuth, async (req, res) => {
+router.patch('/:id', requireAuth, staffScope, async (req, res) => {
   try {
     const { status, assignedCounselor, statusNote } = req.body;
 
-    const existingRequest = await ServiceRequest.findById(req.params.id).select('status');
+    if (!ServiceRequest.schema.path('status').enumValues.includes(status)) {
+      return res.status(400).json({ message: 'Invalid request status.' });
+    }
+    const existingRequest = await ServiceRequest.findOne({ _id: req.params.id, ...req.requestScope }).select('status');
     if (!existingRequest) return res.status(404).json({ message: "Request not found" });
     if (existingRequest.status === 'Cancelled') {
       return res.status(400).json({ message: 'Cancelled cases cannot be changed or reassigned.' });
@@ -200,11 +230,12 @@ router.patch('/:id', requireAuth, async (req, res) => {
       updatedBy: actor ? `${actor.name} (${actor.role})` : 'Staff'
     };
 
-    const updatedRequest = await ServiceRequest.findByIdAndUpdate(
-      req.params.id,
+    const updatedRequest = await ServiceRequest.findOneAndUpdate(
+      { _id: req.params.id, ...req.requestScope, status: { $ne: 'Cancelled' } },
       { $set: update, $push: { statusUpdates: historyEntry } },
-      { new: true }
+      { returnDocument: 'after', runValidators: true }
     );
+    if (!updatedRequest) return res.status(409).json({ message: 'The case changed. Refresh and try again.' });
 
     const isReferral = updatedRequest.serviceName?.toUpperCase() === 'REFERRAL';
     const recipientEmail = isReferral ? updatedRequest.referrerEmail : updatedRequest.studentEmail;
@@ -228,7 +259,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
 });
 
 // STAFF: add a free-form case note (append-only case journal).
-router.post('/:id/notes', requireAuth, async (req, res) => {
+router.post('/:id/notes', requireAuth, staffScope, async (req, res) => {
   try {
     const text = (req.body.text || '').trim();
     if (!text) return res.status(400).json({ message: 'Note text is required.' });
@@ -243,10 +274,10 @@ router.post('/:id/notes', requireAuth, async (req, res) => {
       updatedAt: new Date(),
     };
 
-    const updated = await ServiceRequest.findByIdAndUpdate(
-      req.params.id,
+    const updated = await ServiceRequest.findOneAndUpdate(
+      { _id: req.params.id, ...req.requestScope },
       { $push: { caseNotes: note } },
-      { new: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!updated) return res.status(404).json({ message: 'Request not found' });
     res.status(201).json(updated);
@@ -268,7 +299,7 @@ router.patch('/guest/cancel/:token', async (req, res) => {
     };
 
     const updatedRequest = await ServiceRequest.findOneAndUpdate(
-      { guestToken: String(req.params.token) },
+      { guestToken: String(req.params.token), status: { $in: ['Pending Review', 'In-Progress', 'Reschedule Requested'] } },
       {
         $set: { status: 'Cancelled' },
         $push: { statusUpdates: historyEntry }
@@ -313,7 +344,7 @@ router.patch('/guest/cancel/:token', async (req, res) => {
       }
     }
 
-    res.json(updatedRequest);
+    res.json(guestView(updatedRequest));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error cancelling appointment" });
@@ -324,6 +355,13 @@ router.patch('/guest/cancel/:token', async (req, res) => {
 router.patch('/guest/reschedule/:token', async (req, res) => {
   try {
     const { appointmentDate, timeSlot, statusNote } = req.body;
+    const current = await ServiceRequest.findOne({ guestToken: String(req.params.token) });
+    if (!current) return res.status(404).json({ message: 'Invalid tracking link.' });
+    if (!current.requiresSchedule || current.status !== 'Reschedule Requested') {
+      return res.status(400).json({ message: 'This request cannot be rescheduled.' });
+    }
+    const error = await validateSchedule(appointmentDate, timeSlot);
+    if (error) return res.status(400).json({ message: error });
 
     const historyEntry = {
       status: "Pending Review",
@@ -332,11 +370,12 @@ router.patch('/guest/reschedule/:token', async (req, res) => {
     };
 
     const updatedRequest = await ServiceRequest.findOneAndUpdate(
-      { guestToken: String(req.params.token) },
+      { guestToken: String(req.params.token), requiresSchedule: true, status: 'Reschedule Requested' },
       {
         $set: {
           appointmentDate,
           timeSlot,
+          reminderSent: false,
           status: "Pending Review"
         },
         $push: { statusUpdates: historyEntry }
@@ -382,7 +421,7 @@ router.patch('/guest/reschedule/:token', async (req, res) => {
       }
     }
 
-    res.json(updatedRequest);
+    res.json(guestView(updatedRequest));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error rescheduling" });

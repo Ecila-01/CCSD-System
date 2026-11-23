@@ -23,6 +23,7 @@ function Dashboard() {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/requests`);
       const data = await response.json();
+      if (!response.ok || !Array.isArray(data)) throw new Error('Unable to load requests.');
       setRequests(data);
     } catch (error) {
       console.error("Error fetching requests:", error);
@@ -44,7 +45,7 @@ function Dashboard() {
 
   const authorizedRequests = requests.filter(req => {
     if (isAdmin) return true;
-    return userDepts.includes(req.requestData?.department);
+    return userDepts.some(department => department.trim().toLowerCase() === String(req.requestData?.department || '').trim().toLowerCase());
   });
 
   const todayString = new Date().toDateString();
@@ -108,7 +109,8 @@ function Dashboard() {
             <CasesTable
               requests={authorizedRequests}
               onView={(request) => setViewingRequest(request)}
-              maxItems={6}
+              groupByStudent
+              title="Student Cases"
             />
           </div>
         </section>

@@ -240,7 +240,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
       if (service.name.toUpperCase() === "REFERRAL") {
         extractedData = {
           studentName: getVal(["Student to be referred", "Name of the Student"]),
-          studentEmail: getVal(["Mobile Number", "Contact"]),
+          studentEmail: getVal(["Student Email", "Email Address (Student)"]),
           studentIdNumber: getVal(["ID Number (of Student)", "Student ID"]),
           referrerName: getVal(["Referring Faculty", "Full Name (Referring"]),
           referrerEmail: getVal(["Email Address (Referrer)"]),

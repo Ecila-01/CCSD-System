@@ -1,6 +1,6 @@
 import "./App.css";
 import "./styles/Skeleton.css";
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import axios from 'axios';
 
@@ -20,7 +20,7 @@ import ManageCounselors from "./pages/ManageCounselors";
 import Profile from "./pages/Profile";
 import GuestRequestView from "./pages/GuestRequestView";
 import ManageDepartments from './pages/ManageDepartments';
-import Reports from "./pages/Reports";
+const Reports = lazy(() => import('./pages/Reports'));
 import ManageAbout from "./pages/ManageAbout";
 import Settings from "./pages/Settings";
 import ManageCareers from "./pages/ManageCareers";
@@ -132,7 +132,7 @@ export default function App() {
         {/* SHARED Routes (Admin & Counselor) */}
         <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Dashboard /></ProtectedRoute>} />
         <Route path="/schedules" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Schedules /></ProtectedRoute>} /> 
-        <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Reports/></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Suspense fallback={<p role="status">Loading reports…</p>}><Reports/></Suspense></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute allowedRoles={['admin', 'counsellor']}><Profile/></ProtectedRoute>} /> 
 
         {/* ADMIN ONLY Routes */}

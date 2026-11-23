@@ -79,7 +79,7 @@ const GuestRequestView = () => {
       alert("Reschedule request submitted. Waiting for counselor review.");
     } catch (err) {
       console.error(err);
-      alert("Failed to submit reschedule.");
+      alert(err.response?.data?.message || "Failed to submit reschedule.");
     } finally {
       setIsSubmitting(false);
     }
@@ -170,7 +170,7 @@ const GuestRequestView = () => {
                         <span style={{ fontSize: '10px', color: '#94a3b8' }}>{new Date(update.updatedAt).toLocaleString()}</span>
                       </div>
                       <p style={{ margin: 0, color: '#475569', fontSize: '14px', fontStyle: 'italic' }}>
-                        "{update.note || "Status updated."}"
+                        Status updated.
                       </p>
                     </div>
                   )).reverse()}

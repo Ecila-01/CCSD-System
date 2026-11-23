@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select'; 
 import '../styles/CasesTable.css';
-import { groupStudents, studentName, studentIdentity } from '../utils/studentGroups';
-import StudentHistoryModal from './StudentHistoryModal';
 
-const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 6, groupByStudent = false }) => {
+const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 6 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedGroup, setSelectedGroup] = useState(null);
   
   // --- FILTER STATES ---
   const [filterCase, setFilterCase] = useState('');
@@ -20,6 +17,11 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
   }, [filterCase, filterDepartment, filterStatus, filterCounselor, searchName]);
 
   // --- HELPERS ---
+  const getStudentName = (data) => {
+    if (!data) return "N/A";
+    return data.studentName || data.fullName || data.referrerName || "N/A";
+  };
+
   // ✅ NEW: Simple Department Extractor
   const getDepartment = (data) => {
     if (!data) return "N/A";
@@ -73,7 +75,7 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
 
   // --- THE MASTER FILTER ---
   const filteredRequests = requests.filter(req => {
-    const actualName = studentName(req);
+    const actualName = req.serviceName?.trim().toUpperCase() === "REFERRAL" ? req.studentName : getStudentName(req.requestData);
     
     const matchName = searchName === '' || actualName.toLowerCase().includes(searchName.toLowerCase());
     const matchCase = filterCase === '' || req.serviceName === filterCase;
@@ -85,18 +87,13 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
   });
 
   // --- PAGINATION ---
-  const matchingIds = new Set(filteredRequests.map(request => request._id));
-  const groups = groupByStudent ? groupStudents(requests) : [];
-  const rows = groupByStudent ? groups.filter(group => group.requests.some(request => matchingIds.has(request._id)))
-    .map(group => ({ ...group.requests[0], studentGroup: group })) : filteredRequests;
-  const totalPages = Math.ceil(rows.length / itemsPerPage);
-  const safePage = Math.min(currentPage, Math.max(1, totalPages));
-  const indexOfLastRequest = safePage * itemsPerPage;
+  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+  const indexOfLastRequest = currentPage * itemsPerPage;
   const indexOfFirstRequest = indexOfLastRequest - itemsPerPage;
-  const currentRequests = rows.slice(indexOfFirstRequest, indexOfLastRequest);
+  const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest);
 
-  const handleNextPage = () => { if (safePage < totalPages) setCurrentPage(safePage + 1); };
-  const handlePrevPage = () => { if (safePage > 1) setCurrentPage(safePage - 1); };
+  const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(prev => prev + 1); };
+  const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(prev => prev - 1); };
 
   // --- CUSTOM REACT-SELECT STYLING ---
   const headerSelectStyles = {
@@ -119,7 +116,6 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
     <div className="cases-table-container">
       <div className="table-header">
         <h3 style={{ fontSize: '18px', color: '#1e293b' }}>{title}</h3>
-        {groupByStudent && <p style={{ color: '#475569', fontSize: '14px' }}>One row per student. Status, date, and counselor show their latest request. Open to view all their accessible requests.</p>}
       </div>
       
       <div className="cases-table-outer">
@@ -168,20 +164,16 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
                 <span className="service-badge" style={{ backgroundColor: getServiceColor(req.serviceName).bg, color: getServiceColor(req.serviceName).text, padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold' }}>
                   {req.serviceName}
                 </span>
-                {req.studentGroup && <div style={{ marginTop: '8px', fontSize: '13px' }}>{req.studentGroup.requests.length} request{req.studentGroup.requests.length === 1 ? '' : 's'}</div>}
               </td>
               <td style={{ padding: '16px 20px' }}>
                 {req.serviceName?.trim().toUpperCase() === "REFERRAL" ? (
                   <div style={{ display: 'flex', flexDirection: 'column', fontSize: '13px' }}>
-                    <span style={{ fontWeight: '600', color: '#1e293b' }}>{studentName(req)}</span>
+                    <span style={{ fontWeight: '600', color: '#1e293b' }}>{req.studentName}</span>
                     <span style={{ fontSize: '11px', color: '#64748b' }}>Ref by: {req.referrerName}</span>
                   </div>
                 ) : (
-                  <span style={{ fontSize: '13px', color: '#1e293b' }}>{studentName(req)}</span>
+                  <span style={{ fontSize: '13px', color: '#1e293b' }}>{getStudentName(req.requestData)}</span>
                 )}
-                {req.studentGroup && <div style={{ marginTop: '6px', color: '#475569', fontSize: '12px', overflowWrap: 'anywhere' }}>
-                  {studentIdentity(req).id ? `ID: ${studentIdentity(req).id}` : studentIdentity(req).email || 'Identifier not recorded'}
-                </div>}
               </td>
               
               {/* ✅ NEW: Displays Department */}
@@ -208,7 +200,7 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
                 }
               </td>
               <td style={{ padding: '16px 20px' }}>
-                <button onClick={() => req.studentGroup ? setSelectedGroup(req.studentGroup.key) : onView(req)} style={{ padding: '6px 16px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+                <button onClick={() => onView(req)} style={{ padding: '6px 16px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
                   Open
                 </button>
               </td>
@@ -228,24 +220,19 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
       <div className="table-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', borderTop: '1px solid #f1f5f9' }}>
         <span style={{ fontSize: '13px', color: '#64748b' }}>
           {filteredRequests.length > 0 
-            ? `Showing ${indexOfFirstRequest + 1} to ${Math.min(indexOfLastRequest, rows.length)} of ${rows.length} ${groupByStudent ? 'students' : 'cases'}`
+            ? `Showing ${indexOfFirstRequest + 1} to ${Math.min(indexOfLastRequest, filteredRequests.length)} of ${filteredRequests.length} cases`
             : `Showing 0 of 0 cases`
           }
         </span>
 
         {totalPages > 1 && (
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <button onClick={handlePrevPage} disabled={safePage === 1} style={{ padding: '6px 12px', border: '1px solid #e2e8f0', backgroundColor: safePage === 1 ? '#f8fafc' : '#ffffff', color: safePage === 1 ? '#cbd5e1' : '#475569', borderRadius: '6px', cursor: safePage === 1 ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '13px' }}>Prev</button>
-            <span style={{ padding: '6px 14px', backgroundColor: '#fee2e2', color: '#ef4444', borderRadius: '6px', fontWeight: '700', fontSize: '13px' }}>{safePage}</span>
-            <button onClick={handleNextPage} disabled={safePage === totalPages} style={{ padding: '6px 12px', border: '1px solid #e2e8f0', backgroundColor: safePage === totalPages ? '#f8fafc' : '#ffffff', color: safePage === totalPages ? '#cbd5e1' : '#475569', borderRadius: '6px', cursor: safePage === totalPages ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '13px' }}>Next</button>
+            <button onClick={handlePrevPage} disabled={currentPage === 1} style={{ padding: '6px 12px', border: '1px solid #e2e8f0', backgroundColor: currentPage === 1 ? '#f8fafc' : '#ffffff', color: currentPage === 1 ? '#cbd5e1' : '#475569', borderRadius: '6px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '13px' }}>Prev</button>
+            <span style={{ padding: '6px 14px', backgroundColor: '#fee2e2', color: '#ef4444', borderRadius: '6px', fontWeight: '700', fontSize: '13px' }}>{currentPage}</span>
+            <button onClick={handleNextPage} disabled={currentPage === totalPages} style={{ padding: '6px 12px', border: '1px solid #e2e8f0', backgroundColor: currentPage === totalPages ? '#f8fafc' : '#ffffff', color: currentPage === totalPages ? '#cbd5e1' : '#475569', borderRadius: '6px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '13px' }}>Next</button>
           </div>
         )}
       </div>
-      {selectedGroup && groups.find(group => group.key === selectedGroup) && (
-        <StudentHistoryModal group={groups.find(group => group.key === selectedGroup)}
-          onClose={() => setSelectedGroup(null)}
-          onView={request => { setSelectedGroup(null); onView(request); }} />
-      )}
     </div>
   );
 };

@@ -109,8 +109,7 @@ function Dashboard() {
             <CasesTable
               requests={authorizedRequests}
               onView={(request) => setViewingRequest(request)}
-              groupByStudent
-              title="Student Cases"
+              maxItems={6}
             />
           </div>
         </section>

@@ -63,6 +63,9 @@ statusUpdates: [{
 
   // --- THE FULL DYNAMIC FORM DATA ---
   requestData: { type: mongoose.Schema.Types.Mixed, required: true },
+  // Internal submission controls; never accepted from guests or exposed in guestView.
+  submitterEmailNormalized: { type: String, select: false },
+  submissionFingerprint: { type: String, select: false },
 
   guestToken: {
     type: String,
@@ -72,4 +75,6 @@ statusUpdates: [{
   reminderSent: { type: Boolean, default: false }
 }, { timestamps: true });
 
+serviceRequestSchema.index({ submissionFingerprint: 1, createdAt: -1 });
+serviceRequestSchema.index({ submitterEmailNormalized: 1, createdAt: -1 });
 module.exports = mongoose.model('ServiceRequest', serviceRequestSchema);

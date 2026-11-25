@@ -3,6 +3,7 @@ import "../styles/AppointmentModal.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { validateAnswers, fullName, namePart, isLegacyName } from '../utils/formValidation';
+import { futureSlot } from '../utils/appointmentTime';
 
 // Matches email addresses so we can render them without dumping the literal
 // address into the page source (reduces naive bot scraping).
@@ -55,6 +56,20 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   const [submitError, setSubmitError] = useState("");
   const [liveDepts, setLiveDepts] = useState([]);
   const [closures, setClosures] = useState([]);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!isOpen) return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(timer);
+  }, [isOpen]);
+  useEffect(() => {
+    const dateField = service?.fields?.find(f => f.type === 'date' && !/birth|dob/i.test(f.label || ''));
+    const timeField = service?.fields?.find(f => f.type === 'time');
+    if (timeField && formData[timeField.name] && !futureSlot(formData[dateField?.name], formData[timeField.name], now)) {
+      setFormData(previous => ({ ...previous, [timeField.name]: '' }));
+    }
+  }, [now, service, formData]);
   const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30, workingDays: [1,2,3,4,5] });
 
   // ✅ UPGRADED: Find the max form sections, then add 1 for the Summary Page
@@ -220,6 +235,11 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
 
     // If we aren't on the final summary page, just move to the next step
     const fieldsToValidate = step < totalSteps ? getFieldsForStep() : service.fields;
+    const scheduleDate = service.fields.find(f => f.type === 'date' && !/birth|dob/i.test(f.label || ''));
+    const scheduleTime = service.fields.find(f => f.type === 'time');
+    if (scheduleTime && formData[scheduleTime.name] && !futureSlot(formData[scheduleDate?.name], formData[scheduleTime.name])) {
+      setSubmitError('Choose a future appointment time.'); return;
+    }
     const validationError = validateAnswers(fieldsToValidate, formData);
     if (validationError) {
       setSubmitError(validationError);
@@ -495,7 +515,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                               {(() => {
                                 const apptDateField = service.fields.find(f => f.type === 'date' && !/(birth|dob)/i.test(f.label || ''));
                                 const selDate = apptDateField ? formData[apptDateField.name] : "";
-                                const openSlots = timeSlots.filter(slot => !isSlotClosed(selDate, slot.value));
+                                const openSlots = timeSlots.filter(slot => !isSlotClosed(selDate, slot.value) && futureSlot(selDate, slot.value, now));
                                 if (openSlots.length === 0) {
                                   return <p style={{ color: '#b91c1c', fontSize: '13px', margin: 0 }}>No available times for the selected date. Please choose another day.</p>;
                                 }
@@ -508,6 +528,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                                     >
                                       <input
                                         type="radio" name={field.name} value={slot.value} required={field.required}
+                                        checked={formData[field.name] === slot.value}
                                         onChange={handleChange} className="hidden-radio"
                                       />
                                       {slot.label}
@@ -524,9 +545,6 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                               value={formData[field.name] || ""} placeholder="Your answer" style={styledInput}
                             />
                           )}
-                          {(namePart(field) || isLegacyName(field)) && <small style={{ display: 'block', marginTop: '6px', color: '#64748b' }}>
-                            {namePart(field) === 'middle' ? 'Optional. ' : ''}Use letters, spaces, apostrophes, periods or hyphens. No numbers.
-                          </small>}
                         </>
                       )}
                     </div>

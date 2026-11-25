@@ -123,7 +123,6 @@ const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", item
           <input type="search" aria-label="Search by student name or email" placeholder="Search by name or email…" value={searchName} onChange={event => setSearchName(event.target.value)} />
         </div>
       </div>
-      <p className="case-sort-hint">{sortOrder === 'queue' ? 'Urgent → untouched pending → other active cases; oldest submissions first. ' : 'Sorted by submission date. '}Closed cases always appear last.</p>
       
       <div className="cases-table-outer">
         <div className="cases-table-inner">

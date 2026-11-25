@@ -17,7 +17,7 @@ test('migration separates referral identities, preserves unrelated fields and is
  assert.equal(fullName(normalized,data,'student'),'Ana Cruz');
  assert.equal(fullName(normalized,data,'referrer'),"José O’Connor");
  assert.equal(validateAnswers(normalized,data),null);
- assert.match(validateAnswers(normalized,{...data,studentFirstName:'123'}),/Student First Name/);
+ assert.match(validateAnswers(normalized,{...data,studentFirstName:'123'}),/First Name/);
  assert.match(validateAnswers(normalized,{...data,studentLastName:'   '}),/required/);
 });
 test('required and typed validation covers dates, email, zero, whitespace and dropdown Other',()=>{

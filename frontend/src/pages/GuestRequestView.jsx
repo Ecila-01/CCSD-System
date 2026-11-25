@@ -6,6 +6,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '../styles/AppointmentModal.css';
 import '../styles/GuestRequestView.css';
+import { futureSlot } from '../utils/appointmentTime';
 
 const GuestRequestView = () => {
   const { token } = useParams();
@@ -16,6 +17,15 @@ const GuestRequestView = () => {
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [newDate, setNewDate] = useState(null);
   const [newTime, setNewTime] = useState("");
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(timer);
+  }, []);
+  const selectedDate = newDate ? `${newDate.getFullYear()}-${String(newDate.getMonth()+1).padStart(2,'0')}-${String(newDate.getDate()).padStart(2,'0')}` : '';
+  useEffect(() => {
+    if (newTime && !futureSlot(selectedDate, newTime, now)) setNewTime('');
+  }, [selectedDate, newTime, now]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30, workingDays: [1,2,3,4,5] });
 
@@ -56,12 +66,13 @@ const GuestRequestView = () => {
       slots.push({ label: timeLabel, value: timeValue });
       totalMins += interval;
     }
-    return slots;
+    return slots.filter(slot => futureSlot(selectedDate, slot.value, now));
   };
 
   // Logic to handle the reschedule submission
   const handleRescheduleSubmit = async () => {
     if (!newDate || !newTime) return alert("Please select both date and time.");
+    if (!futureSlot(selectedDate, newTime)) return alert('Choose a future appointment time.');
     
     setIsSubmitting(true);
     try {

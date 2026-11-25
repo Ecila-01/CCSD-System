@@ -19,12 +19,12 @@ function normalizeNameFields(fields) {
    const role=nameRole(field);
    for(const part of ['first','middle','last']) result.push({
     name:`${role}${part[0].toUpperCase()+part.slice(1)}Name`,
-    label:`${role==='referrer'?'Referrer':'Student'} ${part[0].toUpperCase()+part.slice(1)} Name`,
+    label:`${role==='referrer'?'Referrer ':''}${part[0].toUpperCase()+part.slice(1)} Name`,
     type:'text',nameRole:role,namePart:part,required:part!=='middle',options:[],section:field.section
    });
   } else {
    const part=namePart(field);
-   result.push(part ? {...field,namePart:part,nameRole:nameRole(field),type:'text',required:part!=='middle'} : field);
+   result.push(part ? {...field,label:`${nameRole(field)==='referrer'?'Referrer ':''}${part[0].toUpperCase()+part.slice(1)} Name`,namePart:part,nameRole:nameRole(field),type:'text',required:part!=='middle'} : field);
   }
  }
  if (new Set(result.map(f=>f.name)).size!==result.length) throw new Error('Each form field must have a unique name.');

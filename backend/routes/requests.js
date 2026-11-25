@@ -12,6 +12,7 @@ const Service = require('../models/Service');
 const OfficeClosure = require('../models/OfficeClosure');
 const { scopeForStaff, guestView, scheduleError } = require('../utils/requestPolicy');
 const { validateAnswers, fullName, validName } = require('../utils/formValidation');
+const { normalizeEmail, fingerprint, acquire, checkRecent } = require('../utils/submissionGuard');
 
 const staffScope = async (req, res, next) => {
   try {
@@ -47,6 +48,7 @@ const submitLimiter = rateLimit({
 
 // PUBLIC: student/faculty submit the intake form.
 router.post("/", submitLimiter, async (req, res) => {
+  let releaseSubmission;
   try {
     const body = req.body;
     const service = await Service.findById(body.serviceId);
@@ -81,6 +83,21 @@ router.post("/", submitLimiter, async (req, res) => {
     const isReferral = (body.serviceName || '').toUpperCase() === "REFERRAL";
     const submitterEmail = isReferral ? body.referrerEmail : body.studentEmail;
     const studentDept = body.requestData?.department;
+    const normalizedEmail = normalizeEmail(submitterEmail);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) return res.status(400).json({ message: 'Enter a valid submitter email address.' });
+    // Serialize this email within the current single backend instance. Persistent
+    // lookbacks survive restarts; horizontal scaling requires a shared lock.
+    releaseSubmission = acquire(normalizedEmail);
+    if (!releaseSubmission) {
+      res.setHeader('Retry-After', '60');
+      return res.status(429).json({ code: 'SUBMISSION_IN_PROGRESS', message: 'A request is already being submitted with this email. Please wait before trying again.' });
+    }
+    const submissionFingerprint = fingerprint(body, service.fields || [], normalizedEmail);
+    const blocked = await checkRecent(ServiceRequest, normalizedEmail, submissionFingerprint);
+    if (blocked) {
+      res.setHeader('Retry-After', String(blocked.retryAfter));
+      return res.status(blocked.status).json({ code: blocked.code, message: blocked.message, retryAfter: blocked.retryAfter });
+    }
 
     // --- DUPLICATE SUBMISSION GUARD -------------------------------------
     if (!isReferral && submitterEmail && body.serviceId) {
@@ -130,8 +147,12 @@ router.post("/", submitLimiter, async (req, res) => {
       appointmentDate: body.appointmentDate,
       timeSlot: body.timeSlot,
       requestData: body.requestData,
+      submitterEmailNormalized: normalizedEmail,
+      submissionFingerprint,
     });
     const savedRequest = await newRequest.save();
+    releaseSubmission();
+    releaseSubmission = null;
 
     const relatedService = await Service.findById(savedRequest.serviceId);
     let serviceInfoText = null;
@@ -181,6 +202,8 @@ router.post("/", submitLimiter, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
+  } finally {
+    releaseSubmission?.();
   }
 });
 

@@ -14,6 +14,13 @@ export function sortCases(requests, mode = 'queue') {
  return [...requests].sort((a,b) => {
   const closed = Number(isClosed(a)) - Number(isClosed(b));
   if (closed) return closed;
+  if (mode === 'appointment-earliest' || mode === 'appointment-latest') {
+   const appointment = r => r.requiresSchedule && r.appointmentDate ? Date.parse(r.appointmentDate + 'T' + (r.timeSlot || '00:00') + ':00+08:00') : NaN;
+   const at = appointment(a), bt = appointment(b);
+   const missing = Number(!Number.isFinite(at)) - Number(!Number.isFinite(bt));
+   if (missing) return missing;
+   if (Number.isFinite(at) && at !== bt) return (mode === 'appointment-latest' ? -1 : 1) * (at - bt);
+  }
   if (mode === 'queue') {
    if (isClosed(a)) return time(closedAt(b)) - time(closedAt(a)) || String(a._id).localeCompare(String(b._id));
    const rank = r => r.priority === 'Urgent' ? 0 : untouched(r) ? 1 : 2;

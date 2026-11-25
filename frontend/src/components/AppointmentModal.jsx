@@ -6,32 +6,10 @@ import "react-datepicker/dist/react-datepicker.css";
 import { validateAnswers, fullName, namePart, isLegacyName } from '../utils/formValidation';
 import { futureSlot } from '../utils/appointmentTime';
 
-// Matches email addresses so we can render them without dumping the literal
-// address into the page source (reduces naive bot scraping).
+// Preserve instruction text and make published contact addresses directly usable.
 const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
-// Renders an email as a "click to reveal" control. The address is held
-// base64-encoded until the user clicks, so the raw `name@domain` string is not
-// present in the initial DOM/HTML that scrapers read.
-const ObfuscatedEmail = ({ email }) => {
-  const [revealed, setRevealed] = useState(false);
-  const encoded = btoa(email);
-  if (revealed) {
-    const addr = atob(encoded);
-    return <a href={`mailto:${addr}`} style={{ color: "#c00000", fontWeight: 600 }}>{addr}</a>;
-  }
-  return (
-    <button
-      type="button"
-      onClick={() => setRevealed(true)}
-      style={{ background: "none", border: "none", color: "#c00000", textDecoration: "underline", cursor: "pointer", padding: 0, font: "inherit" }}
-    >
-      [click to reveal email]
-    </button>
-  );
-};
-
-// Splits free-text instruction content into plain text + obfuscated emails.
+// Render contact addresses as visible email links.
 const renderInfoContent = (text) => {
   if (!text) return null;
   const parts = [];
@@ -41,7 +19,7 @@ const renderInfoContent = (text) => {
   let key = 0;
   while ((match = re.exec(text)) !== null) {
     if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
-    parts.push(<ObfuscatedEmail key={`em-${key++}`} email={match[0]} />);
+    parts.push(<a key={`em-${key++}`} href={`mailto:${match[0]}`} style={{ color: "#c00000", fontWeight: 600 }}>{match[0]}</a>);
     lastIndex = match.index + match[0].length;
   }
   if (lastIndex < text.length) parts.push(text.slice(lastIndex));

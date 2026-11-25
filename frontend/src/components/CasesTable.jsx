@@ -126,6 +126,21 @@ const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", item
     option: (base, state) => ({ ...base, fontSize: '13px', color: '#1e293b', backgroundColor: state.isFocused ? '#f1f5f9' : 'white', cursor: 'pointer' })
   };
 
+  const dateHeader = (column, label) => {
+    const submitted = column === 'submitted';
+    const options = submitted
+      ? [{value:'queue',label:'Reset to default queue'},{value:'oldest',label:'Oldest submission first'},{value:'newest',label:'Newest submission first'}]
+      : [{value:'queue',label:'Reset to default queue'},{value:'appointment-earliest',label:'Earliest appointment first'},{value:'appointment-latest',label:'Latest appointment first'}];
+    const active = options.find(option=>option.value===sortOrder);
+    const ascending = sortOrder === (submitted ? 'oldest' : 'appointment-earliest');
+    const descending = sortOrder === (submitted ? 'newest' : 'appointment-latest');
+    return <th aria-sort={ascending?'ascending':descending?'descending':'none'} style={{padding:'16px 20px'}}>
+      <Select aria-label={label+' sorting'} options={options} styles={headerSelectStyles}
+        menuPortalTarget={document.body} menuPosition="fixed" isSearchable={false}
+        value={{value:active?.value||'',label:label.toUpperCase()+(ascending?' ↑':descending?' ↓':'')}}
+        onChange={option=>{setCurrentPage(1);setSortOrder(option.value);}} />
+    </th>;
+  };
   const plainHeaderStyle = { color: '#6b7280', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' };
 
   return (
@@ -134,9 +149,7 @@ const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", item
       <div className="table-header">
         <h3 style={{ fontSize: '18px', color: '#1e293b' }}>{title}</h3>
         <div className="case-table-tools">
-          <label>Sort by <select value={sortOrder} onChange={event => {setCurrentPage(1);setSortOrder(event.target.value);}}>
-            <option value="queue">Priority / queue order</option><option value="newest">Newest submission first</option><option value="oldest">Oldest submission first</option>
-          </select></label>
+
           <input type="search" aria-label="Search by student name or email" placeholder="Search by name or email…" value={searchName} onChange={event => {setCurrentPage(1);setSearchName(event.target.value);}} />
         </div>
       </div>
@@ -165,8 +178,8 @@ const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", item
               />
             </th>
             
-            <th style={{ ...plainHeaderStyle, padding: '16px 20px' }}>Submitted</th>
-            <th style={{ ...plainHeaderStyle, padding: '16px 20px' }}>Appointment</th>
+            {dateHeader('submitted', 'Submitted')}
+            {dateHeader('appointment', 'Appointment')}
             
             <th style={{ padding: '16px 10px', minWidth: '150px' }}>
               <Select options={statusOptions} styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" isSearchable={true} value={statusOptions.find(o => o.value === filterStatus)} onChange={(option) => {setCurrentPage(1);setFilterStatus(option ? option.value : '');}} />

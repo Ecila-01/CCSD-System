@@ -25,3 +25,9 @@ test('search normalizes spaces/case and never treats referrer email as student e
  assert.equal(matchesStudent({studentEmail:'ANA@example.com'},'ana@'),true);
  assert.equal(matchesStudent({serviceName:'Referral',referrerEmail:'staff@example.com',requestData:{email:'staff@example.com'}},'staff@'),false);
 });
+
+test('appointment sorts include time, keep missing schedules last and closed cases below active cases',()=>{
+ const rows=[r('missing','2026-01-01'),r('late','2026-01-01',{requiresSchedule:true,appointmentDate:'2026-12-01',timeSlot:'14:00'}),r('early','2026-02-01',{requiresSchedule:true,appointmentDate:'2026-12-01',timeSlot:'08:00'}),r('closed','2026-01-01',{status:'Completed',requiresSchedule:true,appointmentDate:'2026-01-01',timeSlot:'08:00'})];
+ assert.deepEqual(sortCases(rows,'appointment-earliest').map(r=>r._id),['early','late','missing','closed']);
+ assert.deepEqual(sortCases(rows,'appointment-latest').map(r=>r._id),['late','early','missing','closed']);
+});

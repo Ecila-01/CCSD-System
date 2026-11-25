@@ -66,11 +66,11 @@ const GuestRequestView = () => {
     setIsSubmitting(true);
     try {
       const formattedDate = newDate ? newDate.toLocaleDateString('en-CA') : "";
-      // Update request: change date/time and set status back to "Pending Review"
+      // Update request: change date/time and set status back to "Pending"
       const res = await axios.patch(`${import.meta.env.VITE_API_URL}/api/requests/guest/reschedule/${token}`, {
         appointmentDate: formattedDate,
         timeSlot: newTime,
-        status: "Pending Review",
+        status: "Pending",
         statusNote: "Student updated the appointment schedule."
       });
       
@@ -112,7 +112,7 @@ const GuestRequestView = () => {
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'Pending Review': return { bg: '#fff7ed', text: '#c2410c', border: '#ffedd5' };
+      case 'Pending': return { bg: '#fff7ed', text: '#c2410c', border: '#ffedd5' };
       case 'In-Progress': 
       case 'Processing': return { bg: '#eff6ff', text: '#1d4ed8', border: '#dbeafe' };
       case 'Reschedule Requested': return { bg: '#fff1f2', text: '#e11d48', border: '#ffe4e6' };
@@ -262,7 +262,7 @@ const GuestRequestView = () => {
           </div>
 
           {/* Cancel button — only for cancellable statuses */}
-          {['Pending Review', 'In-Progress', 'Reschedule Requested'].includes(request.status) && (
+          {['Pending', 'In-Progress', 'Reschedule Requested'].includes(request.status) && (
             <div className="guest-cancel-footer" style={{ padding: '20px 30px', borderTop: '1px solid #f1f5f9' }}>
               <button
                 onClick={() => setIsCancelModalOpen(true)}

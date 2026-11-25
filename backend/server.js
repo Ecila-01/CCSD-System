@@ -118,7 +118,7 @@ cron.schedule('*/15 * * * *', async () => {
     const candidates = await ServiceRequest.find({
       requiresSchedule: true,
       reminderSent: false,
-      status: { $in: ['Pending Review', 'In-Progress'] },
+      status: { $in: ['Pending', 'In-Progress'] },
       appointmentDate: { $in: [todayStr, tomorrowStr] },
       studentEmail: { $exists: true, $ne: '' }
     });

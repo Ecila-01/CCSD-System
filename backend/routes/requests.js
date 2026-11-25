@@ -33,7 +33,7 @@ async function validateSchedule(date, time) {
 const TERMINAL_STATUSES = ['Declined', 'Cancelled', 'No-Show', 'Resolved', 'Completed'];
 // The inverse: statuses that are still "live".
 const ACTIVE_STATUSES = [
-  'Pending Review', 'In-Progress', 'Processing', 'Action Required',
+  'Pending', 'In-Progress', 'Processing', 'Action Required',
   'Reschedule Requested', 'Ready for Pickup', 'Follow-up Needed'
 ];
 
@@ -206,6 +206,28 @@ router.get('/', requireAuth, staffScope, async (req, res) => {
   }
 });
 
+// Priority is staff-only and independent of status and guest notifications.
+router.patch('/:id/priority', requireAuth, staffScope, async (req, res) => {
+  try {
+    const { priority } = req.body;
+    if (!['Normal', 'Urgent'].includes(priority)) return res.status(400).json({ message: 'Invalid priority.' });
+    const current = await ServiceRequest.findOne({ _id: req.params.id, ...req.requestScope });
+    if (!current) return res.status(404).json({ message: 'Request not found.' });
+    const closed = ['Completed', 'Resolved', 'Declined', 'Cancelled'];
+    if (closed.includes(current.status)) return res.status(400).json({ message: 'Closed cases cannot change priority.' });
+    if ((current.priority || 'Normal') === priority) return res.json(current);
+    const actor = await User.findById(req.user.id).select('name role');
+    const updated = await ServiceRequest.findOneAndUpdate(
+      { _id: current._id, ...req.requestScope, status: { $nin: closed },
+        $or: current.priority === 'Urgent' ? [{ priority: 'Urgent' }] : [{ priority: 'Normal' }, { priority: { $exists: false } }] },
+      { $set: { priority }, $push: { priorityUpdates: { priority, authorId: req.user.id,
+        updatedBy: `${actor.name} (${actor.role})`, updatedAt: new Date() } } },
+      { returnDocument: 'after', runValidators: true });
+    if (!updated) return res.status(409).json({ message: 'The case changed. Refresh and try again.' });
+    res.json(updated);
+  } catch (error) { res.status(500).json({ message: 'Could not update priority.' }); }
+});
+
 // STAFF: Update Status (Accept/Decline/Reschedule).
 router.patch('/:id', requireAuth, staffScope, async (req, res) => {
   try {
@@ -299,7 +321,7 @@ router.patch('/guest/cancel/:token', async (req, res) => {
     };
 
     const updatedRequest = await ServiceRequest.findOneAndUpdate(
-      { guestToken: String(req.params.token), status: { $in: ['Pending Review', 'In-Progress', 'Reschedule Requested'] } },
+      { guestToken: String(req.params.token), status: { $in: ['Pending', 'In-Progress', 'Reschedule Requested'] } },
       {
         $set: { status: 'Cancelled' },
         $push: { statusUpdates: historyEntry }
@@ -364,7 +386,7 @@ router.patch('/guest/reschedule/:token', async (req, res) => {
     if (error) return res.status(400).json({ message: error });
 
     const historyEntry = {
-      status: "Pending Review",
+      status: "Pending",
       note: statusNote || "Student updated the preferred schedule.",
       updatedAt: new Date()
     };
@@ -376,7 +398,7 @@ router.patch('/guest/reschedule/:token', async (req, res) => {
           appointmentDate,
           timeSlot,
           reminderSent: false,
-          status: "Pending Review"
+          status: "Pending"
         },
         $push: { statusUpdates: historyEntry }
       },

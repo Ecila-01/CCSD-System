@@ -8,7 +8,7 @@ const serviceRequestSchema = new mongoose.Schema({
   status: {
   type: String,
   enum: [
-    'Pending Review', 
+    'Pending',
     'In-Progress', 
     'Processing',
     'Action Required',
@@ -21,7 +21,7 @@ const serviceRequestSchema = new mongoose.Schema({
     'No-Show',
     "Completed"
   ],
-  default: 'Pending Review'
+  default: 'Pending'
 },
 // Adding this helps with your Reports page later!
 statusUpdates: [{
@@ -39,6 +39,13 @@ statusUpdates: [{
     updatedAt: { type: Date, default: Date.now }
   }],
   assignedCounselor: { type: String, default: 'Unassigned' },
+  priority: { type: String, enum: ['Normal', 'Urgent'], default: 'Normal' },
+  priorityUpdates: [{
+    priority: { type: String, enum: ['Normal', 'Urgent'] },
+    updatedBy: String,
+    authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    updatedAt: { type: Date, default: Date.now }
+  }],
   // --- THE VITAL EXTRACTED FIELDS ---
   // The Student (The primary subject of the service)
   studentName: { type: String, required: true },

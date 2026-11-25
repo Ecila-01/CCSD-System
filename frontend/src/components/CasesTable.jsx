@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select'; 
 import '../styles/CasesTable.css';
+import { matchesStudent, sortCases, studentName } from '../utils/caseQueue';
+import CasePriorityControl from './CasePriorityControl';
+import { statusLabel } from '../utils/statusLabel';
 
-const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 6 }) => {
+const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", itemsPerPage = 10 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   
   // --- FILTER STATES ---
@@ -11,33 +14,30 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
   const [filterStatus, setFilterStatus] = useState('');
   const [filterCounselor, setFilterCounselor] = useState('');
   const [searchName, setSearchName] = useState('');
+  const [sortOrder, setSortOrder] = useState('queue');
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterCase, filterDepartment, filterStatus, filterCounselor, searchName]);
+  }, [filterCase, filterDepartment, filterStatus, filterCounselor, searchName, sortOrder]);
 
   // --- HELPERS ---
-  const getStudentName = (data) => {
-    if (!data) return "N/A";
-    return data.studentName || data.fullName || data.referrerName || "N/A";
-  };
-
   // ✅ NEW: Simple Department Extractor
   const getDepartment = (data) => {
     if (!data) return "N/A";
     return data.department || "N/A";
   };
 
-  const getDisplayDate = (req) => {
-    const dateString = (req.requiresSchedule && req.appointmentDate) ? req.appointmentDate : req.createdAt;
-    return new Date(dateString).toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+  const formatDate = value => {
+    const date = new Date(value);
+    return value && !Number.isNaN(date.getTime()) ? date.toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila'
+    }) : 'Not recorded';
   };
-
-  const getDisplayTime = (req) => {
-    if (req.requiresSchedule && req.timeSlot) {
-      return new Date(`1970-01-01T${req.timeSlot}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    }
-    return new Date(req.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const formatTime = value => {
+    const date = new Date(value);
+    return value && !Number.isNaN(date.getTime()) ? date.toLocaleTimeString('en-US', {
+      hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila'
+    }) : '';
   };
 
   const getServiceColor = (serviceName) => {
@@ -70,14 +70,13 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
   const caseOptions = buildOptions([...new Set(requests.map(r => r.serviceName))].filter(Boolean), "CASES");
   // ✅ NEW: Build options for Departments
   const departmentOptions = buildOptions([...new Set(requests.map(r => getDepartment(r.requestData)))].filter(c => c !== "N/A"), "DEPARTMENT");
-  const statusOptions = buildOptions([...new Set(requests.map(r => r.status))].filter(Boolean), "STATUS");
+  const statusOptions = buildOptions([...new Set(requests.map(r => r.status))].filter(Boolean), "STATUS")
+    .map(option => ({ ...option, label: statusLabel(option.label) }));
   const counselorOptions = buildOptions([...new Set(requests.map(r => r.assignedCounselor || 'Unassigned'))], "COUNSELOR");
 
   // --- THE MASTER FILTER ---
   const filteredRequests = requests.filter(req => {
-    const actualName = req.serviceName?.trim().toUpperCase() === "REFERRAL" ? req.studentName : getStudentName(req.requestData);
-    
-    const matchName = searchName === '' || actualName.toLowerCase().includes(searchName.toLowerCase());
+    const matchName = matchesStudent(req, searchName);
     const matchCase = filterCase === '' || req.serviceName === filterCase;
     const matchDepartment = filterDepartment === '' || getDepartment(req.requestData) === filterDepartment; // ✅ Filter by Dept
     const matchStatus = filterStatus === '' || req.status === filterStatus;
@@ -88,12 +87,13 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
 
   // --- PAGINATION ---
   const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
-  const indexOfLastRequest = currentPage * itemsPerPage;
+  const safePage = Math.min(currentPage, Math.max(1, totalPages));
+  const indexOfLastRequest = safePage * itemsPerPage;
   const indexOfFirstRequest = indexOfLastRequest - itemsPerPage;
-  const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest);
+  const currentRequests = sortCases(filteredRequests, sortOrder).slice(indexOfFirstRequest, indexOfLastRequest);
 
-  const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(prev => prev + 1); };
-  const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(prev => prev - 1); };
+  const handleNextPage = () => { if (safePage < totalPages) setCurrentPage(safePage + 1); };
+  const handlePrevPage = () => { if (safePage > 1) setCurrentPage(safePage - 1); };
 
   // --- CUSTOM REACT-SELECT STYLING ---
   const headerSelectStyles = {
@@ -116,7 +116,14 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
     <div className="cases-table-container">
       <div className="table-header">
         <h3 style={{ fontSize: '18px', color: '#1e293b' }}>{title}</h3>
+        <div className="case-table-tools">
+          <label>Sort by <select value={sortOrder} onChange={event => setSortOrder(event.target.value)}>
+            <option value="queue">Priority / queue order</option><option value="newest">Newest submission first</option><option value="oldest">Oldest submission first</option>
+          </select></label>
+          <input type="search" aria-label="Search by student name or email" placeholder="Search by name or email…" value={searchName} onChange={event => setSearchName(event.target.value)} />
+        </div>
       </div>
+      <p className="case-sort-hint">{sortOrder === 'queue' ? 'Urgent → untouched pending → other active cases; oldest submissions first. ' : 'Sorted by submission date. '}Closed cases always appear last.</p>
       
       <div className="cases-table-outer">
         <div className="cases-table-inner">
@@ -128,7 +135,7 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
             </th>
             
             <th style={{ padding: '16px 20px' }}>
-              <input type="text" placeholder="🔍 STUDENT NAME..." value={searchName} onChange={(e) => setSearchName(e.target.value)} style={{ ...plainHeaderStyle, background: 'transparent', border: 'none', borderBottom: searchName ? '1px solid #3b82f6' : 'none', outline: 'none', width: '100%' }} />
+              <span style={plainHeaderStyle}>Student Name</span>
             </th>
             
             <th style={{ padding: '16px 10px', minWidth: '160px' }}>
@@ -142,8 +149,8 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
               />
             </th>
             
-            <th style={{ ...plainHeaderStyle, padding: '16px 20px' }}>DATE</th>
-            <th style={{ ...plainHeaderStyle, padding: '16px 20px' }}>TIME</th>
+            <th style={{ ...plainHeaderStyle, padding: '16px 20px' }}>Submitted</th>
+            <th style={{ ...plainHeaderStyle, padding: '16px 20px' }}>Appointment</th>
             
             <th style={{ padding: '16px 10px', minWidth: '150px' }}>
               <Select options={statusOptions} styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" isSearchable={true} value={statusOptions.find(o => o.value === filterStatus)} onChange={(option) => setFilterStatus(option ? option.value : '')} />
@@ -168,11 +175,11 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
               <td style={{ padding: '16px 20px' }}>
                 {req.serviceName?.trim().toUpperCase() === "REFERRAL" ? (
                   <div style={{ display: 'flex', flexDirection: 'column', fontSize: '13px' }}>
-                    <span style={{ fontWeight: '600', color: '#1e293b' }}>{req.studentName}</span>
+                    <span style={{ fontWeight: '600', color: '#1e293b' }}>{studentName(req)}</span>
                     <span style={{ fontSize: '11px', color: '#64748b' }}>Ref by: {req.referrerName}</span>
                   </div>
                 ) : (
-                  <span style={{ fontSize: '13px', color: '#1e293b' }}>{getStudentName(req.requestData)}</span>
+                  <span style={{ fontSize: '13px', color: '#1e293b' }}>{studentName(req)}</span>
                 )}
               </td>
               
@@ -182,16 +189,20 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
               </td>
               
               <td style={{ padding: '16px 20px' }}>
-                <span style={{ fontSize: '13px', color: '#475569' }}>{getDisplayDate(req)}</span>
-                <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', fontWeight: '600', textTransform: 'uppercase' }}>
-                  {req.requiresSchedule ? 'Appointment' : 'Submitted'}
-                </div>
+                <span className="case-date">{formatDate(req.createdAt)}</span>
+                <span className="case-time">{formatTime(req.createdAt)}</span>
               </td>
-              <td style={{ padding: '16px 20px' }}><span style={{ fontSize: '13px', color: '#475569' }}>{getDisplayTime(req)}</span></td>
+              <td style={{ padding: '16px 20px' }}>
+                {!req.requiresSchedule ? <span className="case-time">Not required</span>
+                  : !req.appointmentDate ? <span className="case-time">Not scheduled</span>
+                  : <><span className="case-date">{formatDate(`${req.appointmentDate}T00:00:00+08:00`)}</span>
+                    <span className="case-time">{req.timeSlot ? formatTime(`${req.appointmentDate}T${req.timeSlot}:00+08:00`) : 'Time not recorded'}</span></>}
+              </td>
               <td style={{ padding: '16px 20px' }}>
                 <span className={`case-status-badge ${req.status.toLowerCase().replace(/\s+/g, '-')}`}>
-                  {req.status}
+                  {statusLabel(req.status)}
                 </span>
+                {req.priority === 'Urgent' && <span className="case-urgent-badge">Urgent</span>}
               </td>
               <td style={{ padding: '16px 20px', fontSize: '13px' }}>
                 {req.assignedCounselor !== 'Unassigned' 
@@ -200,9 +211,12 @@ const CasesTable = ({ requests, onView, title = "Updated Cases", itemsPerPage = 
                 }
               </td>
               <td style={{ padding: '16px 20px' }}>
+                <div className="case-row-actions">
                 <button onClick={() => onView(req)} style={{ padding: '6px 16px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
                   Open
                 </button>
+                <CasePriorityControl request={req} onUpdated={onUpdated} compact />
+                </div>
               </td>
             </tr>
           ))}

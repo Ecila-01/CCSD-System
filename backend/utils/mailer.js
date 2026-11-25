@@ -228,7 +228,7 @@ const sendRescheduleNotificationToCounselor = async (counselorEmail, studentName
         <p><strong>New Date:</strong> ${esc(newDate)}</p>
         <p><strong>New Time:</strong> ${esc(newTime)}</p>
         <br/>
-        <p>The request has been returned to <strong>Pending Review</strong>. Please log in to the dashboard to confirm or adjust the new schedule.</p>
+        <p>The request has been returned to <strong>Pending</strong>. Please log in to the dashboard to confirm or adjust the new schedule.</p>
       </div>
     `,
   });

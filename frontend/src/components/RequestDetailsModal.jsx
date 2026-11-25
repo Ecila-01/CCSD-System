@@ -3,6 +3,8 @@ import { MdClose, MdOutlineEmail, MdOutlineCalendarToday, MdEditNote } from "rea
 import '../styles/ServiceModal.css';
 import axios from 'axios';
 import StatusModal from './StatusModal'; // ✅ Importing your custom StatusModal
+import CasePriorityControl from './CasePriorityControl';
+import { statusLabel } from '../utils/statusLabel';
 
 const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
   const [isUpdating, setIsUpdating] = useState(false);
@@ -28,6 +30,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [noteError, setNoteError] = useState("");
   const [showStatusHistory, setShowStatusHistory] = useState(false);
+  const [priorityHistory, setPriorityHistory] = useState(request?.priorityUpdates || []);
 
   // The dashboard keeps this modal mounted and swaps the `request` prop, so
   // re-sync the journal whenever a different case is opened (otherwise the
@@ -37,6 +40,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
     setNoteText("");
     setNoteError("");
     setShowStatusHistory(false);
+    setPriorityHistory(request?.priorityUpdates || []);
   }, [request?._id]);
 
   // --- STATES FOR SUCCESS/ERROR POPUP ---
@@ -136,7 +140,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
       const currentUser = JSON.parse(localStorage.getItem("user"));
       let counselorToAssign = request.assignedCounselor || 'Unassigned';
 
-      if (request.status === 'Pending Review' && pendingStatus === 'In-Progress') {
+      if (request.status === 'Pending' && pendingStatus === 'In-Progress') {
         counselorToAssign = currentUser.name;
       }
 
@@ -188,6 +192,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
         { text }
       );
       setCaseNotes(res.data.caseNotes || []);
+      onStatusUpdate?.();
       setNoteText("");
     } catch (error) {
       console.error("Failed to add note:", error);
@@ -233,7 +238,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                   }}>
                     <div style={{ position: 'absolute', top: '15px', right: '15px', textAlign: 'right' }}>
                       <span className={`case-status-badge ${request.status?.toLowerCase().replace(/\s+/g, '-') || 'pending'}`} style={{ display: 'inline-block', marginBottom: '5px', padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold' }}>
-                        {request.status || 'Pending Review'}
+                        {statusLabel(request.status || 'Pending')}
                       </span>
                       <div style={{ fontSize: '10px', color: '#aaa' }}>{new Date(request.createdAt).toLocaleDateString()}</div>
                     </div>
@@ -262,7 +267,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <span className={`case-status-badge ${request.status?.toLowerCase().replace(/\s+/g, '-') || 'pending'}`} style={{ display: 'inline-block', marginBottom: '8px', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
-                      {request.status || 'Pending Review'}
+                      {statusLabel(request.status || 'Pending')}
                     </span>
                     <div style={{ fontSize: '12px', color: '#888' }}>Submitted: {new Date(request.createdAt).toLocaleDateString()}</div>
                   </div>
@@ -286,6 +291,16 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
             </div>
 
             {/* ── REASSIGN COUNSELOR ── */}
+            <CasePriorityControl request={request} onUpdated={updated => {
+              setPriorityHistory(updated.priorityUpdates || []);
+              onStatusUpdate?.();
+            }} />
+            {!!priorityHistory.length && <details style={{ marginTop: '12px' }}>
+              <summary>Priority history</summary>
+              {[...priorityHistory].reverse().map((entry, i) => <p key={entry._id || i}>
+                {entry.priority} · {entry.updatedBy} · {new Date(entry.updatedAt).toLocaleString()}
+              </p>)}
+            </details>}
             <div style={{ margin: '20px 0', padding: '14px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
               <label style={{ fontSize: '11px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>
                 Assigned Counselor
@@ -370,7 +385,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                       </div>
                     ) : (
                       <div key={'s' + i} className="cj-status-row">
-                        <span>▸ Status → <strong>{it.status}</strong></span>
+                        <span>▸ Status → <strong>{statusLabel(it.status)}</strong></span>
                         {it.note ? <span>· {it.note}</span> : null}
                         <span>· {it.updatedBy || 'Staff'} · {fmt(it.at)}</span>
                       </div>
@@ -410,7 +425,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
             <button onClick={onClose} disabled={isUpdating} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid #ccc', borderRadius: '6px', fontWeight: 'bold', color: '#555' }}>Close</button>
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              {request.status === 'Pending Review' && (
+              {request.status === 'Pending' && (
                 <>
                   {requiresSchedule && (
                     <button onClick={() => initiateStatusUpdate('Reschedule Requested')} style={{ padding: '10px 15px', background: '#fff3e0', color: '#e65100', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>Request Reschedule</button>

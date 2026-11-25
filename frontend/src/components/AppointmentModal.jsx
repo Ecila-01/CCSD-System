@@ -258,7 +258,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
       const payload = {
         serviceId: service._id,
         serviceName: service.name,
-        status: "Pending Review",
+        status: "Pending",
         ...extractedData,
         requiresSchedule: Boolean(service.requiresScheduling),
         appointmentDate: formData.preferredDate || formData.prefDate || "",

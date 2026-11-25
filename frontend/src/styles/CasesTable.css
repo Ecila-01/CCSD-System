@@ -11,6 +11,21 @@
   overflow: hidden;
 }
 
+.cases-table-container .table-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.cases-table-container .table-header h3 { margin: 0; }
+.case-table-tools { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
+.case-table-tools input, .case-table-tools select { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; background: white; color: #334155; }
+.case-table-tools input { width: min(300px, 100%); box-sizing: border-box; }
+.case-table-tools label { font-size: 13px; color: #475569; }
+.case-sort-hint { margin: 12px 0 18px; color: #64748b; font-size: 13px; }
+.case-priority-control { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 4px; }
+.case-priority-button { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; color: #475569; cursor: pointer; font: inherit; }
+.case-priority-button.is-urgent, .case-urgent-badge { color: #9f1239; background: #fff1f2; border-color: #fda4af; }
+.case-priority-button:disabled { opacity: .5; cursor: not-allowed; }
+.case-priority-button:focus-visible, .case-table-tools input:focus-visible, .case-table-tools select:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.case-urgent-badge { display: inline-block; margin-left: 6px; padding: 4px 8px; font-size: 11px; font-weight: 700; border-radius: 4px; }
+.case-priority-error { color: #b91c1c; white-space: normal; font-size: 13px; }
+
 .table-header h3 {
   margin: 0 0 20px 0;
   font-size: 18px;
@@ -29,7 +44,7 @@
 
 .cases-table-inner {
   display: block;
-  min-width: 860px;
+  min-width: 980px;
 }
 
 /* ================================================
@@ -37,9 +52,43 @@
    ================================================ */
 .cases-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   text-align: left;
 }
+
+/* Keep all eight columns compact; wrap content instead of widening the table.
+   Override the legacy inline padding/min-width declarations in CasesTable. */
+.cases-table-container .cases-table th,
+.cases-table-container .cases-table td {
+  padding: 10px 8px !important;
+  min-width: 0 !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+.cases-table th:nth-child(1) { width: 15%; }
+.cases-table th:nth-child(2) { width: 15%; }
+.cases-table th:nth-child(3) { width: 11%; }
+.cases-table th:nth-child(4) { width: 13%; }
+.cases-table th:nth-child(5) { width: 13%; }
+.cases-table th:nth-child(6) { width: 13%; }
+.cases-table th:nth-child(7) { width: 10%; }
+.cases-table th:nth-child(8) { width: 10%; }
+.cases-table-container .cases-table .service-badge {
+  display: inline-block;
+  max-width: 100%;
+  padding: 4px 8px !important;
+  white-space: normal;
+}
+.cases-table-container .cases-table .case-status-badge { white-space: normal; padding: 4px 6px; }
+.case-date { display: block; font-size: 13px; color: #475569; }
+.case-time { display: block; margin-top: 3px; font-size: 12px; color: #64748b; }
+.case-row-actions { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+.case-row-actions > button { padding: 5px 8px !important; flex-shrink: 0; }
+.cases-table-container .cases-table .case-priority-control { margin: 0; flex-shrink: 0; }
+.case-row-actions .case-priority-button { padding: 5px 8px; }
+.cases-table-container .cases-table .case-urgent-badge { margin: 4px 0 0; }
 
 .cases-table th {
   font-size: 12px;
@@ -98,7 +147,7 @@
 .case-status-badge.cancelled            { background-color: #f1f5f9; color: #475569; }
 .case-status-badge.referred-externally  { background-color: #f3e5f5; color: #7b1fa2; }
 
-/* Fallback for Pending Review from old code */
+/* Fallback for Pending from old code */
 .case-status-badge.pending              { background-color: #fef3c7; color: #d97706; }
 .case-status-badge.active               { background-color: #fce4e4; color: #c00000; }
 

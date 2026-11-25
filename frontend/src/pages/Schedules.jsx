@@ -86,7 +86,7 @@ function Schedules() {
   });
    
   const scheduledRequests = authorizedRequests.filter(req => req.requiresSchedule === true);
-  const pendingCount = scheduledRequests.filter(req => req.status === 'Pending Review' || req.status === 'Pending').length;
+  const pendingCount = scheduledRequests.filter(req => req.status === 'Pending').length;
   const completedCount = scheduledRequests.filter(req => req.status === 'Completed').length;
 
   return (
@@ -326,7 +326,7 @@ function Schedules() {
 
                     const renderEventCard = (req) => {
                       let colorClass = ""; 
-                      if (req.status === "Pending Review" || req.status === "Pending") colorClass = "blue-event"; 
+                      if (req.status === "Pending") colorClass = "blue-event";
                       else if (req.status === "Active" || req.status === "In-Progress") colorClass = "red-event"; 
                       else if (req.status === "Completed") colorClass = "green-event"; 
                       else colorClass = "gray-event"; 

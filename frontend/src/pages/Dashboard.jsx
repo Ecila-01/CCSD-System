@@ -57,8 +57,8 @@ function Dashboard() {
   }).length;
 
   // 3. Department Queue (Awaiting Review)
-  // ✅ Updated to match the exact 'Pending Review' status
-  const displayQueue = authorizedRequests.filter(req => req.status === 'Pending Review').length;
+  // ✅ Updated to match the exact 'Pending' status
+  const displayQueue = authorizedRequests.filter(req => req.status === 'Pending').length;
 
   // 4. "YOUR" Cases (All Assigned Cases)
   // ✅ Removed the 'Active' restriction. Now grabs ALL cases assigned to the user.
@@ -109,7 +109,8 @@ function Dashboard() {
             <CasesTable
               requests={authorizedRequests}
               onView={(request) => setViewingRequest(request)}
-              maxItems={6}
+              onUpdated={fetchRequests}
+              itemsPerPage={10}
             />
           </div>
         </section>

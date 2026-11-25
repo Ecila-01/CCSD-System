@@ -12,11 +12,11 @@ test('counselor scope matches only assigned departments, including whitespace/ca
 });
 
 test('guest response excludes notes, author identities, forms and tokens', () => {
-  const response = guestView({ studentName: 'Test', status: 'Pending Review', caseNotes: [{ text: 'private' }],
+  const response = guestView({ studentName: 'Test', status: 'Pending', caseNotes: [{ text: 'private' }],
     requestData: { confidential: true }, guestToken: 'secret',
-    statusUpdates: [{ status: 'Pending Review', updatedAt: '2026-01-01', note: 'private', updatedBy: 'Staff' }] });
+    statusUpdates: [{ status: 'Pending', updatedAt: '2026-01-01', note: 'private', updatedBy: 'Staff' }] });
   for (const field of ['caseNotes', 'requestData', 'guestToken']) assert.ok(!(field in response));
-  assert.deepEqual(response.statusUpdates, [{ status: 'Pending Review', updatedAt: '2026-01-01' }]);
+  assert.deepEqual(response.statusUpdates, [{ status: 'Pending', updatedAt: '2026-01-01' }]);
 });
 
 test('schedule enforces Manila future times, working days, intervals and closures', () => {

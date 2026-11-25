@@ -45,12 +45,12 @@ function Referrals() {
   );
 
   const totalCount    = referralRequests.length;
-  const pendingReview = referralRequests.filter(r => r.status === 'Pending Review').length;
+  const pendingReview = referralRequests.filter(r => r.status === 'Pending').length;
   const processedCount = referralRequests.filter(r => r.status === 'Completed').length;
 
   const stats = [
     { icon: <MdOutlineAssignment />,  value: totalCount,     label: 'Total Referrals', color: '#6b7280' },
-    { icon: <MdOutlinePending />,     value: pendingReview,  label: 'Pending Review',  color: '#0369a1' },
+    { icon: <MdOutlinePending />,     value: pendingReview,  label: 'Pending',  color: '#0369a1' },
     { icon: <MdOutlineCheckCircle />, value: processedCount, label: 'Processed',       color: '#15803d' },
   ];
 
@@ -90,6 +90,7 @@ function Referrals() {
             <CasesTable
               requests={referralRequests}
               onView={setViewingRequest}
+              onUpdated={fetchRequests}
               title="Recent Referrals"
               itemsPerPage={10}
             />

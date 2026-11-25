@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/AppointmentModal.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { validateAnswers, fullName, namePart, isLegacyName } from '../utils/formValidation';
 
 // Matches email addresses so we can render them without dumping the literal
 // address into the page source (reduces naive bot scraping).
@@ -218,6 +219,18 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
     setSubmitError("");
 
     // If we aren't on the final summary page, just move to the next step
+    const fieldsToValidate = step < totalSteps ? getFieldsForStep() : service.fields;
+    const validationError = validateAnswers(fieldsToValidate, formData);
+    if (validationError) {
+      setSubmitError(validationError);
+      const invalidField = service.fields.find(field => validationError.startsWith(field.label));
+      if (invalidField && step === totalSteps) {
+        const page = formSections.findIndex(fields => fields.some(field => field.name === invalidField.name));
+        if (page >= 0) setStep(page + 1);
+      }
+      document.querySelector('.form-scroll-area')?.scrollTo({ top: 0 });
+      return;
+    }
     if (step < totalSteps) {
       const scrollArea = document.querySelector(".form-scroll-area");
       if (scrollArea) scrollArea.scrollTop = 0;
@@ -265,6 +278,10 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
         timeSlot: formData.preferredTime || formData.prefTime || "",
         requestData: formData,
       };
+      const student = fullName(service.fields, formData, 'student');
+      const referrer = fullName(service.fields, formData, 'referrer');
+      if (student) payload.studentName = student;
+      if (referrer) payload.referrerName = referrer;
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/requests`, {
         method: "POST",
@@ -349,6 +366,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
 
             <form className="dynamic-form" onSubmit={handleSubmit}>
               <div className="form-scroll-area">
+                {submitError && step < totalSteps && <p role="alert" style={{ color: '#b91c1c' }}>{submitError}</p>}
 
                 {/* ✅ UPGRADED: Logic Split between Form and Summary */}
                 {step < totalSteps ? (
@@ -452,6 +470,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
 
                                 return (
                                   <DatePicker
+                                    required={field.required}
                                     selected={formData[field.name] ? new Date(formData[field.name]) : null}
                                     onChange={(date) => {
                                       const formattedDate = date ? fmtLocalDate(date) : "";
@@ -499,10 +518,15 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
                             </div>
                           ) : (
                             <input
-                              type={field.type} name={field.name} required={field.required} onChange={handleChange}
+                              type={field.type === 'name' ? 'text' : field.type} name={field.name} required={field.required} onChange={handleChange}
+                              maxLength={namePart(field) || isLegacyName(field) ? 100 : undefined}
+                              autoComplete={namePart(field) === 'first' ? 'given-name' : namePart(field) === 'middle' ? 'additional-name' : namePart(field) === 'last' ? 'family-name' : undefined}
                               value={formData[field.name] || ""} placeholder="Your answer" style={styledInput}
                             />
                           )}
+                          {(namePart(field) || isLegacyName(field)) && <small style={{ display: 'block', marginTop: '6px', color: '#64748b' }}>
+                            {namePart(field) === 'middle' ? 'Optional. ' : ''}Use letters, spaces, apostrophes, periods or hyphens. No numbers.
+                          </small>}
                         </>
                       )}
                     </div>

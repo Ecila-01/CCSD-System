@@ -6,6 +6,7 @@ const cloudinary = require('cloudinary').v2;
 const { requireAuth, requireRole } = require('../middleware/auth');
 
 const adminOnly = [requireAuth, requireRole('admin')];
+const { normalizeNameFields } = require('../utils/formValidation');
 
 // GET all services (PUBLIC)
 router.get('/', async (req, res) => {
@@ -28,7 +29,7 @@ router.post('/', adminOnly, upload.single('image'), async (req, res) => {
       status: "Inactive",
       image: imageUrl,
       requiresScheduling: req.body.requiresScheduling === 'true',
-      fields: typeof req.body.fields === 'string' ? JSON.parse(req.body.fields) : req.body.fields
+      fields: normalizeNameFields((typeof req.body.fields === 'string' ? JSON.parse(req.body.fields) : req.body.fields) || [])
     });
 
     const newService = await service.save();
@@ -73,9 +74,9 @@ router.patch('/:id', adminOnly, upload.single('image'), async (req, res) => {
     }
     if (req.body.status) updateData.status = req.body.status;
     if (req.body.fields) {
-      updateData.fields = typeof req.body.fields === 'string'
+      updateData.fields = normalizeNameFields(typeof req.body.fields === 'string'
         ? JSON.parse(req.body.fields)
-        : req.body.fields;
+        : req.body.fields);
     }
     if (req.file) {
       updateData.image = req.file.path;

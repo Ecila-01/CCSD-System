@@ -11,6 +11,7 @@ const { sendGuestLink, sendCounselorNotification, sendStatusUpdateToStudent, sen
 const Service = require('../models/Service');
 const OfficeClosure = require('../models/OfficeClosure');
 const { scopeForStaff, guestView, scheduleError } = require('../utils/requestPolicy');
+const { validateAnswers, fullName, validName } = require('../utils/formValidation');
 
 const staffScope = async (req, res, next) => {
   try {
@@ -51,7 +52,28 @@ router.post("/", submitLimiter, async (req, res) => {
     const service = await Service.findById(body.serviceId);
     if (!service || service.status !== 'Active') return res.status(400).json({ message: 'Select an active service.' });
     body.serviceName = service.name;
+    const formError = validateAnswers(service.fields || [], body.requestData);
+    if (formError) return res.status(400).json({ message: formError });
+    const student = fullName(service.fields || [], body.requestData, 'student');
+    const referrer = fullName(service.fields || [], body.requestData, 'referrer');
+    if (student) body.studentName = student;
+    if (referrer) body.referrerName = referrer;
+    const emailField = (service.fields || []).find(f => f.type === 'email' && !/student/i.test(f.label || ''));
+    if (emailField) {
+      if (service.name.trim().toUpperCase() === 'REFERRAL') body.referrerEmail = String(body.requestData[emailField.name] || '').trim();
+      else body.studentEmail = String(body.requestData[emailField.name] || '').trim();
+    }
+    const idField = (service.fields || []).find(f => /id number|student id/i.test(f.label || ''));
+    if (idField) body.studentIdNumber = String(body.requestData[idField.name] || '').trim();
+    if (!validName(body.studentName)) return res.status(400).json({ message: 'Enter a valid student name using letters, spaces, apostrophes, periods or hyphens.' });
+    if (service.name.trim().toUpperCase() === 'REFERRAL' && !validName(body.referrerName)) return res.status(400).json({ message: 'Enter a valid referrer name.' });
     body.requiresSchedule = Boolean(service.requiresScheduling);
+    if (body.requiresSchedule) {
+      const dateField = service.fields.find(f=>f.type==='date' && !/birth|dob/i.test(f.label || ''));
+      const timeField = service.fields.find(f=>f.type==='time');
+      if (dateField) body.appointmentDate = body.requestData[dateField.name];
+      if (timeField) body.timeSlot = body.requestData[timeField.name];
+    }
     if (body.requiresSchedule) {
       const error = await validateSchedule(body.appointmentDate, body.timeSlot);
       if (error) return res.status(400).json({ message: error });

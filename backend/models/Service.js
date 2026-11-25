@@ -10,7 +10,9 @@ const fieldSchema = new mongoose.Schema({
   content: String,
   dependsOnLabel: { type: String, default: "" },
   optionsMap: { type: mongoose.Schema.Types.Mixed, default: {} },
-  isSystemLinked: String 
+  isSystemLinked: String,
+  namePart: { type: String, enum: ['first', 'middle', 'last'] },
+  nameRole: { type: String, enum: ['student', 'referrer'] }
   
 });
 

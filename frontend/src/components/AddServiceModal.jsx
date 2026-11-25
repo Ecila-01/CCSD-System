@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { MdClose, MdAdd, MdDeleteOutline, MdCloudUpload } from "react-icons/md";
 import '../styles/ServiceModal.css'; 
+import { basicInfoFields } from '../utils/formValidation';
 
 const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
   if (!isOpen) return null;
@@ -84,10 +85,7 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
     if (templateName === 'blank') {
       newFields = [{ name: '', label: '', type: 'text', required: false, options: [], content: '' }];
     } else if (templateName === 'basic') {
-      newFields = [
-        { label: "Email Address", type: "email", required: true, options: [] },
-        { label: "Full Name (Last, First, M.I.)", type: "text", required: true, options: [] }
-      ];
+      newFields = basicInfoFields();
     } else if (templateName === 'academic') {
       newFields = [
         { label: "School / Department", type: "select", required: true, options: [], isSystemLinked: "departments" },
@@ -131,7 +129,14 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
       const lowerLabel = field.label.toLowerCase();
 
       // NEW: Catch Email and Name to guarantee perfect DB keys
-      if (lowerLabel.includes('email')) {
+      if (field.name) {
+        dbFieldName = field.name;
+      }
+      else if (/\b(first|middle|last) name\b/.test(lowerLabel)) {
+        const part = lowerLabel.match(/\b(first|middle|last) name\b/)[1];
+        dbFieldName = `${/referr/i.test(lowerLabel) ? 'referrer' : 'student'}${part[0].toUpperCase()+part.slice(1)}Name`;
+      }
+      else if (lowerLabel.includes('email')) {
         dbFieldName = 'email';
       }
       else if (lowerLabel.includes('name')) {
@@ -210,10 +215,7 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
 
   // --- QUICK ADD MACROS ---
   const addBasicInfo = () => {
-    const basicFields = [
-      { label: "Email Address", type: "email", required: true, options: [] },
-      { label: "Full Name (Last, First, M.I.)", type: "text", required: true, options: [] }
-    ];
+    const basicFields = basicInfoFields();
     setFields([...fields, ...basicFields]);
   };
 

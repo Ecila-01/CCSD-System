@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import {personName} from '../utils/displayName';
+import React, { useState, useEffect, useRef } from 'react';
 import Select from 'react-select'; 
 import '../styles/CasesTable.css';
 import { matchesStudent, sortCases, studentName } from '../utils/caseQueue';
 import CasePriorityControl from './CasePriorityControl';
 import { statusLabel } from '../utils/statusLabel';
 
-const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", itemsPerPage = 10 }) => {
+const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", itemsPerPage = 10, targetId, targetVisit }) => {
+  const positioned=useRef(null),flashed=useRef(null);
+  const [highlighted,setHighlighted]=useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   
   // --- FILTER STATES ---
@@ -16,9 +19,7 @@ const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", item
   const [searchName, setSearchName] = useState('');
   const [sortOrder, setSortOrder] = useState('queue');
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filterCase, filterDepartment, filterStatus, filterCounselor, searchName, sortOrder]);
+
 
   // --- HELPERS ---
   // ✅ NEW: Simple Department Extractor
@@ -92,6 +93,21 @@ const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", item
   const indexOfFirstRequest = indexOfLastRequest - itemsPerPage;
   const currentRequests = sortCases(filteredRequests, sortOrder).slice(indexOfFirstRequest, indexOfLastRequest);
 
+  useEffect(()=>{
+    const visit=targetId+':'+targetVisit;
+    if(!targetId || positioned.current===visit || !requests.some(r=>r._id===targetId))return;
+    const frame=requestAnimationFrame(()=>{positioned.current=visit;setFilterCase('');setFilterDepartment('');setFilterStatus('');setFilterCounselor('');setSearchName('');const index=sortCases(requests,sortOrder).findIndex(r=>r._id===targetId);if(index>=0)setCurrentPage(Math.floor(index/itemsPerPage)+1);});
+    return()=>cancelAnimationFrame(frame);
+  },[targetId,targetVisit,requests,sortOrder,itemsPerPage]);
+  useEffect(()=>{
+    const visit=targetId+':'+targetVisit;
+    if(!targetId || flashed.current===visit || !currentRequests.some(r=>r._id===targetId))return;
+    const frame=requestAnimationFrame(()=>{flashed.current=visit;setHighlighted(targetId);document.getElementById('case-'+targetId)?.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});});
+    return()=>cancelAnimationFrame(frame);
+  },[targetId,targetVisit,safePage,requests,currentRequests]);
+
+  useEffect(()=>{if(!highlighted)return;const timer=setTimeout(()=>setHighlighted(null),2000);return()=>clearTimeout(timer);},[highlighted,targetVisit]);
+
   const handleNextPage = () => { if (safePage < totalPages) setCurrentPage(safePage + 1); };
   const handlePrevPage = () => { if (safePage > 1) setCurrentPage(safePage - 1); };
 
@@ -114,13 +130,14 @@ const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", item
 
   return (
     <div className="cases-table-container">
+      {targetId && requests.length>0 && !requests.some(r=>r._id===targetId) && <p role="status">This case is no longer available to your account.</p>}
       <div className="table-header">
         <h3 style={{ fontSize: '18px', color: '#1e293b' }}>{title}</h3>
         <div className="case-table-tools">
-          <label>Sort by <select value={sortOrder} onChange={event => setSortOrder(event.target.value)}>
+          <label>Sort by <select value={sortOrder} onChange={event => {setCurrentPage(1);setSortOrder(event.target.value);}}>
             <option value="queue">Priority / queue order</option><option value="newest">Newest submission first</option><option value="oldest">Oldest submission first</option>
           </select></label>
-          <input type="search" aria-label="Search by student name or email" placeholder="Search by name or email…" value={searchName} onChange={event => setSearchName(event.target.value)} />
+          <input type="search" aria-label="Search by student name or email" placeholder="Search by name or email…" value={searchName} onChange={event => {setCurrentPage(1);setSearchName(event.target.value);}} />
         </div>
       </div>
       
@@ -130,7 +147,7 @@ const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", item
         <thead>
           <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
             <th style={{ padding: '16px 10px 16px 20px', minWidth: '160px' }}>
-              <Select options={caseOptions} styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" isSearchable={true} value={caseOptions.find(o => o.value === filterCase)} onChange={(option) => setFilterCase(option ? option.value : '')} />
+              <Select options={caseOptions} styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" isSearchable={true} value={caseOptions.find(o => o.value === filterCase)} onChange={(option) => {setCurrentPage(1);setFilterCase(option ? option.value : '');}} />
             </th>
             
             <th style={{ padding: '16px 20px' }}>
@@ -144,7 +161,7 @@ const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", item
                 styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" 
                 isSearchable={true} 
                 value={departmentOptions.find(o => o.value === filterDepartment)} 
-                onChange={(option) => setFilterDepartment(option ? option.value : '')} 
+                onChange={(option) => {setCurrentPage(1);setFilterDepartment(option ? option.value : '');}}
               />
             </th>
             
@@ -152,11 +169,11 @@ const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", item
             <th style={{ ...plainHeaderStyle, padding: '16px 20px' }}>Appointment</th>
             
             <th style={{ padding: '16px 10px', minWidth: '150px' }}>
-              <Select options={statusOptions} styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" isSearchable={true} value={statusOptions.find(o => o.value === filterStatus)} onChange={(option) => setFilterStatus(option ? option.value : '')} />
+              <Select options={statusOptions} styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" isSearchable={true} value={statusOptions.find(o => o.value === filterStatus)} onChange={(option) => {setCurrentPage(1);setFilterStatus(option ? option.value : '');}} />
             </th>
             
             <th style={{ padding: '16px 10px', minWidth: '180px' }}>
-              <Select options={counselorOptions} styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" isSearchable={true} value={counselorOptions.find(o => o.value === filterCounselor)} onChange={(option) => setFilterCounselor(option ? option.value : '')} />
+              <Select options={counselorOptions} styles={headerSelectStyles} menuPortalTarget={document.body} menuPosition="fixed" isSearchable={true} value={counselorOptions.find(o => o.value === filterCounselor)} onChange={(option) => {setCurrentPage(1);setFilterCounselor(option ? option.value : '');}} />
             </th>
             
             <th style={{ ...plainHeaderStyle, padding: '16px 20px' }}>ACTIONS</th>
@@ -165,7 +182,7 @@ const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", item
         
         <tbody>
           {currentRequests.map((req) => (
-            <tr key={req._id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+            <tr key={req._id} id={'case-'+req._id} className={highlighted===req._id?'case-notification-highlight':''} style={{ borderBottom: '1px solid #f1f5f9' }}>
               <td style={{ padding: '16px 20px' }}>
                 <span className="service-badge" style={{ backgroundColor: getServiceColor(req.serviceName).bg, color: getServiceColor(req.serviceName).text, padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 'bold' }}>
                   {req.serviceName}
@@ -175,7 +192,7 @@ const CasesTable = ({ requests, onView, onUpdated, title = "Updated Cases", item
                 {req.serviceName?.trim().toUpperCase() === "REFERRAL" ? (
                   <div style={{ display: 'flex', flexDirection: 'column', fontSize: '13px' }}>
                     <span style={{ fontWeight: '600', color: '#1e293b' }}>{studentName(req)}</span>
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>Ref by: {req.referrerName}</span>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>Ref by: {personName(req,'referrer')}</span>
                   </div>
                 ) : (
                   <span style={{ fontSize: '13px', color: '#1e293b' }}>{studentName(req)}</span>

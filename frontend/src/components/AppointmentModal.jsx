@@ -1,3 +1,4 @@
+import {bookingSettings,calendarSlots,slotClosed} from '../utils/bookingCalendar';
 import React, { useState, useEffect } from "react";
 import "../styles/AppointmentModal.css";
 import DatePicker from "react-datepicker";
@@ -144,28 +145,11 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
   // A specific slot is blocked when a partial closure on that date covers it
   const isSlotClosed = (dateStr, slotValue) => {
     if (!dateStr) return false;
-    return closures.some(c =>
-      c.date === dateStr && c.allDay === false && c.startTime && c.endTime &&
-      slotValue >= c.startTime && slotValue < c.endTime
-    );
+    return slotClosed(dateStr,slotValue,closures,bizHours.slotIntervalMinutes);
   };
 
   const generateTimeSlots = () => {
-    const { businessHoursStart: startH, businessHoursEnd: endH, slotIntervalMinutes: interval } = bizHours;
-    const slots = [];
-    let totalMins = startH * 60;
-    const endMins = endH * 60;
-    while (totalMins < endMins) {
-      const hour = Math.floor(totalMins / 60);
-      const mins = totalMins % 60;
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
-      const timeLabel = `${displayHour}:${String(mins).padStart(2, '0')} ${ampm}`;
-      const timeValue = `${String(hour).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-      slots.push({ label: timeLabel, value: timeValue });
-      totalMins += interval;
-    }
-    return slots;
+    return calendarSlots(bizHours);
   };
   const timeSlots = generateTimeSlots();
 
@@ -178,7 +162,7 @@ const AppointmentModal = ({ isOpen, onClose, service }) => {
 
       fetch(`${import.meta.env.VITE_API_URL}/api/system/settings`)
         .then(res => res.json())
-        .then(data => setBizHours(data))
+        .then(data => setBizHours(bookingSettings(data)))
         .catch(err => console.error("Error fetching business hours:", err));
 
       fetch(`${import.meta.env.VITE_API_URL}/api/closures`)

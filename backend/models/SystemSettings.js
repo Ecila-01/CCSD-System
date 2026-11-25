@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 const SystemSettingsSchema = new mongoose.Schema({
   // Business hours (24-hour integers, e.g. 8 = 8 AM, 17 = 5 PM)
-  businessHoursStart: { type: Number, default: 8 },
-  businessHoursEnd:   { type: Number, default: 16 },
+  businessHoursStart: { type: Number, default: 8, min: 0, max: 23, validate: Number.isInteger },
+  businessHoursEnd:   { type: Number, default: 16, min: 1, max: 24, validate: Number.isInteger },
   // Slot interval in minutes
-  slotIntervalMinutes: { type: Number, default: 30 },
+  slotIntervalMinutes: { type: Number, default: 30, min: 1, max: 1440, validate: Number.isInteger },
   // Working days (0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat)
   workingDays: { type: [Number], default: [1, 2, 3, 4, 5] },
 

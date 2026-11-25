@@ -12,7 +12,7 @@ function guestView(request) {
   return {
     _id: request._id,
     serviceName: request.serviceName,
-    studentName: request.studentName,
+    studentName: require('./displayName').personName(request),
     status: request.status,
     requiresSchedule: request.requiresSchedule,
     appointmentDate: request.appointmentDate,

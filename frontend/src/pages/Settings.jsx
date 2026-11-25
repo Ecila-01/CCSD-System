@@ -7,7 +7,7 @@ import { MdBackup, MdRestore, MdWarning, MdDownload, MdUpload, MdDeleteForever, 
 import '../styles/Dashboard.css';
 
 // The exact model names for the backend
-const ALL_MODELS = ['AboutContent', 'Department', 'Announcement', 'Service', 'ServiceRequest'];
+const ALL_MODELS = ['AboutContent', 'Department', 'Announcement', 'Career', 'Service', 'ServiceRequest', 'SystemSettings', 'OfficeClosure', 'Notification'];
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
@@ -20,6 +20,9 @@ function Settings() {
   const [wipeChecklist, setWipeChecklist] = useState(['ServiceRequest', 'Announcement']);
 
   // Restore States
+  const [backupPassword,setBackupPassword]=useState('');
+  const [restorePassword,setRestorePassword]=useState('');
+  const [encryptedRestore,setEncryptedRestore]=useState(false);
   const [restoreFile, setRestoreFile] = useState(null);
   const [modelsInRestoreFile, setModelsInRestoreFile] = useState([]);
 
@@ -118,6 +121,16 @@ function Settings() {
     setWipeChecklist(prev => prev.includes(model) ? prev.filter(m => m !== model) : [...prev, model]);
   };
 
+  const handleRecoveryBackup=async()=>{
+   if(backupPassword.length<12)return alert('Use a backup password of at least 12 characters.');
+   setIsLoading(true);
+   try {
+    const response=await axios.post(import.meta.env.VITE_API_URL+'/api/system/recovery-backup',{password:backupPassword});
+    const url=URL.createObjectURL(new Blob([JSON.stringify(response.data)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='CCSD_Recovery_'+new Date().toISOString().slice(0,10)+'.json';link.click();URL.revokeObjectURL(url);setBackupPassword('');
+    setStatusModal({isOpen:true,type:'success',title:'Recovery Backup Downloaded',message:'Keep the backup and its password separately. It contains staff accounts and confidential case data.',onConfirm:()=>setStatusModal({isOpen:false})});
+   } catch(error){setStatusModal({isOpen:true,type:'error',title:'Backup Failed',message:error.response?.data?.message||'Unable to create a complete recovery backup.',onConfirm:()=>setStatusModal({isOpen:false})});}
+   finally{setIsLoading(false);}
+  };
   // --- ACTION 1: BACKUP ---
   const handleGenerateBackup = async () => {
     if (backupChecklist.length === 0) return alert("Please select at least one collection to backup.");
@@ -168,13 +181,15 @@ function Settings() {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setRestoreFile(file);
+    setRestoreFile(null);setModelsInRestoreFile([]);setEncryptedRestore(false);setRestorePassword('');
 
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const parsedJson = JSON.parse(event.target.result);
-        if (parsedJson.data) {
+        if(parsedJson.system==='UB CCSD' && parsedJson.format==='encrypted-recovery-v1' && Array.isArray(parsedJson.models)){setModelsInRestoreFile(parsedJson.models);setEncryptedRestore(true);setRestoreFile(file);}
+        else if (parsedJson.data) {
+          setRestoreFile(file);
           setModelsInRestoreFile(Object.keys(parsedJson.data));
         } else {
           alert("Invalid backup file structure.");
@@ -189,8 +204,9 @@ function Settings() {
   const triggerRestore = () => {
     if (!restoreFile || modelsInRestoreFile.length === 0) return alert("Please upload a valid .json backup file.");
 
-    const includesUsers = modelsInRestoreFile.includes('User');
-    const restorableModels = modelsInRestoreFile.filter(model => model !== 'User');
+    if(encryptedRestore && restorePassword.length<12)return alert('Enter the recovery backup password.');
+    const includesUsers = !encryptedRestore && modelsInRestoreFile.includes('User');
+    const restorableModels = modelsInRestoreFile.filter(model => encryptedRestore || model !== 'User');
 
     setConfirmModal({
       isOpen: true,
@@ -221,10 +237,10 @@ function Settings() {
     setConfirmModal({ isOpen: false });
     setStatusModal({ isOpen: true, type: 'loading', title: 'Restoring...', message: 'Overwriting database...' });
 
-    const formData = new FormData(); formData.append('backupFile', restoreFile);
+    const formData = new FormData(); formData.append('backupFile', restoreFile);if(encryptedRestore)formData.append('password',restorePassword);
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/system/restore`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setStatusModal({ isOpen: true, type: 'success', title: 'Restore Complete', message: 'Database restored successfully. Page will reload.', onConfirm: () => window.location.reload() });
+      const restored=await axios.post(`${import.meta.env.VITE_API_URL}/api/system/restore`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setStatusModal({ isOpen: true, type: 'success', title: 'Restore Complete', message: encryptedRestore?'Recovery completed. Sign in using an account from the backup.':'Database restored successfully. Page will reload.', onConfirm: () => {if(restored.data.fullRecovery){localStorage.removeItem('token');localStorage.removeItem('user');window.location.href='/';}else window.location.reload();} });
     } catch (err) {
       setStatusModal({ isOpen: true, type: 'error', title: 'Restore Failed', message: err.response?.data?.message || 'Error occurred.', onConfirm: () => setStatusModal({ isOpen: false }) });
     }
@@ -266,6 +282,13 @@ function Settings() {
         {/* --- TOP BAR (Date & Admin) --- */}
         <TopBar />
         <div style={{ padding: '0 30px' }}>
+        <section style={{background:'white',padding:20,margin:'20px 0'}}>
+          <h3>Full Recovery Backup</h3>
+          <p>Includes all database collections, staff accounts, and copies of Cloudinary images. Encrypted with your backup password. Hosting environment secrets must be kept separately by MIS.</p>
+          <label>Backup password <input type="password" autoComplete="new-password" value={backupPassword} onChange={e=>setBackupPassword(e.target.value)} minLength={12}/></label>
+          <button disabled={isLoading} onClick={handleRecoveryBackup}>{isLoading?'Preparing…':'Download Recovery Backup'}</button>
+          {encryptedRestore && <label>Recovery password <input type="password" autoComplete="off" value={restorePassword} onChange={e=>setRestorePassword(e.target.value)}/></label>}
+        </section>
         {/* --- PAGE TITLE ROW (Matches Manage Departments) --- */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', marginTop: '10px' }}>
           <h2 style={{ fontSize: '24px', color: '#0f172a', margin: 0 }}>System Vault</h2>

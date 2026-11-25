@@ -1,5 +1,7 @@
+import useRequests from '../hooks/useRequests';
+import RequestLoadState from '../components/RequestLoadState';
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
 import WelcomeCard from '../components/WelcomeCard';
@@ -12,29 +14,19 @@ import WalkInModal from '../components/WalkInModal';
 
 function Dashboard() {
   const [user, setUser] = useState(null);
-  const [requests, setRequests] = useState([]);
+  const {requests,loading,error,refresh:fetchRequests}=useRequests();
   const [viewingRequest, setViewingRequest] = useState(null);
   const [isWalkInOpen, setIsWalkInOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
 
   const navigate = useNavigate();
-
-  const fetchRequests = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/requests`);
-      const data = await response.json();
-      if (!response.ok || !Array.isArray(data)) throw new Error('Unable to load requests.');
-      setRequests(data);
-    } catch (error) {
-      console.error("Error fetching requests:", error);
-    }
-  };
+  const location=useLocation();
+  const targetId=new URLSearchParams(location.search).get('case');
 
   useEffect(() => {
     const loggedInUser = localStorage.getItem("user");
     if (!loggedInUser) navigate('/');
     else setUser(JSON.parse(loggedInUser));
-    fetchRequests();
   }, [navigate]);
 
   if (!user) return null;
@@ -43,10 +35,7 @@ function Dashboard() {
   const isAdmin = user.role === 'admin';
   const userDepts = user.assignedDepartments || [];
 
-  const authorizedRequests = requests.filter(req => {
-    if (isAdmin) return true;
-    return userDepts.some(department => department.trim().toLowerCase() === String(req.requestData?.department || '').trim().toLowerCase());
-  });
+  const authorizedRequests = requests;
 
   const todayString = new Date().toDateString();
   const sessionsToday = authorizedRequests.filter(req => {
@@ -87,8 +76,9 @@ function Dashboard() {
 
       <main className="main-content">
         <TopBar />
+        <RequestLoadState loading={loading} error={error} onRetry={fetchRequests} />
 
-        <section className="dashboard-view">
+        {(!loading && (!error || requests.length>0)) && <section className="dashboard-view">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2>Case Dashboard</h2>
           </div>
@@ -107,13 +97,14 @@ function Dashboard() {
           {/* Responsive table wrapper prevents layout overflow on mobile */}
           <div className="cases-table-wrapper">
             <CasesTable
+              targetId={targetId} targetVisit={location.state?.notificationVisit}
               requests={authorizedRequests}
               onView={(request) => setViewingRequest(request)}
               onUpdated={fetchRequests}
               itemsPerPage={10}
             />
           </div>
-        </section>
+        </section>}
       </main>
 
       <WalkInModal

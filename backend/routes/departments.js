@@ -32,18 +32,38 @@ router.post('/', adminOnly, async (req, res) => {
 
 // PUT update a department (admin only)
 router.put('/:id', adminOnly, async (req, res) => {
-  try {
-    const { name, fullName, courses } = req.body;
-    const updatedDept = await Department.findByIdAndUpdate(
-      req.params.id,
-      { $set: { name, fullName, courses } },
-      { returnDocument: 'after', runValidators: true }
-    );
-    if (!updatedDept) return res.status(404).json({ message: "Department not found" });
-    res.json(updatedDept);
-  } catch (error) {
-    res.status(500).json({ message: "Server Error updating department" });
-  }
+ const session = await Department.startSession();
+ try {
+  let updatedDept;
+  await session.withTransaction(async () => {
+   const dept = await Department.findById(req.params.id).session(session);
+   if (!dept) { const e=new Error('Department not found'); e.status=404; throw e; }
+   const oldName=dept.name;
+   const {name,fullName,courses}=req.body;
+   if(name!==undefined) dept.name=name;
+   if(fullName!==undefined) dept.fullName=fullName;
+   if(courses!==undefined) dept.courses=courses;
+   await dept.save({session});
+   if(oldName!==dept.name) {
+    const match=new RegExp('^\\s*'+require('../utils/counselors').escapeRegex(oldName.trim())+'\\s*$','i');
+    await require('../models/User').updateMany({assignedDepartments:match}, {$set:{'assignedDepartments.$[d]':dept.name}}, {arrayFilters:[{d:match}],session});
+    await require('../models/ServiceRequest').updateMany({'requestData.department':match}, {$set:{'requestData.department':dept.name}}, {session});
+    await require('../models/Notification').updateMany({department:match}, {$set:{department:dept.name}}, {session});
+    const services=await require('../models/Service').find().session(session);
+    for(const service of services) {
+     let changed=false;
+     for(const field of service.fields||[]) {
+      if(field.name==='department' && field.options?.some(v=>match.test(v))) { field.options=field.options.map(v=>match.test(v)?dept.name:v); changed=true; }
+      for(const key of Object.keys(field.optionsMap||{})){if(match.test(key)){field.optionsMap[dept.name]=field.optionsMap[key];if(key!==dept.name)delete field.optionsMap[key];changed=true;}}
+     }
+     if(changed) {service.markModified('fields');await service.save({session});}
+    }
+   }
+   updatedDept=dept;
+  });
+  res.json(updatedDept);
+ } catch(error) {res.status(error.code===11000?409:error.status||400).json({message:error.code===11000?'Department already exists':error.message});}
+ finally {await session.endSession();}
 });
 
 // DELETE a department (admin only)

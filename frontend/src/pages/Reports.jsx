@@ -1,5 +1,8 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import axios from 'axios';
+import {personName} from '../utils/displayName';
+import useRequests from '../hooks/useRequests';
+import RequestLoadState from '../components/RequestLoadState';
+import {reportDate,reportMonth,completedStatus} from '../utils/reportDates';
+import React, { useState, useMemo, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
 import {
@@ -39,9 +42,9 @@ const statusColor = (status) => {
 // ── component ─────────────────────────────────────────────────────────────────
 function Reports() {
   const storedUser = JSON.parse(localStorage.getItem('user'));
-  const [requests, setRequests]   = useState([]);
+  const {requests,loading:isLoading,error,refresh}=useRequests();
   const [user]                    = useState(storedUser);
-  const [isLoading, setIsLoading] = useState(true);
+
   const [casePage, setCasePage]   = useState(1);
   const [exporting, setExporting] = useState(null); // 'word' | 'excel' | null
   const CASE_PAGE_SIZE = 20;
@@ -61,24 +64,10 @@ function Reports() {
   // pdfRef captures ONLY the stats section (no case log)
   const pdfRef = useRef(null);
 
-  useEffect(() => {
-    axios.get(`${import.meta.env.VITE_API_URL}/api/requests`)
-      .then(res => setRequests(res.data))
-      .catch(err => console.error('Error fetching report data:', err))
-      .finally(() => setIsLoading(false));
-  }, []);
-
   // ── filtered requests within the selected month range ──────────────────────
   const filtered = useMemo(() => {
-    const { year: sy, month: sm } = parseMonthValue(startMonth);
-    const { year: ey, month: em } = parseMonthValue(endMonth);
-    const start = new Date(sy, sm, 1);
-    const end   = new Date(ey, em + 1, 0, 23, 59, 59); // last day of end month
-    return requests.filter(r => {
-      const d = new Date(r.createdAt);
-      return d >= start && d <= end;
-    });
-  }, [requests, startMonth, endMonth]);
+    return requests.filter(r => {const month=reportMonth(reportDate(r,reportType));return month && month>=startMonth && month<=endMonth;});
+  }, [requests,startMonth,endMonth,reportType]);
 
   // Requests belonging to the current counselor within the range
   const myFiltered = useMemo(() =>
@@ -111,7 +100,7 @@ function Reports() {
     const monthMap = {};
     monthLabels.forEach(l => { monthMap[l] = { month: l, completed: 0, pending: 0, declined: 0 }; });
     reqs.forEach(r => {
-      const l = new Date(r.createdAt).toLocaleString('default', { month: 'short', year: '2-digit' });
+      const l = new Date(reportDate(r,reportType)).toLocaleString('default', { month: 'short', year: '2-digit',timeZone:'Asia/Manila' });
       if (!monthMap[l]) return;
       monthMap[l][statusType(r.status)]++;
     });
@@ -154,13 +143,14 @@ function Reports() {
 
     // Weekly breakdown within the range
     const weeks = Array.from({ length: 5 }, (_, i) => ({ name: `Week ${i+1}`, completed: 0, pending: 0, declined: 0 }));
-    myFiltered.forEach(r => {
-      const wi = Math.min(Math.floor((new Date(r.createdAt).getDate() - 1) / 7), 4);
+    myFiltered.filter(r=>reportMonth(reportDate(r,'accomplishment'))===endMonth).forEach(r => {
+      const day=Number(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Manila',day:'numeric'}).format(new Date(reportDate(r,'accomplishment'))));
+      const wi=Math.min(Math.floor((day-1)/7),4);
       weeks[wi][statusType(r.status)]++;
     });
 
     return { ...s, weeks };
-  }, [myFiltered, monthLabels]);
+  }, [myFiltered, monthLabels, endMonth]);
 
   // ── data passed directly to PDF / Word / Excel generators ─────────────────
   const pdfStatsData = useMemo(() => {
@@ -207,8 +197,10 @@ function Reports() {
     return s === e ? s : `${s} – ${e}`;
   })();
 
+  if(error && !requests.length)return <div><Sidebar/><main className="main-content"><TopBar/><RequestLoadState error={error} onRetry={refresh}/></main></div>;
   if (isLoading) return <div style={{ padding: '50px', textAlign: 'center' }}>Loading Report Data…</div>;
 
+  const undatedCompletions=requests.filter(r=>r.assignedCounselor===user?.name && completedStatus(r.status) && !reportDate(r,'accomplishment')).length;
   const activeReqs = reportType === 'overall' ? filtered   : myFiltered;
   const activeStats = reportType === 'overall' ? overallStats : myStats;
 
@@ -219,7 +211,7 @@ function Reports() {
       const payload = {
         statsData: pdfStatsData,
         cases: activeReqs.map(r => ({
-          date: new Date(r.createdAt).toLocaleDateString(),
+          date: new Date(reportDate(r,reportType)).toLocaleDateString('en-US',{timeZone:'Asia/Manila'}),
           client: getClientName(r),
           service: r.serviceName || 'N/A',
           assignedTo: r.assignedCounselor || 'Unassigned',
@@ -244,8 +236,10 @@ function Reports() {
 
       <main className="main-content" style={{ padding: '20px', maxWidth: '100vw', boxSizing: 'border-box', overflowX: 'hidden' }}>
         <TopBar />
+        <RequestLoadState error={error} onRetry={refresh} />
 
         <section className="reports-view">
+          {reportType==='accomplishment' && undatedCompletions>0 && <p role="status">{undatedCompletions} completed case(s) have no recorded completion date and are excluded from this report.</p>}
 
           {/* ── Controls ── */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '20px' }}>
@@ -424,7 +418,7 @@ function Reports() {
                     <table style={tbl}>
                       <thead>
                         <tr>
-                          <th style={th}>Date</th>
+                          <th style={th}>{reportType==='overall'?'Submitted':'Status date'}</th>
                           <th style={th}>Client Name</th>
                           <th style={th}>Service</th>
                           {reportType === 'overall' && <th style={th}>Assigned To</th>}
@@ -434,7 +428,7 @@ function Reports() {
                       <tbody>
                         {pageReqs.map((r, i) => (
                           <tr key={r._id || i} style={i % 2 === 0 ? trEven : {}}>
-                            <td style={td}>{new Date(r.createdAt).toLocaleDateString()}</td>
+                            <td style={td}>{new Date(reportDate(r,reportType)).toLocaleDateString('en-US',{timeZone:'Asia/Manila'})}</td>
                             <td style={td}>{getClientName(r)}</td>
                             <td style={td}>{r.serviceName || 'N/A'}</td>
                             {reportType === 'overall' && <td style={td}>{r.assignedCounselor || 'Unassigned'}</td>}
@@ -477,9 +471,9 @@ function Reports() {
 
 // ── getClientName ─────────────────────────────────────────────────────────────
 function getClientName(req) {
-  const student = req.studentName || 'Unknown Student';
+  const student = personName(req);
   if (req.serviceName?.toUpperCase() === 'REFERRAL') {
-    return `${student} (via ${req.referrerName || 'Unknown Referrer'})`;
+    return `${student} (via ${personName(req,'referrer')})`;
   }
   return student;
 }

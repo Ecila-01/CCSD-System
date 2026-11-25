@@ -4,7 +4,7 @@ import { MdClose, MdCloudUpload } from "react-icons/md";
 import '../styles/ServiceModal.css';
 
 const AddCareerModal = ({ isOpen, onClose, onSuccess, editingCareer }) => {
-  if (!isOpen) return null;
+
 
   const [title, setTitle] = useState('');
   const [shortDescription, setShortDescription] = useState('');
@@ -34,6 +34,8 @@ const AddCareerModal = ({ isOpen, onClose, onSuccess, editingCareer }) => {
       setPreviewUrl(null);
     }
   }, [editingCareer, isOpen]);
+
+  if (!isOpen) return null;
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];

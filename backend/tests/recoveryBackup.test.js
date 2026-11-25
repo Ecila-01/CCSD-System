@@ -1,0 +1,16 @@
+const test=require('node:test'),assert=require('node:assert/strict');const {encrypt,decrypt,replaceUrls,captureAssets}=require('../utils/recoveryBackup');
+test('recovery preserves accounts, internal controls and media only with the correct password',async()=>{const data={system:'UB CCSD',version:1,data:{User:[{password:'hashed',role:'admin'}],ServiceRequest:[{submissionFingerprint:'abc'}]},assets:[{url:'https://res.cloudinary.com/a/image/upload/a.png',base64:'aGVsbG8='}]};const encrypted=await encrypt(data,'test-backup-password');assert.ok(!JSON.stringify(encrypted).includes('hashed'));assert.deepEqual(await decrypt(encrypted,'test-backup-password'),data);await assert.rejects(decrypt(encrypted,'incorrect-password'));await assert.rejects(decrypt({...encrypted,models:['Service']},'test-backup-password'));await assert.rejects(decrypt({...encrypted,tag:Buffer.alloc(16).toString('base64')},'test-backup-password'));await assert.rejects(encrypt(data,'short'));assert.deepEqual(replaceUrls({items:['old',{image:'old'}]},new Map([['old','new']])),{items:['new',{image:'new'}]});});
+test('media failures abort a recovery backup instead of silently exporting broken references',async t=>{t.mock.method(global,'fetch',async()=>({ok:false}));await assert.rejects(captureAssets({image:'https://res.cloudinary.com/a/image/upload/a.png'}));assert.deepEqual(await captureAssets({image:'https://example.com/external.png'}),[]);});
+
+test('full recovery restores hashed accounts and case controls in one database transaction; wrong passwords never delete',async t=>{
+ const mongoose=require('mongoose'),User=require('../models/User'),Request=require('../models/ServiceRequest');
+ const handler=require('../routes/system').stack.find(l=>l.route?.path==='/restore').route.stack.at(-1).handle;
+ const payload={system:'UB CCSD',version:1,data:{User:[{_id:'000000000000000000000001',name:'Test Admin',email:'admin@example.test',password:'$2b$10$'+'a'.repeat(53),role:'admin'}],ServiceRequest:[{serviceName:'Counselling',studentName:'Test Student',requestData:{department:'SIT'},submissionFingerprint:'fingerprint',submitterEmailNormalized:'student@example.test'}]},assets:[]};
+ const envelope=await encrypt(payload,'test-backup-password');let transactions=0;const writes=[];const session={withTransaction:async fn=>{transactions++;await fn();},endSession:async()=>{}};
+ t.mock.method(mongoose,'startSession',async()=>session);
+ for(const Model of [User,Request]){t.mock.method(Model,'deleteMany',async(q,o)=>{assert.equal(o.session,session);writes.push(['delete',Model.modelName]);});t.mock.method(Model,'insertMany',async(rows,o)=>{assert.equal(o.session,session);writes.push(['insert',Model.modelName,rows]);});}
+ let status=200,result;const res={status(n){status=n;return this;},json(v){result=v;return this;}};
+ const req={file:{buffer:Buffer.from(JSON.stringify(envelope))},body:{password:'incorrect-password'}};
+ await handler(req,res);assert.equal(status,400);assert.equal(writes.length,0);
+ req.body.password='test-backup-password';status=200;await handler(req,res);assert.equal(status,200);assert.equal(result.fullRecovery,true);assert.equal(transactions,1);assert.equal(writes[1][2][0].password,payload.data.User[0].password);assert.equal(writes[3][2][0].submissionFingerprint,'fingerprint');
+});

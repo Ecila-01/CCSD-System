@@ -1,3 +1,5 @@
+import useRequests from '../hooks/useRequests';
+import RequestLoadState from '../components/RequestLoadState';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
@@ -14,28 +16,14 @@ import {
 
 function Referrals() {
   const [user, setUser] = useState(null);
-  const [requests, setRequests] = useState([]);
+  const {requests,loading,error,refresh:fetchRequests}=useRequests();
   const [viewingRequest, setViewingRequest] = useState(null);
   const navigate = useNavigate();
-
-  const fetchRequests = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/requests`);
-      if (!response.ok) {
-        throw new Error(`Unable to load referrals (${response.status})`);
-      }
-      const data = await response.json();
-      setRequests(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error fetching referrals:', error);
-    }
-  };
 
   useEffect(() => {
     const loggedInUser = localStorage.getItem('user');
     if (!loggedInUser) navigate('/');
     else setUser(JSON.parse(loggedInUser));
-    fetchRequests();
   }, [navigate]);
 
   if (!user) return null;
@@ -60,9 +48,10 @@ function Referrals() {
 
       <main className="main-content">
         <TopBar />
+        <RequestLoadState loading={loading} error={error} onRetry={fetchRequests} />
 
         {/* ── Page body ── */}
-        <section className="referrals-view">
+        {(!loading && (!error || requests.length>0)) && <section className="referrals-view">
 
           {/* Page title row */}
           <div className="page-header">
@@ -96,7 +85,7 @@ function Referrals() {
             />
           </div>
 
-        </section>
+        </section>}
       </main>
 
       {viewingRequest && (

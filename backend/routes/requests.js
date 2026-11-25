@@ -258,7 +258,7 @@ router.patch('/:id/priority', requireAuth, staffScope, async (req, res) => {
     if (!['Normal', 'Urgent'].includes(priority)) return res.status(400).json({ message: 'Invalid priority.' });
     const current = await ServiceRequest.findOne({ _id: req.params.id, ...req.requestScope });
     if (!current) return res.status(404).json({ message: 'Request not found.' });
-    const closed = ['Completed', 'Resolved', 'Declined', 'Cancelled'];
+    const closed = ['Completed', 'Resolved', 'Declined', 'Cancelled', 'No-Show'];
     if (closed.includes(current.status)) return res.status(400).json({ message: 'Closed cases cannot change priority.' });
     if ((current.priority || 'Normal') === priority) return res.json(current);
     const actor = await User.findById(req.user.id).select('name role');
@@ -278,7 +278,7 @@ router.patch('/:id', requireAuth, staffScope, async (req, res) => {
   try {
     const { status, assignedCounselor, statusNote } = req.body;
 
-    if (!ServiceRequest.schema.path('status').enumValues.includes(status)) {
+    if (status === 'No-Show' || !ServiceRequest.schema.path('status').enumValues.includes(status)) {
       return res.status(400).json({ message: 'Invalid request status.' });
     }
     const existingRequest = await ServiceRequest.findOne({ _id: req.params.id, ...req.requestScope }).select('status');

@@ -1,3 +1,4 @@
+import {personName} from '../utils/displayName';
 import React, { useState, useEffect } from 'react';
 import { MdClose, MdOutlineEmail, MdOutlineCalendarToday, MdEditNote } from "react-icons/md";
 import '../styles/ServiceModal.css';
@@ -245,7 +246,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
 
                     <div style={{ borderRight: '1px solid #eee', paddingRight: '10px' }}>
                       <label style={{ fontSize: '10px', color: '#888', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Referred By</label>
-                      <h3 style={{ margin: '8px 0 5px 0', color: '#333', fontSize: '18px' }}>{request.referrerName || "Unknown Staff"}</h3>
+                      <h3 style={{ margin: '8px 0 5px 0', color: '#333', fontSize: '18px' }}>{personName(request,'referrer') || "Unknown Staff"}</h3>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#666', fontSize: '13px' }}>
                         <MdOutlineEmail size={16} /> {request.referrerEmail || request.requestData?.email || "No contact info"}
                       </div>
@@ -253,14 +254,14 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
 
                     <div style={{ paddingLeft: '10px' }}>
                       <label style={{ fontSize: '10px', color: '#888', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Student Being Referred</label>
-                      <h2 style={{ margin: '8px 0 5px 0', color: '#c00000', fontSize: '22px' }}>{request.studentName || "Unknown Student"}</h2>
+                      <h2 style={{ margin: '8px 0 5px 0', color: '#c00000', fontSize: '22px' }}>{personName(request)}</h2>
                       <p style={{ margin: 0, fontSize: '14px', color: '#444' }}>{request.requestData?.courseYear}</p>
                     </div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <h1 style={{ margin: '0 0 5px 0', fontSize: '28px', color: '#333', fontWeight: '700' }}>{request.studentName || "Unknown Client"}</h1>
+                    <h1 style={{ margin: '0 0 5px 0', fontSize: '28px', color: '#333', fontWeight: '700' }}>{personName(request)}</h1>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#666', fontSize: '15px' }}>
                       <MdOutlineEmail size={18} /> {request.studentEmail || "No email provided"}
                     </div>
@@ -404,7 +405,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                   <div style={{ padding: '20px', textAlign: 'center', color: '#666', fontStyle: 'italic' }}>Loading details...</div>
                 ) : request.requestData ? (
                   Object.entries(request.requestData).map(([questionKey, answer], index) => {
-                    if (questionKey.toLowerCase().includes('name') || questionKey.toLowerCase().includes('email')) return null;
+                    if (['studentName', 'fullName', 'referrerName', 'studentEmail', 'referrerEmail', 'email'].includes(questionKey) || serviceFields.some(field => field.name === questionKey && field.namePart)) return null;
                     if (answer === "" || answer === null || answer === undefined) return null;
                     return (
                       <div key={index} style={{ padding: '12px 15px', background: '#fcfcfc', borderRadius: '6px', border: '1px solid #f0f0f0' }}>
@@ -482,7 +483,7 @@ const RequestDetailsModal = ({ request, onClose, onStatusUpdate }) => {
                   <ul style={{ margin: '6px 0 0', paddingLeft: '18px' }}>
                     {slotConflicts.map(c => (
                       <li key={c._id}>
-                        {c.studentName} — {c.status}
+                        {personName(c)} — {c.status}
                         {c.assignedCounselor && c.assignedCounselor !== 'Unassigned' ? ` (with ${c.assignedCounselor})` : ''}
                       </li>
                     ))}

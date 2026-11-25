@@ -127,3 +127,12 @@ Run `npm audit` in both `backend/` and `frontend/` periodically and apply `npm a
 ---
 
 *The application-level security controls (JWT verification, RBAC, rate limiting, NoSQL-injection sanitization, OTP hardening, output escaping) are implemented in code and require no configuration. This document covers only the environment and hosting configuration the deployer must provide.*
+
+
+### Full recovery backups
+
+In Settings, **Full Recovery Backup** exports every registered MongoDB collection, including staff password hashes and internal submission controls, plus copies of Cloudinary images referenced by those records. Password reset codes are excluded. The download is encrypted with AES-256-GCM and a scrypt-derived key; use a backup password of at least 12 characters and retain it separately. An unavailable referenced Cloudinary image aborts the export instead of producing an incomplete recovery file. The bounded in-app export supports up to 35 MB of source images and 60 MB of unencrypted package data. Larger installations need managed database/media backups. Third-party images hosted outside Cloudinary and unreferenced Cloudinary files are not included.
+
+Use the existing restore upload with the encrypted JSON and its password. Recovery restores all packaged collections, including accounts, in a MongoDB transaction, uploads the packaged images to the currently configured Cloudinary account, and rewrites their URLs. Failed database recovery rolls back database changes and attempts to remove newly uploaded images. Sign in afterward with an account from the backup. This requires a replica set or MongoDB Atlas, as does atomic department renaming. Existing unencrypted selective backups remain supported and do not restore accounts.
+
+Keep hosting environment variables, OAuth credentials, JWT secret, database access, and Cloudinary account access in MIS's separate secret store. They are not exported by the application. Restoring accounts does not itself revoke previously issued JWTs; the existing session-revocation limitation still applies. Test recovery in a separate environment before relying on it for production disaster recovery.

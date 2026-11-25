@@ -1,3 +1,4 @@
+import {bookingSettings,calendarSlots,slotClosed,dateKey} from '../utils/bookingCalendar';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -10,7 +11,12 @@ import { futureSlot } from '../utils/appointmentTime';
 
 const GuestRequestView = () => {
   const { token } = useParams();
+  const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30, workingDays: [1,2,3,4,5] });
+  const [closures,setClosures]=useState([]);
+  const [calendarError,setCalendarError]=useState('');
+  const [calendarReady,setCalendarReady]=useState(false);
   const [request, setRequest] = useState(null);
+  const [loadError,setLoadError]=useState('');
   const [loading, setLoading] = useState(true);
   
   // States for Rescheduling
@@ -24,10 +30,10 @@ const GuestRequestView = () => {
   }, []);
   const selectedDate = newDate ? `${newDate.getFullYear()}-${String(newDate.getMonth()+1).padStart(2,'0')}-${String(newDate.getDate()).padStart(2,'0')}` : '';
   useEffect(() => {
-    if (newTime && !futureSlot(selectedDate, newTime, now)) setNewTime('');
-  }, [selectedDate, newTime, now]);
+    if (newTime && (!futureSlot(selectedDate, newTime, now) || slotClosed(selectedDate,newTime,closures,bizHours.slotIntervalMinutes))) setNewTime('');
+  }, [selectedDate, newTime, now,closures,bizHours.slotIntervalMinutes]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [bizHours, setBizHours] = useState({ businessHoursStart: 8, businessHoursEnd: 16, slotIntervalMinutes: 30, workingDays: [1,2,3,4,5] });
+
 
   // States for Cancellation
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -40,33 +46,19 @@ const GuestRequestView = () => {
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/requests/guest/${token}`);
         setRequest(res.data);
       } catch (err) {
-        console.error("Invalid or expired link");
+        if(err.response?.status!==404)setLoadError('Your request could not be loaded. Please retry.');
       } finally {
         setLoading(false);
       }
     };
     fetchRequest();
-    axios.get(`${import.meta.env.VITE_API_URL}/api/system/settings`)
-      .then(res => setBizHours(res.data))
-      .catch(err => console.error("Error fetching business hours:", err));
+    Promise.all([axios.get(`${import.meta.env.VITE_API_URL}/api/system/settings`),axios.get(`${import.meta.env.VITE_API_URL}/api/closures`)])
+      .then(([settings,closed])=>{setBizHours(bookingSettings(settings.data));setClosures(closed.data);setCalendarReady(true);setCalendarError('');})
+      .catch(()=>setCalendarError('Available dates could not be loaded. Please reload to retry.'));
   }, [token]);
 
   const generateTimeSlots = () => {
-    const { businessHoursStart: startH, businessHoursEnd: endH, slotIntervalMinutes: interval } = bizHours;
-    const slots = [];
-    let totalMins = startH * 60;
-    const endMins = endH * 60;
-    while (totalMins < endMins) {
-      const hour = Math.floor(totalMins / 60);
-      const mins = totalMins % 60;
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
-      const timeLabel = `${displayHour}:${String(mins).padStart(2, '0')} ${ampm}`;
-      const timeValue = `${String(hour).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-      slots.push({ label: timeLabel, value: timeValue });
-      totalMins += interval;
-    }
-    return slots.filter(slot => futureSlot(selectedDate, slot.value, now));
+    return calendarSlots(bizHours).filter(slot=>futureSlot(selectedDate,slot.value,now) && !slotClosed(selectedDate,slot.value,closures,bizHours.slotIntervalMinutes));
   };
 
   // Logic to handle the reschedule submission
@@ -113,6 +105,8 @@ const GuestRequestView = () => {
   };
 
   if (loading) return null;
+
+  if(loadError)return <div role="alert" style={{padding:40}}>{loadError} <button onClick={()=>window.location.reload()}>Retry</button></div>;
 
   if (!request) return (
     <div style={{ textAlign: 'center', padding: '100px 20px' }}>
@@ -221,6 +215,7 @@ const GuestRequestView = () => {
                   </>
                 ) : (
                   <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '15px', border: '1px solid #e2e8f0' }}>
+                    {calendarError && <p role="alert">{calendarError} <button onClick={()=>window.location.reload()}>Reload</button></p>}
                     <h5 style={{ margin: '0 0 15px 0', color: '#1e293b' }}>Select New Schedule</h5>
                     <div style={{ display: 'grid', gap: '15px', marginBottom: '20px' }}>
                       <div>
@@ -231,7 +226,7 @@ const GuestRequestView = () => {
                             onChange={(date) => setNewDate(date)}
                             minDate={new Date()}
                             maxDate={new Date(new Date().setMonth(new Date().getMonth() + 2))}
-                            filterDate={(date) => (bizHours.workingDays || [1,2,3,4,5]).includes(date.getDay())}
+                            filterDate={(date) => bizHours.workingDays.includes(date.getDay()) && !closures.some(c=>c.date===dateKey(date)&&c.allDay!==false)}
                             placeholderText="Select appointment date"
                             dateFormat="MMMM d, yyyy"
                             className="react-datepicker-custom-input"
@@ -262,7 +257,7 @@ const GuestRequestView = () => {
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button onClick={() => setIsRescheduling(false)} style={{ ...secondaryBtnStyle, flex: 1 }}>Cancel</button>
-                      <button onClick={handleRescheduleSubmit} disabled={isSubmitting} style={{ ...dangerBtnStyle, backgroundColor: '#c00000', color: 'white', flex: 2 }}>
+                      <button onClick={handleRescheduleSubmit} disabled={isSubmitting || !calendarReady || Boolean(calendarError)} style={{ ...dangerBtnStyle, backgroundColor: '#c00000', color: 'white', flex: 2 }}>
                         {isSubmitting ? "Submitting..." : "Confirm & Resubmit"}
                       </button>
                     </div>

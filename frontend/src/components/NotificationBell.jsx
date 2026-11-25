@@ -1,3 +1,4 @@
+import {useNavigate} from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
 import { MdNotificationsNone } from 'react-icons/md';
 import axios from 'axios';
@@ -9,6 +10,7 @@ const API = import.meta.env.VITE_API_URL;
 // the "opt out of email" preference — a counsellor who turns off submission
 // emails still sees new requests here.
 const NotificationBell = () => {
+  const navigate=useNavigate();
   const savedUser = JSON.parse(localStorage.getItem('user')) || {};
   const userId = savedUser.id || savedUser._id;
 
@@ -58,13 +60,13 @@ const NotificationBell = () => {
 
   const markRead = async (n) => {
     if (n.read) return;
-    try { await axios.patch(`${API}/api/notifications/${n._id}/read`); } catch (e) { /* silent */ }
+    try { await axios.patch(`${API}/api/notifications/${n._id}/read`); } catch { return; }
     setItems(prev => prev.map(x => (x._id === n._id ? { ...x, read: true } : x)));
     setCount(c => Math.max(0, c - 1));
   };
 
   const markAll = async () => {
-    try { await axios.patch(`${API}/api/notifications/${userId}/read-all`); } catch (e) { /* silent */ }
+    try { await axios.patch(`${API}/api/notifications/${userId}/read-all`); } catch { return; }
     setItems(prev => prev.map(x => ({ ...x, read: true })));
     setCount(0);
   };
@@ -105,7 +107,9 @@ const NotificationBell = () => {
             items.map(n => (
               <div
                 key={n._id}
-                onClick={() => markRead(n)}
+                role="button" tabIndex={0}
+                onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.currentTarget.click();}}}
+                onClick={() => {markRead(n);setOpen(false);if(n.relatedRequestId)navigate('/dashboard?case='+encodeURIComponent(n.relatedRequestId),{state:{notificationVisit:Date.now()}});}}
                 style={{ padding: '10px 14px', borderBottom: '1px solid #f8fafc', cursor: 'pointer', background: n.read ? 'white' : '#eff6ff' }}
               >
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{n.title}</div>

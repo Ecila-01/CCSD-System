@@ -1,10 +1,11 @@
-export const isClosed = r => ['Completed', 'Resolved', 'Declined', 'Cancelled'].includes(r.status);
+import { personName } from './displayName.js';
+export const isClosed = r => ['Completed', 'Resolved', 'Declined', 'Cancelled', 'No-Show'].includes(r.status);
 const norm = v => String(v || '').trim().replace(/\s+/g, ' ').toLowerCase();
-export const studentName = r => r.studentName || r.requestData?.studentName || r.requestData?.fullName || 'N/A';
+export const studentName = r => personName(r);
 export function matchesStudent(r, query) {
  const d = r.requestData || {};
  const email = r.studentEmail || d.studentEmail || (norm(r.serviceName) !== 'referral' ? d.email || d['Email Address'] : '');
- return [studentName(r), email].some(v => norm(v).includes(norm(query)));
+ return [studentName(r), r.studentName, [d.studentFirstName,d.studentMiddleName,d.studentLastName].filter(Boolean).join(' '), email].some(v => norm(v).includes(norm(query)));
 }
 export const untouched = r => r.status === 'Pending' && (!r.assignedCounselor || r.assignedCounselor === 'Unassigned') && !r.caseNotes?.length && !r.priorityUpdates?.length && !(r.statusUpdates || []).some(h => h.updatedBy);
 const time = v => Date.parse(v) || 0;

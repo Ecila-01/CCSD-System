@@ -8,7 +8,7 @@ test('queue prioritizes urgent then untouched then active, sorting submissions n
  assert.equal(rows[0]._id,'active');
 });
 test('all sort choices keep every closed status below active cases', () => {
- const rows = ['Completed','Resolved','Declined','Cancelled'].map((status,i)=>r(String(i),'2026-06-01',{status,priority:'Urgent'}));
+ const rows = ['Completed','Resolved','Declined','Cancelled','No-Show'].map((status,i)=>r(String(i),'2026-06-01',{status,priority:'Urgent'}));
  rows.push(r('a','2026-01-01'), r('b','2026-05-01'));
  for (const mode of ['queue','oldest','newest']) {
   const ids=sortCases(rows,mode).map(x=>x._id);

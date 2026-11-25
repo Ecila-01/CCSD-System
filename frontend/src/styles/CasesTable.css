@@ -205,3 +205,6 @@
     padding: 10px 8px;
   }
 }
+
+.case-notification-highlight td { background: #fff2ba !important; outline-offset: -2px; }
+.case-notification-highlight { outline: 2px solid #d69e00; }

@@ -5,7 +5,7 @@ import '../styles/ServiceModal.css';
 import { basicInfoFields } from '../utils/formValidation';
 
 const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
-  if (!isOpen) return null;
+
   const [insertMenuIndex, setInsertMenuIndex] = useState(null);
   // --- STATE ---
   const [name, setName] = useState('');
@@ -42,6 +42,8 @@ const AddServiceModal = ({ isOpen, onClose, onSuccess, editingService }) => {
       setSelectedFile(null);
     }
   }, [editingService, isOpen]);
+
+  if (!isOpen) return null;
 
   // --- FIELD BUILDER LOGIC ---
   const handleAddField = () => {

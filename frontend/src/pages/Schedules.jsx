@@ -1,3 +1,8 @@
+import {personName} from '../utils/displayName';
+import {bookingSettings,calendarSlots,slotClosed,dateKey} from '../utils/bookingCalendar';
+import {isClosed} from '../utils/caseQueue';
+import useRequests from '../hooks/useRequests';
+import RequestLoadState from '../components/RequestLoadState';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
@@ -8,8 +13,14 @@ import RequestDetailsModal from '../components/RequestDetailsModal';
 import { MdOutlineDateRange, MdOutlineSchedule, MdOutlineCheckCircle } from "react-icons/md";
 
 function Schedules() {
+  const [bizHours,setBizHours]=useState(bookingSettings());
+  const [closures,setClosures]=useState([]);
+  const [calendarError,setCalendarError]=useState('');
+  const [calendarReady,setCalendarReady]=useState(false);
+  const loadCalendar=()=>Promise.all([fetch(import.meta.env.VITE_API_URL+'/api/system/settings'),fetch(import.meta.env.VITE_API_URL+'/api/closures')]).then(async responses=>{if(responses.some(r=>!r.ok))throw Error('Calendar unavailable');const [settings,closed]=await Promise.all(responses.map(r=>r.json()));setBizHours(bookingSettings(settings));setClosures(closed);setCalendarReady(true);setCalendarError('');}).catch(()=>setCalendarError('Calendar settings could not be loaded.'));
+  useEffect(()=>{loadCalendar();window.addEventListener('focus',loadCalendar);const timer=setInterval(loadCalendar,30000);return()=>{window.removeEventListener('focus',loadCalendar);clearInterval(timer);};},[]);
   const [user, setUser] = useState(null);
-  const [requests, setRequests] = useState([]); 
+  const {requests,loading,error,refresh:fetchRequests}=useRequests();
   const [viewingRequest, setViewingRequest] = useState(null); 
   const [hoveredCell, setHoveredCell] = useState(null);
   const navigate = useNavigate();
@@ -18,7 +29,7 @@ function Schedules() {
     const d = new Date(date);
     const day = d.getDay();
     const diff = d.getDate() - day;
-    return new Date(d.setDate(diff));
+    d.setDate(diff);d.setHours(0,0,0,0);return d;
   };
   
   const [currentWeekStart, setCurrentWeekStart] = useState(getStartOfWeek(new Date()));
@@ -57,22 +68,11 @@ function Schedules() {
     return d;
   });
 
-  const fetchRequests = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/requests`);
-      const data = await response.json();
-      setRequests(data);
-    } catch (error) {
-      console.error("Error fetching requests:", error);
-    }
-  };
-
   useEffect(() => {
     const loggedInUser = localStorage.getItem("user");
     if (!loggedInUser) navigate('/');
     else setUser(JSON.parse(loggedInUser));
     
-    fetchRequests();
   }, [navigate]);
 
   if (!user) return null;
@@ -80,12 +80,11 @@ function Schedules() {
   const isAdmin = user?.role?.toLowerCase() === 'admin';
   const userDepts = user.assignedDepartments || [];
 
-  const authorizedRequests = requests.filter(req => {
-    if (isAdmin) return true; 
-    return userDepts.includes(req.requestData?.department);
-  });
+  const authorizedRequests = requests;
    
   const scheduledRequests = authorizedRequests.filter(req => req.requiresSchedule === true);
+  const activeAppointments=scheduledRequests.filter(req=>!isClosed(req));
+  const slots=calendarSlots(bizHours);
   const pendingCount = scheduledRequests.filter(req => req.status === 'Pending').length;
   const completedCount = scheduledRequests.filter(req => req.status === 'Completed').length;
 
@@ -203,8 +202,9 @@ function Schedules() {
         `}</style>
 
         <TopBar />
+        <RequestLoadState loading={loading} error={error} onRetry={fetchRequests} />
 
-        <section className="schedules-view" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 20px' }}>
+        {(!loading && (!error || requests.length>0)) && <section className="schedules-view" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 20px' }}>
           
           <div style={{ width: '100%', maxWidth: '1500px' }}>
             
@@ -258,7 +258,8 @@ function Schedules() {
 
             <div className="schedules-main-panel" style={{ width: '100%' }}>
               <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '10px' }}>
-                <div className="weekly-calendar" style={{ minWidth: '900px' }}>
+                {calendarError && <p role="alert">{calendarError} <button onClick={loadCalendar}>Retry</button></p>}
+                {calendarReady && <div className="weekly-calendar" style={{ minWidth: '900px',gridTemplateRows:`60px repeat(${slots.length},75px)` }}>
                   <div className="time-col-header"></div>
                   {weekDays.map((dateObj, index) => {
                     const today = new Date();
@@ -276,34 +277,18 @@ function Schedules() {
                     );
                   })}
 
-                  <div className="time-label" style={{gridRow: 2}}>8 AM</div>
-                  <div className="time-label" style={{gridRow: 3}}>9 AM</div>
-                  <div className="time-label" style={{gridRow: 4}}>10 AM</div>
-                  <div className="time-label" style={{gridRow: 5}}>11 AM</div>
-                  <div className="time-label" style={{gridRow: 6}}>12 PM</div>
-                  <div className="time-label" style={{gridRow: 7}}>1 PM</div>
-                  <div className="time-label" style={{gridRow: 8}}>2 PM</div>
-                  <div className="time-label" style={{gridRow: 9}}>3 PM</div>
-                  <div className="time-label" style={{gridRow: 10}}>4 PM</div>
-                  <div className="time-label" style={{gridRow: 11}}>5 PM</div>
-
-                  {[2,3,4,5,6,7,8,9,10,11].map(row => 
-                    [2,3,4,5,6,7,8].map(col => (
-                      <div key={`${row}-${col}`} className="grid-cell" style={{gridRow: row, gridColumn: col}}></div>
-                    ))
-                  )}
-
-                  <div className="lunch-break" style={{gridRow: 6, gridColumn: '2 / 9'}}>
-                    LUNCH BREAK
-                  </div>
-
+                  {slots.map((slot,i)=><div key={slot.value} className="time-label" style={{gridRow:i+2}}>{slot.label}</div>)}
+                  {slots.flatMap((slot,i)=>weekDays.map((day,j)=>{
+                    const closed=!bizHours.workingDays.includes(day.getDay()) || slotClosed(dateKey(day),slot.value,closures,bizHours.slotIntervalMinutes);
+                    return <div key={slot.value+'-'+j} className="grid-cell" style={{gridRow:i+2,gridColumn:j+2,background:closed?'#e2e8f0':undefined}}>{closed && <span style={{fontSize:10,color:'#64748b'}}>Closed</span>}</div>;
+                  }))}
                   {(() => {
                     const groupedEvents = {};
 
-                    scheduledRequests.forEach((req) => {
+                    activeAppointments.forEach((req) => {
                       if (!req.appointmentDate || !req.timeSlot) return;
 
-                      const eventDate = new Date(req.appointmentDate);
+                      const eventDate = new Date(req.appointmentDate+'T00:00:00');
                       const currentWeekEnd = new Date(currentWeekStart);
                       currentWeekEnd.setDate(currentWeekEnd.getDate() + 6);
                       currentWeekEnd.setHours(23, 59, 59, 999); 
@@ -313,9 +298,9 @@ function Schedules() {
                       const dayOfWeek = eventDate.getDay(); 
                       const gridCol = dayOfWeek + 2;
 
-                      const hour = parseInt(req.timeSlot.split(':')[0], 10);
-                      if (hour < 8 || hour > 16) return; 
-                      const gridRow = hour - 6;
+                      const slotIndex=slots.findIndex(slot=>slot.value===req.timeSlot);
+                      if(slotIndex<0)return;
+                      const gridRow=slotIndex+2;
 
                       const cellKey = `${gridRow}-${gridCol}`;
                       if (!groupedEvents[cellKey]) {
@@ -356,7 +341,7 @@ function Schedules() {
                             {timeString}
                           </div>
                           <span style={{ fontSize: '12px', fontWeight: '900', lineHeight: '1.1', marginBottom: '2px', color: '#1a202c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {req.studentName}
+                            {personName(req)}
                           </span>
                           <span style={{ fontSize: '9px', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.3px', opacity: 0.7, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {req.serviceName}
@@ -383,6 +368,7 @@ function Schedules() {
                             position: 'relative',
                           }}
                           onMouseEnter={() => setHoveredCell(cellKey)}
+                          onFocus={() => setHoveredCell(cellKey)}
                           onMouseLeave={() => setHoveredCell(null)}
                         >
                           {events.length > 1 ? (
@@ -412,7 +398,7 @@ function Schedules() {
                                   border: '1px solid #e2e8f0'
                                 }}>
                                   <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', marginBottom: '4px' }}>
-                                    Conflicts at {events[0].timeSlot}
+                                    Sessions at {events[0].timeSlot}
                                   </div>
                                   {events.map(req => renderEventCard(req))}
                                 </div>
@@ -425,7 +411,7 @@ function Schedules() {
                       );
                     });
                   })()}
-                </div>
+                </div>}
               </div> 
 
               <div style={{ marginTop: '40px' }}>
@@ -438,7 +424,7 @@ function Schedules() {
 
             </div>
           </div>
-        </section>
+        </section>}
       </main>
 
       {viewingRequest && (
